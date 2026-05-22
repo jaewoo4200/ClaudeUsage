@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Claude Usage - 3가지 테마 비교</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: -apple-system, "SF Pro Display", "Pretendard", system-ui, sans-serif;
+    background: linear-gradient(135deg, #d8dde4 0%, #eef0f3 100%);
+    min-height: 100vh;
+    padding: 48px 20px;
+  }
+  h1 { text-align: center; font-size: 22px; font-weight: 700; color: #1f2329; margin-bottom: 8px; letter-spacing: -0.02em; }
+  .sub { text-align: center; font-size: 13px; color: #6b7280; margin-bottom: 40px; }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    max-width: 1300px;
+    margin: 0 auto 32px;
+  }
+  .col {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.06);
+  }
+  .col-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9ca3af; margin-bottom: 4px; }
+  .col-name { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.02em; }
+  .col-desc { font-size: 11px; color: #6b7280; margin-bottom: 24px; line-height: 1.5; }
+  .col-name.toss { color: #3182F6; }
+  .col-name.daangn { color: #FF6F0F; }
+  .col-name.hybrid { color: #0EA5E9; }
+  .label { font-size: 10px; font-weight: 700; color: #9ca3af; margin: 18px 0 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* 메뉴바 시뮬 */
+  .menubar-sim {
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 8px;
+    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1f2329;
+    height: 24px;
+  }
+  .menubar-sim .icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  /* ============================
+     TOSS
+     ============================ */
+  .toss-menubar .pct { color: #3182F6; font-weight: 700; }
+  .toss-dropdown {
+    width: 320px; background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.12);
+    padding: 20px;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .toss-dropdown .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .toss-dropdown .head-title { font-size: 15px; font-weight: 700; color: #191F28; letter-spacing: -0.02em; }
+  .toss-dropdown .plan { font-size: 11px; color: #3182F6; background: #E8F2FF; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .toss-card { background: #F9FAFB; border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+  .toss-card .row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .toss-card .row1 .lbl { font-size: 13px; color: #6B7684; font-weight: 500; }
+  .toss-card .row1 .reset { font-size: 11px; color: #8B95A1; font-variant-numeric: tabular-nums; }
+  .toss-card .big { display: flex; align-items: baseline; gap: 4px; margin-bottom: 10px; }
+  .toss-card .big .n { font-size: 32px; font-weight: 700; color: #191F28; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .toss-card .big .u { font-size: 14px; font-weight: 600; color: #8B95A1; }
+  .toss-bar { height: 6px; background: #E5E8EB; border-radius: 3px; overflow: hidden; }
+  .toss-bar .fill { height: 100%; background: #3182F6; border-radius: 3px; }
+  .toss-bar .fill.warn { background: #FF9500; }
+
+  /* ============================
+     DAANGN
+     ============================ */
+  .daangn-menubar .icon { background: #FF6F0F; }
+  .daangn-menubar .pct { color: #FF6F0F; font-weight: 700; }
+  .daangn-dropdown {
+    width: 320px; background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.14);
+    padding: 22px;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .daangn-dropdown .head { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .daangn-dropdown .head .ic {
+    width: 36px; height: 36px; border-radius: 12px;
+    background: linear-gradient(135deg, #FF6F0F 0%, #FF8F1F 100%);
+    display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 800;
+  }
+  .daangn-dropdown .head .meta { flex: 1; }
+  .daangn-dropdown .head .ttl { font-size: 15px; font-weight: 700; color: #212124; }
+  .daangn-dropdown .head .sub { font-size: 11px; color: #868E96; margin-top: 2px; }
+  .daangn-dropdown .plan { font-size: 11px; color: #FF6F0F; background: #FFF1E6; padding: 4px 10px; border-radius: 999px; font-weight: 700; }
+  .daangn-card { background: #FAFAFA; border-radius: 16px; padding: 16px; margin-bottom: 10px; }
+  .daangn-card .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .daangn-card .top .lbl { font-size: 13px; color: #495057; font-weight: 600; }
+  .daangn-card .top .reset { font-size: 11px; color: #868E96; font-variant-numeric: tabular-nums; background: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .daangn-card .ring-wrap { display: flex; align-items: center; gap: 14px; }
+  .daangn-card .ring { width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(#FF6F0F var(--p), #FFE8D6 0); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .daangn-card .ring-inner { width: 44px; height: 44px; background: #FAFAFA; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #212124; }
+  .daangn-card .text-side .big { font-size: 22px; font-weight: 800; color: #212124; letter-spacing: -0.02em; line-height: 1.1; }
+  .daangn-card .text-side .desc { font-size: 11px; color: #868E96; margin-top: 4px; }
+
+  /* ============================
+     HYBRID — 토스의 정보 위계 + 당근의 따뜻함
+     - 컬러: 메인은 라이트 미드나이트 (#0F1729) + 포인트 시안/오렌지 (사용량 단계별)
+     - 그래프: 토스 스타일 라운드 progress bar (정보 명확) + 당근 스타일 라운드 큰 코너 + 컬러 단계
+     - 헤더: 당근 스타일 아이콘 + 토스 스타일 정보 정렬
+     - 메시지: 당근의 친근함 약간 (한 줄 코멘트)
+     ============================ */
+  .hybrid-menubar .icon {
+    background: linear-gradient(135deg, #0EA5E9 0%, #06B6D4 100%);
+  }
+  .hybrid-menubar .pct { color: #0F1729; font-weight: 700; }
+
+  .hybrid-dropdown {
+    width: 320px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 16px 48px rgba(0,0,0,0.13);
+    padding: 20px;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .hybrid-dropdown .head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  }
+  .hybrid-dropdown .head .ic {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0F1729 0%, #1E293B 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px; font-weight: 800;
+    position: relative;
+  }
+  .hybrid-dropdown .head .ic::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #34D399;
+    border: 2px solid #fff;
+  }
+  .hybrid-dropdown .head .meta { flex: 1; }
+  .hybrid-dropdown .head .ttl { font-size: 14px; font-weight: 700; color: #0F1729; letter-spacing: -0.01em; }
+  .hybrid-dropdown .head .sub { font-size: 11px; color: #64748B; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .hybrid-dropdown .plan {
+    font-size: 10px; font-weight: 800;
+    padding: 4px 9px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+    background: linear-gradient(135deg, #0F1729 0%, #1E293B 100%);
+    color: #fff;
+  }
+  .hybrid-card {
+    background: #F8FAFC;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    border: 1px solid #F1F5F9;
+  }
+  .hybrid-card .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .hybrid-card .top .lbl-wrap { display: flex; align-items: center; gap: 6px; }
+  .hybrid-card .top .lbl {
+    font-size: 12px; font-weight: 700; color: #1E293B;
+  }
+  .hybrid-card .top .badge {
+    font-size: 9px; font-weight: 700;
+    color: #64748B;
+    background: #E2E8F0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+  .hybrid-card .top .reset {
+    font-size: 11px; color: #64748B; font-variant-numeric: tabular-nums; font-weight: 600;
+  }
+  .hybrid-card .pct-row {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .hybrid-card .pct-row .n {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.03em;
+    color: #0F1729; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hybrid-card .pct-row .n .u { font-size: 13px; font-weight: 700; color: #94A3B8; margin-left: 1px; }
+  .hybrid-card .pct-row .comment {
+    font-size: 11px; color: #64748B; font-weight: 500;
+  }
+  .hybrid-bar {
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hybrid-bar .fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s;
+    background: linear-gradient(90deg, #0EA5E9 0%, #06B6D4 100%);
+  }
+  .hybrid-bar .fill.warn {
+    background: linear-gradient(90deg, #FB923C 0%, #F97316 100%);
+  }
+  .hybrid-bar .fill.danger {
+    background: linear-gradient(90deg, #F43F5E 0%, #E11D48 100%);
+  }
+  .hybrid-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid #F1F5F9;
+  }
+  .hybrid-footer .email {
+    font-size: 11px; color: #64748B; display: flex; align-items: center; gap: 5px; font-weight: 600;
+  }
+  .hybrid-footer .email-dot { width: 5px; height: 5px; border-radius: 50%; background: #34D399; }
+  .hybrid-footer .btn {
+    font-size: 11px; color: #64748B; background: none; border: none; cursor: pointer; font-weight: 600;
+  }
+
+  /* HYBRID 위젯 */
+  .hybrid-widget {
+    width: 240px;
+    background: linear-gradient(180deg, #fff 0%, #F8FAFC 100%);
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(15,23,41,0.06), 0 12px 40px rgba(15,23,41,0.12);
+    padding: 18px;
+    border: 1px solid rgba(15,23,41,0.06);
+  }
+  .hybrid-widget .head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+  .hybrid-widget .head .ttl-wrap { display: flex; align-items: center; gap: 7px; }
+  .hybrid-widget .head .ic {
+    width: 22px; height: 22px; border-radius: 7px;
+    background: linear-gradient(135deg, #0F1729, #1E293B);
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+  .hybrid-widget .head .t {
+    font-size: 12px; font-weight: 800; color: #0F1729; letter-spacing: -0.01em;
+  }
+  .hybrid-widget .head .plan-mini {
+    font-size: 9px; font-weight: 800;
+    padding: 3px 7px; border-radius: 5px;
+    background: #0F1729; color: #fff; letter-spacing: 0.04em;
+  }
+  .hybrid-widget .metric { margin-bottom: 12px; }
+  .hybrid-widget .metric:last-child { margin-bottom: 0; }
+  .hybrid-widget .metric .row1 {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;
+  }
+  .hybrid-widget .metric .lbl {
+    font-size: 10px; font-weight: 700; color: #64748B; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .hybrid-widget .metric .reset {
+    font-size: 11px; font-weight: 700; color: #0F1729; font-variant-numeric: tabular-nums;
+  }
+  .hybrid-widget .metric .pct-row {
+    display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 5px;
+  }
+  .hybrid-widget .metric .n {
+    font-size: 20px; font-weight: 800; color: #0F1729; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  }
+  .hybrid-widget .metric .n .u { font-size: 11px; font-weight: 700; color: #94A3B8; margin-left: 1px; }
+
+  .legend {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 14px;
+    padding: 16px 20px;
+    font-size: 12px;
+    color: #4b5563;
+    line-height: 1.6;
+    max-width: 1300px;
+    margin: 24px auto 0;
+  }
+  .legend b { color: #0F1729; }
+  .legend .key {
+    background: #F1F5F9; padding: 1px 6px; border-radius: 4px; font-family: 'SF Mono', monospace; font-size: 11px; color: #0F1729;
+  }
+</style>
+</head>
+<body>
+
+<h1>Claude Usage Widget — 3가지 테마</h1>
+<p class="sub">설정에서 자유롭게 전환 가능. 어떤 게 가장 마음에 드시나요?</p>
+
+<!-- ============================
+     1. 메뉴바
+     ============================ -->
+<div class="row">
+  <div class="col">
+    <div class="col-tag">THEME 1</div>
+    <div class="col-name toss">Toss</div>
+    <div class="col-desc">차가운 화이트 + 블루 포인트<br>정보 위계 또렷, 정돈된 느낌</div>
+    <div class="label">메뉴바</div>
+    <div class="menubar-sim toss-menubar">
+      <span>Claude</span>
+      <span class="pct">38%</span>
+    </div>
+  </div>
+  <div class="col">
+    <div class="col-tag">THEME 2</div>
+    <div class="col-name daangn">Daangn</div>
+    <div class="col-desc">따뜻한 화이트 + 오렌지 포인트<br>친근한 라운드, 캐주얼한 톤</div>
+    <div class="label">메뉴바</div>
+    <div class="menubar-sim daangn-menubar">
+      <span class="icon">C</span>
+      <span class="pct">38%</span>
+    </div>
+  </div>
+  <div class="col">
+    <div class="col-tag">THEME 3 ✨ NEW</div>
+    <div class="col-name hybrid">Hybrid</div>
+    <div class="col-desc">미드나이트 + 시안/오렌지 단계<br>토스의 위계 + 당근의 따뜻함</div>
+    <div class="label">메뉴바</div>
+    <div class="menubar-sim hybrid-menubar">
+      <span class="icon">C</span>
+      <span class="pct">38%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     2. 드롭다운
+     ============================ -->
+<div class="row">
+  <div class="col">
+    <div class="label">드롭다운</div>
+    <div class="toss-dropdown">
+      <div class="head">
+        <div class="head-title">Claude 사용량</div>
+        <div class="plan">Max 5x</div>
+      </div>
+      <div class="toss-card">
+        <div class="row1"><div class="lbl">5시간</div><div class="reset">3:24:18</div></div>
+        <div class="big"><span class="n">38</span><span class="u">%</span></div>
+        <div class="toss-bar"><div class="fill" style="width:38%"></div></div>
+      </div>
+      <div class="toss-card">
+        <div class="row1"><div class="lbl">7일</div><div class="reset">5d 12h</div></div>
+        <div class="big"><span class="n">72</span><span class="u">%</span></div>
+        <div class="toss-bar"><div class="fill warn" style="width:72%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="label">드롭다운</div>
+    <div class="daangn-dropdown">
+      <div class="head">
+        <div class="ic">C</div>
+        <div class="meta">
+          <div class="ttl">Claude 사용량</div>
+          <div class="sub">jaewoo@example.com</div>
+        </div>
+        <div class="plan">Max 5x</div>
+      </div>
+      <div class="daangn-card">
+        <div class="top"><div class="lbl">5시간</div><div class="reset">3:24:18</div></div>
+        <div class="ring-wrap">
+          <div class="ring" style="--p:136.8deg"><div class="ring-inner">38%</div></div>
+          <div class="text-side"><div class="big">38<span style="font-size:14px;color:#868E96">%</span></div><div class="desc">아직 여유로워요 🙂</div></div>
+        </div>
+      </div>
+      <div class="daangn-card">
+        <div class="top"><div class="lbl">7일</div><div class="reset">5d 12h</div></div>
+        <div class="ring-wrap">
+          <div class="ring" style="--p:259.2deg"><div class="ring-inner">72%</div></div>
+          <div class="text-side"><div class="big">72<span style="font-size:14px;color:#868E96">%</span></div><div class="desc">조금만 아껴 써요 😯</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="label">드롭다운</div>
+    <div class="hybrid-dropdown">
+      <div class="head">
+        <div class="ic">C</div>
+        <div class="meta">
+          <div class="ttl">Claude</div>
+          <div class="sub">jaewoo@example.com</div>
+        </div>
+        <div class="plan">MAX 5×</div>
+      </div>
+      <div class="hybrid-card">
+        <div class="top">
+          <div class="lbl-wrap"><div class="lbl">5시간</div><div class="badge">SHORT</div></div>
+          <div class="reset">3:24:18</div>
+        </div>
+        <div class="pct-row">
+          <div class="n">38<span class="u">%</span></div>
+          <div class="comment">충분히 여유</div>
+        </div>
+        <div class="hybrid-bar"><div class="fill" style="width:38%"></div></div>
+      </div>
+      <div class="hybrid-card">
+        <div class="top">
+          <div class="lbl-wrap"><div class="lbl">7일</div><div class="badge">LONG</div></div>
+          <div class="reset">5d 12h</div>
+        </div>
+        <div class="pct-row">
+          <div class="n">72<span class="u">%</span></div>
+          <div class="comment">속도 조절</div>
+        </div>
+        <div class="hybrid-bar"><div class="fill warn" style="width:72%"></div></div>
+      </div>
+      <div class="hybrid-footer">
+        <div class="email"><span class="email-dot"></span>로그인됨</div>
+        <button class="btn">로그아웃</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     3. 위젯
+     ============================ -->
+<div class="row">
+  <div class="col">
+    <div class="label">위젯</div>
+    <div style="display:flex; justify-content:center; padding:8px 0;">
+      <div style="width:220px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.1);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;color:#3182F6;letter-spacing:0.08em">CLAUDE</div>
+          <div style="font-size:9px;background:#E8F2FF;color:#3182F6;padding:2px 6px;border-radius:5px;font-weight:700">MAX</div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+            <div style="font-size:22px;font-weight:700;color:#191F28">38<span style="font-size:12px;color:#8B95A1">%</span></div>
+            <div style="font-size:10px;color:#8B95A1;font-variant-numeric:tabular-nums">3:24:18</div>
+          </div>
+          <div style="font-size:10px;color:#6B7684;margin-bottom:5px">5시간</div>
+          <div style="height:5px;background:#E5E8EB;border-radius:3px;overflow:hidden"><div style="height:100%;width:38%;background:#3182F6;border-radius:3px"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+            <div style="font-size:22px;font-weight:700;color:#191F28">72<span style="font-size:12px;color:#8B95A1">%</span></div>
+            <div style="font-size:10px;color:#8B95A1;font-variant-numeric:tabular-nums">5d 12h</div>
+          </div>
+          <div style="font-size:10px;color:#6B7684;margin-bottom:5px">7일</div>
+          <div style="height:5px;background:#E5E8EB;border-radius:3px;overflow:hidden"><div style="height:100%;width:72%;background:#FF9500;border-radius:3px"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="label">위젯</div>
+    <div style="display:flex; justify-content:center; padding:8px 0;">
+      <div style="width:220px;background:#fff;border-radius:22px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.12);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#FF6F0F,#FF8F1F);color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">C</div>
+            <div style="font-size:12px;font-weight:700;color:#212124">Claude</div>
+          </div>
+          <div style="font-size:9px;background:#FFF1E6;color:#FF6F0F;padding:2px 6px;border-radius:5px;font-weight:800">MAX</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:48px;height:48px;border-radius:50%;background:conic-gradient(#FF6F0F 136.8deg, #FFE8D6 0);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="width:38px;height:38px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#212124">38%</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#868E96;font-weight:600;margin-bottom:2px">5시간</div>
+            <div style="font-size:13px;font-weight:700;color:#212124;font-variant-numeric:tabular-nums">3:24:18</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:48px;height:48px;border-radius:50%;background:conic-gradient(#FF9500 259.2deg, #FFF1E6 0);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="width:38px;height:38px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#212124">72%</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#868E96;font-weight:600;margin-bottom:2px">7일</div>
+            <div style="font-size:13px;font-weight:700;color:#212124;font-variant-numeric:tabular-nums">5d 12h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="label">위젯</div>
+    <div style="display:flex; justify-content:center; padding:8px 0;">
+      <div class="hybrid-widget">
+        <div class="head">
+          <div class="ttl-wrap">
+            <div class="ic">C</div>
+            <div class="t">Claude</div>
+          </div>
+          <div class="plan-mini">MAX 5×</div>
+        </div>
+        <div class="metric">
+          <div class="row1">
+            <div class="lbl">5시간</div>
+            <div class="reset">3:24:18</div>
+          </div>
+          <div class="pct-row">
+            <div class="n">38<span class="u">%</span></div>
+          </div>
+          <div class="hybrid-bar"><div class="fill" style="width:38%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="row1">
+            <div class="lbl">7일</div>
+            <div class="reset">5d 12h</div>
+          </div>
+          <div class="pct-row">
+            <div class="n">72<span class="u">%</span></div>
+          </div>
+          <div class="hybrid-bar"><div class="fill warn" style="width:72%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <p><b>하이브리드</b>는 토스의 <b>정보 위계와 정밀함</b>(progress bar, 큰 숫자, 카운트다운)과 당근의 <b>아이덴티티</b>(로고, 친근한 라운드, 메시지)를 섞었어요.</p>
+  <p style="margin-top:8px;">컬러는 <span class="key">미드나이트(#0F1729)</span>을 베이스로, 사용량 단계별로 <span class="key">시안 → 오렌지 → 레드</span> 그라데이션으로 변합니다. 토스가 차갑게 느껴졌다면, 당근이 너무 캐주얼했다면 — 그 중간이에요.</p>
+  <p style="margin-top:8px;"><b>SHORT / LONG 뱃지</b>로 5시간 vs 7일 사용량의 시간 단위를 시각적으로 한 번 더 강조했어요.</p>
+</div>
+
+</body>
+</html>

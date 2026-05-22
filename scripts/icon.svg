@@ -1,0 +1,70 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E89968"/>
+      <stop offset="55%" stop-color="#D97757"/>
+      <stop offset="100%" stop-color="#B85C42"/>
+    </linearGradient>
+
+    <radialGradient id="highlight" cx="30%" cy="25%" r="55%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="14"/>
+      <feOffset dx="0" dy="8" result="offsetBlur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.35"/></feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <linearGradient id="ringGrad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1.0"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.65"/>
+    </linearGradient>
+
+    <filter id="textShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="3" result="offsetBlur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.10"/>
+      <feComposite in2="offsetBlur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- squircle 배경 -->
+  <g filter="url(#softShadow)">
+    <rect x="80" y="80" width="864" height="864" rx="200" ry="200" fill="url(#bg)"/>
+    <rect x="80" y="80" width="864" height="864" rx="200" ry="200" fill="url(#highlight)"/>
+  </g>
+
+  <!-- 사용량 ring + 50% -->
+  <g transform="translate(512 512)">
+    <!-- 배경 트랙 -->
+    <circle r="290" fill="none" stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="34"/>
+
+    <!-- 진행 ring 77% — C = 2π*290 ≈ 1822, 77% = 1403 -->
+    <circle r="290" fill="none"
+            stroke="url(#ringGrad)"
+            stroke-width="34"
+            stroke-linecap="round"
+            stroke-dasharray="1403 419"
+            transform="rotate(-90)"/>
+
+    <!-- 77% — Avenir Next Heavy, 크기 줄임 + 정확한 baseline 정렬 -->
+    <text x="0" y="80"
+          text-anchor="middle"
+          font-family="'Avenir Next', 'Helvetica Neue', sans-serif"
+          font-weight="900"
+          fill="#FFFFFF"
+          filter="url(#textShadow)">
+      <tspan font-size="240" letter-spacing="-4">77</tspan><tspan font-size="130" font-weight="700" fill-opacity="0.82" dx="14">%</tspan>
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.moved-aside
+*.xcuserstate
+
+# xcodegen이 매번 재생성하므로 commit 안 함
+ClaudeUsage.xcodeproj/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 빌드 산출물
+*.dmg
+*.app
+*.icns
+
+# 단, AppIcon.icns는 commit (빌드 시 필요)
+!Sources/ClaudeUsage/Resources/AppIcon.icns
+
+# 임시 / 캐시
+*.log
+*.swp
+*.swo
+.swift-version
+
+# 개인 데이터
+.claude-widget.json
