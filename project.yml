@@ -1,6 +1,6 @@
 name: ClaudeUsage
 options:
-  bundleIdPrefix: com.jaewoolee
+  bundleIdPrefix: app
   deploymentTarget:
     macOS: "13.0"
   developmentLanguage: en
@@ -11,7 +11,7 @@ settings:
     SWIFT_VERSION: "5.9"
     MARKETING_VERSION: "1.1.0"
     CURRENT_PROJECT_VERSION: "2"
-    PRODUCT_BUNDLE_IDENTIFIER: com.jaewoolee.ClaudeUsage
+    PRODUCT_BUNDLE_IDENTIFIER: app.claudeusage
     GENERATE_INFOPLIST_FILE: NO
     INFOPLIST_FILE: Sources/ClaudeUsage/Resources/Info.plist
     CODE_SIGN_STYLE: Automatic
@@ -43,7 +43,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleIconFile: AppIcon
-        NSHumanReadableCopyright: "© 2026 Jaewoo Lee"
+        NSHumanReadableCopyright: "© 2026 ClaudeUsage Project · MIT Licensed"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
     entitlements:

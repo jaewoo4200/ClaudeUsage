@@ -142,6 +142,14 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 - 메뉴바 우상단의 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
 - 로그인 완료 시 자동으로 사용량 표시 ✨
 
+### 4. Keychain 권한 다이얼로그 (첫 로그인 시)
+
+로그인 후 사용량 fetch 시 macOS가 **"ClaudeUsage이(가) 키체인 항목 'app.claudeusage'에 접근하려 합니다"** 다이얼로그를 띄울 수 있어요.
+
+이건 cookie를 안전하게 Keychain에 저장하기 위해 필요한 권한이고, **악성 동작이 아닙니다**. 코드 서명 없는 앱이라 macOS가 첫 접근 시 사용자 확인을 받는 정상 절차예요.
+
+**"Always Allow"** 를 클릭하시면 이후로는 안 뜹니다.
+
 ## 🔧 빌드 (개발자)
 
 ### 사전 요구사항

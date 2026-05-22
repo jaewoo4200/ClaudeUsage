@@ -142,6 +142,14 @@ This removes the macOS quarantine flag (automatically added to downloaded files)
 - Click **[C] Sign in** in the menu bar → log in to claude.ai (Google supported)
 - Once signed in, usage updates automatically ✨
 
+### 4. Keychain access dialog (first fetch)
+
+After signing in, when ClaudeUsage first accesses the stored cookie, macOS may show a dialog: **"ClaudeUsage wants to access key 'app.claudeusage' in your keychain"**.
+
+This is **not malicious** — it's macOS's normal first-time approval flow for keychain access by an unsigned app. Cookies are stored in the Keychain for security.
+
+Click **"Always Allow"** and you won't see it again.
+
 ## 🔧 Build (Developers)
 
 ### Prerequisites

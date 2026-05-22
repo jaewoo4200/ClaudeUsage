@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 enum CookieStore {
-    private static let service = "com.jaewoolee.ClaudeUsage"
+    private static let service = "app.claudeusage"
     private static let account = "claude.ai-cookie"
 
     static func save(_ cookieString: String) {
