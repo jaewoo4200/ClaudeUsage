@@ -29,6 +29,7 @@ A native macOS app that shows your **claude.ai usage** (5-hour / 7-day / Claude 
 - 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
 - 🌏 **Multilingual**: Korean / English — toggle instantly
 - 🔄 **Auto-refresh every 60s** plus manual refresh
+- 🌑 **Dark mode** — follows system appearance
 - 💻 **Universal Binary** (Intel + Apple Silicon)
 
 ## 📸 Screenshots
@@ -105,15 +106,41 @@ A native macOS app that shows your **claude.ai usage** (5-hour / 7-day / Claude 
 
 ## 🚀 Installation (Users)
 
+### 1. Download & install
+
 1. Download the latest `ClaudeUsage-x.x.x.dmg` from [Releases](https://github.com/jaewoo4200/ClaudeUsage/releases)
 2. Open the dmg → drag to `Applications`
-3. On first launch, if macOS shows "unidentified developer":
-   - **Right-click ClaudeUsage in Applications → "Open" → "Open"** (once)
-   - Or run: `xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app`
-4. Click the menu bar **[C] Sign in** → log in to claude.ai (Google sign-in supported)
-5. Done — usage updates automatically ✨
 
-> Not signed with an Apple Developer ID, so macOS's quarantine flag triggers a warning on first run. This is a personal open-source project so I haven't paid for an Apple Developer account.
+### 2. ⚠️ First launch — bypassing "unidentified developer"
+
+The app is not signed with an Apple Developer ID, so macOS blocks the first launch (a free open-source app doesn't justify the $99/year fee). **It's not malware and the bypass is safe.**
+
+Depending on your macOS version:
+
+#### macOS Sonoma (14) or later — recommended
+
+1. Double-click `ClaudeUsage.app` → if you see **"is damaged and can't be opened"**, click **Cancel**
+2. Open **System Settings → Privacy & Security**
+3. Scroll down → next to **"ClaudeUsage was blocked from use"** click **"Open Anyway"**
+4. Confirm the next dialog → **"Open"**
+
+#### macOS Ventura (13) — right-click
+
+1. In Applications, **right-click (Control+click) `ClaudeUsage.app` → "Open"**
+2. Confirm dialog → **"Open"** (once only — subsequent launches work normally)
+
+#### Terminal one-liner (works on any version, fastest)
+
+```bash
+xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
+```
+
+This removes the macOS quarantine flag (automatically added to downloaded files). After this, the app opens with a normal double-click.
+
+### 3. Get started
+
+- Click **[C] Sign in** in the menu bar → log in to claude.ai (Google supported)
+- Once signed in, usage updates automatically ✨
 
 ## 🔧 Build (Developers)
 
@@ -195,7 +222,7 @@ ClaudeUsage/
 
 ## 🗺️ Roadmap
 
-- [ ] 🌑 **Dark mode** (currently light mode only)
+- [x] 🌑 **Dark mode** — added in v1.1.0
 - [ ] 🤖 **GPT / OpenAI usage** support (multi-provider)
 - [ ] 🔔 macOS notifications at 70% / 90%
 - [ ] 📊 Usage history graph (local SQLite)

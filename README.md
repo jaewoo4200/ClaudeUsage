@@ -29,6 +29,7 @@ Claude.ai의 사용량(5시간 / 7일 / Claude Design)을 **메뉴바와 떠다�
 - 🎨 **3가지 테마**: 당근 / 토스 / 하이브리드 — 실시간 전환
 - 🌏 **다국어**: 한국어 / English — 즉시 토글
 - 🔄 **60초 자동 새로고침** + 수동 새로고침
+- 🌑 **다크 모드** 자동 대응 (시스템 설정 따라감)
 - 💻 **Universal Binary** (Intel + Apple Silicon)
 
 ## 📸 스크린샷
@@ -105,15 +106,41 @@ Claude.ai의 사용량(5시간 / 7일 / Claude Design)을 **메뉴바와 떠다�
 
 ## 🚀 설치 (사용자)
 
+### 1. 다운로드 & 설치
+
 1. [Releases](https://github.com/jaewoo4200/ClaudeUsage/releases)에서 최신 `ClaudeUsage-x.x.x.dmg` 다운로드
 2. dmg 열기 → `Applications` 폴더로 드래그
-3. 처음 실행 시 macOS 보안 경고가 뜨면:
-   - **Applications 폴더에서 ClaudeUsage 우클릭 → "열기" → "열기"** (1회만)
-   - 또는 터미널에서: `xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app`
-4. 메뉴바 우상단의 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
-5. 로그인 완료 시 자동으로 사용량 표시 ✨
 
-> **참고**: 서명 안 된 앱이라 macOS의 quarantine flag로 인한 경고입니다. 개인 사용 목적의 오픈소스 앱이라 Apple Developer 서명은 진행하지 않았어요.
+### 2. ⚠️ 처음 실행 — "확인되지 않은 개발자" 경고 우회
+
+이 앱은 Apple Developer ID 서명이 없어서 macOS가 처음 실행을 차단합니다 (오픈소스 무료 앱이라 $99/년 비용은 안 들였어요). **악성코드가 아니며 우회는 안전**합니다.
+
+macOS 버전에 따라 다음 중 하나로 진행하세요:
+
+#### macOS Sonoma (14) 이상 — 권장
+
+1. 처음 `ClaudeUsage.app` 더블클릭 → **"손상되어 휴지통으로 이동" 경고 뜨면 "취소"**
+2. **시스템 설정 → 개인정보 보호 및 보안** 열기
+3. 아래로 스크롤 → **"ClaudeUsage이(가) 차단되었습니다"** 메시지 옆 **"그래도 열기"** 클릭
+4. 다시 한번 확인 다이얼로그 → **"열기"** 클릭
+
+#### macOS Ventura (13) — 우클릭
+
+1. Applications 폴더에서 `ClaudeUsage.app` **우클릭(Control+클릭) → "열기"**
+2. 경고 다이얼로그에서 **"열기"** 클릭 (1회만 — 이후부턴 더블클릭으로 OK)
+
+#### 터미널 한 줄 (가장 빠름, 위의 모든 버전에서 동작)
+
+```bash
+xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
+```
+
+위 명령은 macOS의 quarantine flag를 제거합니다 (다운로드한 파일에 자동으로 붙는 표식). 이후 더블클릭만으로 실행됩니다.
+
+### 3. 사용 시작
+
+- 메뉴바 우상단의 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
+- 로그인 완료 시 자동으로 사용량 표시 ✨
 
 ## 🔧 빌드 (개발자)
 
@@ -195,7 +222,7 @@ ClaudeUsage/
 
 ## 🗺️ Roadmap (예정)
 
-- [ ] 🌑 **다크 모드** 지원 (현재는 라이트 모드 고정)
+- [x] 🌑 **다크 모드** 자동 대응 — v1.1.0에서 추가
 - [ ] 🤖 **GPT / OpenAI 사용량** 지원 (multi-provider 확장)
 - [ ] 🔔 70% / 90% 도달 시 macOS 알림
 - [ ] 📊 사용량 히스토리 그래프 (로컬 SQLite)

@@ -1,4 +1,17 @@
 import SwiftUI
+import AppKit
+
+// MARK: - Dark mode helper
+
+extension Color {
+    /// Light/Dark에 따라 자동으로 변하는 동적 Color
+    init(light: Color, dark: Color) {
+        self.init(nsColor: NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            return NSColor(isDark ? dark : light)
+        })
+    }
+}
 
 // 사용량 단계별 색상 키
 enum UsageLevel {
@@ -12,8 +25,8 @@ enum UsageLevel {
 
 // 테마별 디자인 토큰
 struct DesignTokens {
-    let accent: Color           // 메인 컬러 (브랜드)
-    let accentSecondary: Color  // 보조 (그라데이션 등에 사용)
+    let accent: Color           // 메인 컬러 (브랜드) — 라이트/다크 동일
+    let accentSecondary: Color  // 보조 (그라데이션)
     let warn: Color
     let danger: Color
     let ok: Color
@@ -28,9 +41,9 @@ struct DesignTokens {
     let border: Color
     let divider: Color
 
-    let cornerCard: CGFloat      // 카드 코너
-    let cornerOuter: CGFloat     // 외곽 패널 코너
-    let cornerSmall: CGFloat     // 뱃지 등
+    let cornerCard: CGFloat
+    let cornerOuter: CGFloat
+    let cornerSmall: CGFloat
 
     func color(forLevel level: UsageLevel) -> Color {
         switch level {
@@ -51,60 +64,81 @@ struct DesignTokens {
 
 extension ThemeKind {
     var tokens: DesignTokens {
+        // 공통 시스템 색 (자동 다크/라이트 대응)
+        let textPrimary = Color.primary
+        let textSecondary = Color(light: Color(red: 0.286, green: 0.314, blue: 0.337),
+                                   dark: Color(white: 0.78))
+        let textTertiary = Color(light: Color(red: 0.525, green: 0.557, blue: 0.588),
+                                  dark: Color(white: 0.55))
+        let bg = Color(light: .white,
+                        dark: Color(red: 0.118, green: 0.122, blue: 0.137))     // #1E1F22
+        let bgSecondary = Color(light: Color(red: 0.976, green: 0.980, blue: 0.984),
+                                 dark: Color(red: 0.157, green: 0.165, blue: 0.184))  // #282A2F
+        let divider = Color(light: Color(red: 0.945, green: 0.953, blue: 0.961),
+                             dark: Color.white.opacity(0.08))
+        let border = Color(light: Color.black.opacity(0.06),
+                            dark: Color.white.opacity(0.10))
+
         switch self {
         case .daangn:
+            let accent = Color(red: 1.0, green: 0.435, blue: 0.058)         // #FF6F0F
             return DesignTokens(
-                accent: Color(red: 1.0, green: 0.435, blue: 0.058),         // #FF6F0F
+                accent: accent,
                 accentSecondary: Color(red: 1.0, green: 0.561, blue: 0.121),// #FF8F1F
                 warn: Color(red: 1.0, green: 0.584, blue: 0.0),
                 danger: Color(red: 0.945, green: 0.267, blue: 0.322),
                 ok: Color(red: 0.318, green: 0.812, blue: 0.4),
-                textPrimary: Color(red: 0.129, green: 0.129, blue: 0.141),
-                textSecondary: Color(red: 0.286, green: 0.314, blue: 0.337),
-                textTertiary: Color(red: 0.525, green: 0.557, blue: 0.588),
-                bg: Color.white,
-                bgSecondary: Color(red: 0.98, green: 0.98, blue: 0.98),
-                bgRing: Color(red: 1.0, green: 0.91, blue: 0.839),
-                border: Color.black.opacity(0.06),
-                divider: Color(red: 0.945, green: 0.953, blue: 0.961),
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                textTertiary: textTertiary,
+                bg: bg,
+                bgSecondary: bgSecondary,
+                bgRing: Color(light: Color(red: 1.0, green: 0.91, blue: 0.839),
+                               dark: accent.opacity(0.18)),
+                border: border,
+                divider: divider,
                 cornerCard: 16,
                 cornerOuter: 22,
-                cornerSmall: 999  // pill
+                cornerSmall: 999
             )
         case .toss:
+            let accent = Color(red: 0.192, green: 0.510, blue: 0.965)       // #3182F6
             return DesignTokens(
-                accent: Color(red: 0.192, green: 0.510, blue: 0.965),       // #3182F6
+                accent: accent,
                 accentSecondary: Color(red: 0.353, green: 0.659, blue: 1.0),
                 warn: Color(red: 1.0, green: 0.584, blue: 0.0),
                 danger: Color(red: 0.941, green: 0.267, blue: 0.322),
                 ok: Color(red: 0.318, green: 0.812, blue: 0.4),
-                textPrimary: Color(red: 0.098, green: 0.122, blue: 0.157),  // #191F28
-                textSecondary: Color(red: 0.420, green: 0.463, blue: 0.518),// #6B7684
-                textTertiary: Color(red: 0.545, green: 0.584, blue: 0.631), // #8B95A1
-                bg: Color.white,
-                bgSecondary: Color(red: 0.976, green: 0.980, blue: 0.984),  // #F9FAFB
-                bgRing: Color(red: 0.910, green: 0.949, blue: 1.0),         // #E8F2FF
-                border: Color.black.opacity(0.04),
-                divider: Color(red: 0.949, green: 0.957, blue: 0.965),
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                textTertiary: textTertiary,
+                bg: bg,
+                bgSecondary: bgSecondary,
+                bgRing: Color(light: Color(red: 0.910, green: 0.949, blue: 1.0),
+                               dark: accent.opacity(0.18)),
+                border: border,
+                divider: divider,
                 cornerCard: 12,
                 cornerOuter: 16,
                 cornerSmall: 6
             )
         case .hybrid:
+            let accent = Color(red: 0.055, green: 0.647, blue: 0.914)       // #0EA5E9
             return DesignTokens(
-                accent: Color(red: 0.055, green: 0.647, blue: 0.914),       // #0EA5E9
+                accent: accent,
                 accentSecondary: Color(red: 0.024, green: 0.714, blue: 0.831),// #06B6D4
-                warn: Color(red: 0.984, green: 0.451, blue: 0.122),         // #FB923C → #F97316
-                danger: Color(red: 0.957, green: 0.247, blue: 0.369),       // #F43F5E
-                ok: Color(red: 0.204, green: 0.827, blue: 0.600),           // #34D399
-                textPrimary: Color(red: 0.059, green: 0.090, blue: 0.161),  // #0F1729
-                textSecondary: Color(red: 0.118, green: 0.161, blue: 0.231),// #1E293B
-                textTertiary: Color(red: 0.392, green: 0.455, blue: 0.545), // #64748B
-                bg: Color.white,
-                bgSecondary: Color(red: 0.973, green: 0.980, blue: 0.988),  // #F8FAFC
-                bgRing: Color(red: 0.886, green: 0.949, blue: 0.992),
-                border: Color(red: 0.059, green: 0.090, blue: 0.161).opacity(0.06),
-                divider: Color(red: 0.945, green: 0.961, blue: 0.973),
+                warn: Color(red: 0.984, green: 0.451, blue: 0.122),
+                danger: Color(red: 0.957, green: 0.247, blue: 0.369),
+                ok: Color(red: 0.204, green: 0.827, blue: 0.600),
+                textPrimary: textPrimary,
+                textSecondary: textSecondary,
+                textTertiary: textTertiary,
+                bg: bg,
+                bgSecondary: bgSecondary,
+                bgRing: Color(light: Color(red: 0.886, green: 0.949, blue: 0.992),
+                               dark: accent.opacity(0.18)),
+                border: border,
+                divider: divider,
                 cornerCard: 14,
                 cornerOuter: 18,
                 cornerSmall: 6
@@ -112,7 +146,6 @@ extension ThemeKind {
         }
     }
 
-    // 5시간/7일에 어떤 코멘트 보여줄지 (당근 / 하이브리드 톤)
     @MainActor
     func comment(forUtilization u: Double, isWeekly: Bool) -> String {
         let level = UsageLevel.from(u)
@@ -134,20 +167,24 @@ extension ThemeKind {
         }
     }
 
-    // 아이콘 그라데이션 (대시보드 헤더)
     var iconGradient: LinearGradient {
         let t = tokens
         switch self {
-        case .daangn:
-            return LinearGradient(colors: [t.accent, t.accentSecondary], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case .toss:
+        case .daangn, .toss:
             return LinearGradient(colors: [t.accent, t.accentSecondary], startPoint: .topLeading, endPoint: .bottomTrailing)
         case .hybrid:
-            return LinearGradient(colors: [t.textPrimary, t.textSecondary], startPoint: .topLeading, endPoint: .bottomTrailing)
+            // hybrid는 미드나이트 그라데이션 — 다크모드에선 약간 밝게
+            return LinearGradient(
+                colors: [
+                    Color(light: Color(red: 0.059, green: 0.090, blue: 0.161), dark: Color(red: 0.27, green: 0.30, blue: 0.38)),
+                    Color(light: Color(red: 0.118, green: 0.161, blue: 0.231), dark: Color(red: 0.38, green: 0.42, blue: 0.50))
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         }
     }
 
-    // 메뉴바 라벨에 아이콘 보일지 여부
     var menubarShowsIcon: Bool {
         switch self {
         case .toss: return false
@@ -156,7 +193,8 @@ extension ThemeKind {
     }
 }
 
-// 카운트다운 텍스트 (테마 무관)
+// MARK: - Countdown
+
 struct CountdownText: View {
     let resetsAt: Date?
     let isWeekly: Bool

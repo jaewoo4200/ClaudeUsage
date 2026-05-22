@@ -269,7 +269,7 @@ private struct MetricRowHybrid: View {
 
 @ViewBuilder
 private func panelBg(t: DesignTokens) -> some View {
-    // shadow는 NSPanel.hasShadow가 처리 — SwiftUI shadow를 panel boundary 안에서 그리면 한쪽이 잘려서 이상하게 보임
+    // shadow는 NSPanel.hasShadow가 처리. 여기선 background fill + 테두리만.
     RoundedRectangle(cornerRadius: t.cornerOuter, style: .continuous)
         .fill(t.bg)
         .overlay(

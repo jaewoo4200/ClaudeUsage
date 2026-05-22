@@ -16,7 +16,7 @@ struct SettingsView: View {
                     Text("Claude Usage")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(t.textPrimary)
-                    Text("v1.0.0 · \("settings_title".l)")
+                    Text("v1.1.0 · \("settings_title".l)")
                         .font(.system(size: 11))
                         .foregroundStyle(t.textTertiary)
                 }
