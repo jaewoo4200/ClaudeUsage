@@ -29,7 +29,6 @@ A native macOS app that shows your **claude.ai usage** (5-hour / 7-day / Claude 
 - 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
 - 🌏 **Multilingual**: Korean / English — toggle instantly
 - 🔄 **Auto-refresh every 60s** plus manual refresh
-- 🌑 **Dark mode** supported
 - 💻 **Universal Binary** (Intel + Apple Silicon)
 
 ## 📸 Screenshots
@@ -193,6 +192,17 @@ ClaudeUsage/
 | Session expiry | When claude.ai cookies expire, you'll need to sign in again (the app shows a prompt) |
 | Single account | Only one claude.ai account at a time |
 | Code signing | Not signed with Apple Developer ID — first run needs right-click → Open |
+
+## 🗺️ Roadmap
+
+- [ ] 🌑 **Dark mode** (currently light mode only)
+- [ ] 🤖 **GPT / OpenAI usage** support (multi-provider)
+- [ ] 🔔 macOS notifications at 70% / 90%
+- [ ] 📊 Usage history graph (local SQLite)
+- [ ] 👥 Multiple organization accounts
+- [ ] 🖥️ macOS Sonoma+ desktop widget (WidgetKit)
+
+Contributions welcome — feel free to open issues or PRs.
 
 ## 📜 Disclaimer
 

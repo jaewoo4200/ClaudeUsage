@@ -29,7 +29,6 @@ Claude.ai의 사용량(5시간 / 7일 / Claude Design)을 **메뉴바와 떠다�
 - 🎨 **3가지 테마**: 당근 / 토스 / 하이브리드 — 실시간 전환
 - 🌏 **다국어**: 한국어 / English — 즉시 토글
 - 🔄 **60초 자동 새로고침** + 수동 새로고침
-- 🌑 **다크 모드 지원**
 - 💻 **Universal Binary** (Intel + Apple Silicon)
 
 ## 📸 스크린샷
@@ -193,6 +192,17 @@ ClaudeUsage/
 | 세션 만료 | claude.ai 쿠키가 만료되면 재로그인 필요 (앱이 알림 표시) |
 | 다중 계정 | 한 번에 하나의 claude.ai 계정만 지원 |
 | 코드 서명 | Apple Developer 서명 없음 — 첫 실행 시 우클릭→열기 필요 |
+
+## 🗺️ Roadmap (예정)
+
+- [ ] 🌑 **다크 모드** 지원 (현재는 라이트 모드 고정)
+- [ ] 🤖 **GPT / OpenAI 사용량** 지원 (multi-provider 확장)
+- [ ] 🔔 70% / 90% 도달 시 macOS 알림
+- [ ] 📊 사용량 히스토리 그래프 (로컬 SQLite)
+- [ ] 👥 다중 organization 계정 지원
+- [ ] 🖥️ macOS Sonoma+ 데스크탑 위젯 (WidgetKit)
+
+기여 환영합니다! 이슈/PR 부담 없이 올려주세요.
 
 ## 📜 Disclaimer
 
