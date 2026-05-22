@@ -64,21 +64,29 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
     // MARK: - WKNavigationDelegate
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        #if DEBUG
         print("[Login] didFinish: \(webView.url?.absoluteString ?? "nil")")
+        #endif
         tryCapture(reason: "didFinish")
     }
 
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        #if DEBUG
         print("[Login] didCommit: \(webView.url?.absoluteString ?? "nil")")
+        #endif
     }
 
     func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+        #if DEBUG
         print("[Login] redirect: \(webView.url?.absoluteString ?? "nil")")
+        #endif
         tryCapture(reason: "redirect")
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        #if DEBUG
         print("[Login] didFailProvisional: \(error.localizedDescription)")
+        #endif
     }
 
     // MARK: - WKUIDelegate (popup 처리)
@@ -89,7 +97,9 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
                  createWebViewWith configuration: WKWebViewConfiguration,
                  for navigationAction: WKNavigationAction,
                  windowFeatures: WKWindowFeatures) -> WKWebView? {
+        #if DEBUG
         print("[Login] popup requested: \(navigationAction.request.url?.absoluteString ?? "nil")")
+        #endif
         if let url = navigationAction.request.url {
             webView.load(URLRequest(url: url))
         }
@@ -117,7 +127,9 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
             }
             if !claudeCookies.isEmpty {
                 let names = claudeCookies.map { $0.name }.joined(separator: ", ")
+                #if DEBUG
                 print("[Login] [\(reason)] claude.ai cookies: \(names)")
+                #endif
             }
             let hasSession = claudeCookies.contains { self.sessionCookieCandidates.contains($0.name) }
             guard hasSession else { return }
@@ -125,7 +137,9 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
             let cookieString = claudeCookies.map { "\($0.name)=\($0.value)" }.joined(separator: "; ")
             self.capturedAndClosed = true
             self.pollingTimer?.invalidate()
+            #if DEBUG
             print("[Login] ✅ captured \(claudeCookies.count) cookies, has session token")
+            #endif
             DispatchQueue.main.async { self.onCookies(cookieString) }
         }
     }

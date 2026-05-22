@@ -22,10 +22,12 @@ enum UsageService {
         let url = URL(string: "\(baseURL)/api/organizations")!
         let (data, response) = try await request(url: url, cookie: cookie)
         try checkStatus(response: response)
+        #if DEBUG
         if let raw = String(data: data, encoding: .utf8) {
             print("[Usage] /organizations: \(raw.prefix(3000))")
             fflush(stdout)
         }
+        #endif
         let decoder = JSONDecoder()
         if let arr = try? decoder.decode([Organization].self, from: data), let first = arr.first {
             return first
@@ -40,15 +42,19 @@ enum UsageService {
         let url = URL(string: "\(baseURL)/api/organizations/\(orgId)/usage")!
         let (data, response) = try await request(url: url, cookie: cookie)
         try checkStatus(response: response)
+        #if DEBUG
         if let raw = String(data: data, encoding: .utf8) {
             print("[Usage] /usage RAW: \(raw)")
             fflush(stdout)
         }
+        #endif
         do {
             return try JSONDecoder().decode(UsageData.self, from: data)
         } catch {
+            #if DEBUG
             print("[Usage] decode error: \(error)")
             fflush(stdout)
+            #endif
             throw UsageError.decode
         }
     }

@@ -36,7 +36,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         setbuf(stdout, nil)
         setbuf(stderr, nil)
         NSApp.setActivationPolicy(.accessory)
+        #if DEBUG
         print("[App] launched")
+        #endif
         // 위젯 alwaysOnTop 토글 시 panel level 갱신
         NotificationCenter.default.addObserver(
             self,
@@ -53,7 +55,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         panel.collectionBehavior = alwaysOnTop
             ? [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
             : [.canJoinAllSpaces, .stationary]
+        #if DEBUG
         print("[Widget] level changed: alwaysOnTop=\(alwaysOnTop)")
+        #endif
     }
 
     func toggleWidget(viewModel: UsageViewModel) {
@@ -93,7 +97,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func showWidget(viewModel: UsageViewModel) {
+        #if DEBUG
         print("[Widget] showWidget called")
+        #endif
         if widgetWindow == nil {
             let host = NSHostingView(rootView: WidgetView()
                 .environmentObject(viewModel)
@@ -103,7 +109,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             let fitting = host.fittingSize
             let w = max(fitting.width, 240)
             let h = max(fitting.height, 180)
+            #if DEBUG
             print("[Widget] hosting fitting size: \(w) x \(h)")
+            #endif
 
             let panel = FloatingPanel(
                 contentRect: NSRect(x: 0, y: 0, width: w, height: h),
@@ -142,12 +150,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 if origin.y + h > visible.maxY { origin.y = visible.maxY - h - 20 }
             }
             panel.setFrameOrigin(origin)
+            #if DEBUG
             print("[Widget] panel origin: \(origin)")
+            #endif
             widgetWindow = panel
         }
         widgetWindow?.orderFrontRegardless()
         widgetVisible = true
+        #if DEBUG
         print("[Widget] panel ordered front. isVisible=\(widgetWindow?.isVisible ?? false), frame=\(widgetWindow?.frame ?? .zero)")
+        #endif
     }
 
     func hideWidget() {
@@ -178,7 +190,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         loginWindow = win
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        #if DEBUG
         print("[Login] window presented, controller retained")
+        #endif
     }
 }
 

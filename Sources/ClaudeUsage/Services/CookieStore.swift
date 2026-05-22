@@ -15,6 +15,8 @@ enum CookieStore {
         SecItemDelete(query as CFDictionary)
         var attributes = query
         attributes[kSecValueData as String] = data
+        // 이 기기에서만 접근, 첫 unlock 후에만 접근 가능 — iCloud 백업/다른 기기 복원 방지
+        attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         SecItemAdd(attributes as CFDictionary, nil)
     }
 
