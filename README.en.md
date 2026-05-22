@@ -19,6 +19,10 @@
   <img alt="Size" src="https://img.shields.io/badge/dmg-2.0MB-blueviolet">
 </p>
 
+<p align="center">
+  <b>👉 <a href="#-installation-users">Install</a> · <a href="#-read-before-first-launch">First-launch guide</a> · <a href="#-is-it-safe-keychain-explained">Is it safe? (Keychain)</a></b>
+</p>
+
 ---
 
 ## ✨ What is Claude Usage?
@@ -106,14 +110,15 @@ A native macOS app that shows your **claude.ai usage** (5-hour / 7-day / Claude 
 
 ## 🚀 Installation (Users)
 
-### 1. Download & install
-
 1. Download the latest `ClaudeUsage-x.x.x.dmg` from [Releases](https://github.com/jaewoo4200/ClaudeUsage/releases)
 2. Open the dmg → drag to `Applications`
+3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
-### 2. ⚠️ First launch — bypassing "unidentified developer"
+## 🔑 Read before first launch
 
-The app is not signed with an Apple Developer ID, so macOS blocks the first launch (a free open-source app doesn't justify the $99/year fee). **It's not malware and the bypass is safe.**
+This app is **not signed with an Apple Developer ID** (free open-source — didn't pay the $99/year fee). macOS may show two security dialogs as a result. **Both are normal and safe.**
+
+### 1) Bypass "unidentified developer"
 
 Depending on your macOS version:
 
@@ -135,20 +140,40 @@ Depending on your macOS version:
 xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 ```
 
-This removes the macOS quarantine flag (automatically added to downloaded files). After this, the app opens with a normal double-click.
+Removes the macOS quarantine flag (auto-added to downloaded files). After this, normal double-click works.
 
-### 3. Get started
+### 2) Sign in & first fetch
 
 - Click **[C] Sign in** in the menu bar → log in to claude.ai (Google supported)
 - Once signed in, usage updates automatically ✨
 
-### 4. Keychain access dialog (first fetch)
+## 🔒 Is it safe? Keychain explained
 
-After signing in, when ClaudeUsage first accesses the stored cookie, macOS may show a dialog: **"ClaudeUsage wants to access key 'app.claudeusage' in your keychain"**.
+Right after signing in, macOS may show this dialog:
 
-This is **not malicious** — it's macOS's normal first-time approval flow for keychain access by an unsigned app. Cookies are stored in the Keychain for security.
+> **"ClaudeUsage wants to access key 'app.claudeusage' in your keychain."**
+> *"To allow this, enter the 'login' keychain password."*
 
-Click **"Always Allow"** and you won't see it again.
+### What is this?
+
+When you first sign in, ClaudeUsage saves your **claude.ai session cookies in the macOS Keychain** so you don't have to re-login every time. macOS asks for permission when an **unsigned app accesses Keychain for the first time** — this is standard behavior.
+
+### Why is it safe?
+
+- 🔓 **Open source**: [The entire code is on GitHub](https://github.com/jaewoo4200/ClaudeUsage/tree/main/Sources/ClaudeUsage). Keychain code lives in [CookieStore.swift](https://github.com/jaewoo4200/ClaudeUsage/blob/main/Sources/ClaudeUsage/Services/CookieStore.swift) — about 28 lines.
+- 🍪 **Your cookies, your Mac only**: claude.ai cookies are stored only in your local Keychain (no iCloud backup — `AfterFirstUnlockThisDeviceOnly` is set).
+- 🌐 **No external transmission**: Cookies are used **only** for `claude.ai` API calls. No analytics, telemetry, or third-party servers.
+- 🔐 **We don't see your password**: You log in on claude.ai's official page directly — the app never displays a password form itself.
+
+### What should you do?
+
+When the dialog appears:
+
+- ✅ **"Always Allow"** (recommended) — Enter your Mac login password once → never asked again
+- ⚠️ **"Allow"** — One-time only → asks again on next fetch
+- ❌ **"Deny"** — Usage data won't load
+
+> With code signing (Apple Developer ID, $99/year) this dialog wouldn't appear at all. Since this is a free open-source app, the dialog is part of macOS's standard process.
 
 ## 🔧 Build (Developers)
 

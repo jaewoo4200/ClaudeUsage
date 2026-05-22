@@ -43,7 +43,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleIconFile: AppIcon
-        NSHumanReadableCopyright: "© 2026 ClaudeUsage Project · MIT Licensed"
+        NSHumanReadableCopyright: "© 2026 Jaewoo Lee · MIT Licensed"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: false
     entitlements:

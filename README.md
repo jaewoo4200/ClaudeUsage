@@ -19,6 +19,10 @@
   <img alt="Size" src="https://img.shields.io/badge/dmg-2.0MB-blueviolet">
 </p>
 
+<p align="center">
+  <b>👉 <a href="#-설치-사용자">설치하기</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a> · <a href="#-안전한가요-keychain-안내">Keychain이 안전한가요?</a></b>
+</p>
+
 ---
 
 ## ✨ Claude Usage란?
@@ -106,22 +110,23 @@ Claude.ai의 사용량(5시간 / 7일 / Claude Design)을 **메뉴바와 떠다�
 
 ## 🚀 설치 (사용자)
 
-### 1. 다운로드 & 설치
-
 1. [Releases](https://github.com/jaewoo4200/ClaudeUsage/releases)에서 최신 `ClaudeUsage-x.x.x.dmg` 다운로드
 2. dmg 열기 → `Applications` 폴더로 드래그
+3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
 
-### 2. ⚠️ 처음 실행 — "확인되지 않은 개발자" 경고 우회
+## 🔑 처음 실행할 때 읽어주세요
 
-이 앱은 Apple Developer ID 서명이 없어서 macOS가 처음 실행을 차단합니다 (오픈소스 무료 앱이라 $99/년 비용은 안 들였어요). **악성코드가 아니며 우회는 안전**합니다.
+이 앱은 **Apple Developer ID 코드 서명이 없습니다** (개인 오픈소스라 $99/년 비용을 들이지 않았어요). 그래서 macOS가 다음 두 가지 보안 다이얼로그를 띄울 수 있는데, **둘 다 정상이고 안전**합니다.
 
-macOS 버전에 따라 다음 중 하나로 진행하세요:
+### 1) "확인되지 않은 개발자" 경고 우회
+
+macOS 버전에 따라 다음 중 하나로:
 
 #### macOS Sonoma (14) 이상 — 권장
 
-1. 처음 `ClaudeUsage.app` 더블클릭 → **"손상되어 휴지통으로 이동" 경고 뜨면 "취소"**
+1. `ClaudeUsage.app` 더블클릭 → **"손상되어 휴지통으로 이동" 경고 뜨면 "취소"**
 2. **시스템 설정 → 개인정보 보호 및 보안** 열기
-3. 아래로 스크롤 → **"ClaudeUsage이(가) 차단되었습니다"** 메시지 옆 **"그래도 열기"** 클릭
+3. 아래로 스크롤 → **"ClaudeUsage이(가) 차단되었습니다"** 옆 **"그래도 열기"** 클릭
 4. 다시 한번 확인 다이얼로그 → **"열기"** 클릭
 
 #### macOS Ventura (13) — 우클릭
@@ -129,26 +134,46 @@ macOS 버전에 따라 다음 중 하나로 진행하세요:
 1. Applications 폴더에서 `ClaudeUsage.app` **우클릭(Control+클릭) → "열기"**
 2. 경고 다이얼로그에서 **"열기"** 클릭 (1회만 — 이후부턴 더블클릭으로 OK)
 
-#### 터미널 한 줄 (가장 빠름, 위의 모든 버전에서 동작)
+#### 터미널 한 줄 (가장 빠름, 모든 버전 동작)
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 ```
 
-위 명령은 macOS의 quarantine flag를 제거합니다 (다운로드한 파일에 자동으로 붙는 표식). 이후 더블클릭만으로 실행됩니다.
+다운로드 파일에 자동으로 붙는 quarantine flag를 제거합니다. 이후 더블클릭만으로 실행됩니다.
 
-### 3. 사용 시작
+### 2) 로그인 + 첫 사용량 조회
 
-- 메뉴바 우상단의 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
-- 로그인 완료 시 자동으로 사용량 표시 ✨
+- 메뉴바 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
+- 로그인 완료 → 자동으로 사용량 표시 ✨
 
-### 4. Keychain 권한 다이얼로그 (첫 로그인 시)
+## 🔒 안전한가요? Keychain 안내
 
-로그인 후 사용량 fetch 시 macOS가 **"ClaudeUsage이(가) 키체인 항목 'app.claudeusage'에 접근하려 합니다"** 다이얼로그를 띄울 수 있어요.
+로그인 직후 macOS가 다음 다이얼로그를 띄울 수 있어요:
 
-이건 cookie를 안전하게 Keychain에 저장하기 위해 필요한 권한이고, **악성 동작이 아닙니다**. 코드 서명 없는 앱이라 macOS가 첫 접근 시 사용자 확인을 받는 정상 절차예요.
+> **"ClaudeUsage wants to access key 'app.claudeusage' in your keychain."**
+> *"To allow this, enter the 'login' keychain password."*
 
-**"Always Allow"** 를 클릭하시면 이후로는 안 뜹니다.
+### 이게 뭔가요?
+
+처음 로그인하면 ClaudeUsage가 **claude.ai 세션 쿠키를 macOS Keychain에 저장**합니다. 매번 다시 로그인하지 않게요. macOS는 **서명 안 된 앱이 Keychain에 처음 접근할 때** 사용자 확인을 받는 것이 표준 동작입니다.
+
+### 왜 안전한가요?
+
+- 🔓 **오픈소스**: [전체 코드를 GitHub에서 검증](https://github.com/jaewoo4200/ClaudeUsage/tree/main/Sources/ClaudeUsage)할 수 있어요. Keychain 코드는 [CookieStore.swift](https://github.com/jaewoo4200/ClaudeUsage/blob/main/Sources/ClaudeUsage/Services/CookieStore.swift) 28줄짜리예요.
+- 🍪 **본인 쿠키만 본인 Mac에**: claude.ai 로그인 쿠키가 본인 Mac의 Keychain에만 저장됩니다 (iCloud 백업 안 됨 — `AfterFirstUnlockThisDeviceOnly` 적용).
+- 🌐 **외부 전송 없음**: 쿠키는 오직 `claude.ai`로 API 호출할 때만 사용. analytics, telemetry, 외부 서버 전송 없음.
+- 🔐 **claude.ai 비밀번호는 안 봐요**: 로그인은 claude.ai 공식 페이지에서 직접 — 우리는 비밀번호 입력 폼 자체를 표시하지 않아요.
+
+### 어떻게 해야 하나요?
+
+다이얼로그가 뜨면:
+
+- ✅ **"Always Allow"** (권장) — Mac 로그인 비밀번호 입력 → 이후로는 안 뜸
+- ⚠️ **"Allow"** — 한 번만 허용 → 다음 fetch 때 다시 물어봄
+- ❌ **"Deny"** — 사용량 조회 안 됨
+
+> 코드 서명을 한다면(Apple Developer ID, $99/년) 이 다이얼로그 자체가 안 떠요. 무료 오픈소스라 서명을 안 했고, 이게 macOS의 표준 절차입니다.
 
 ## 🔧 빌드 (개발자)
 
