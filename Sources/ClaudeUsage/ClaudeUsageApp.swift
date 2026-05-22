@@ -36,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         setbuf(stdout, nil)
         setbuf(stderr, nil)
         NSApp.setActivationPolicy(.accessory)
+        // 저장된 appearance 즉시 적용
+        AppSettings.shared.applyAppearance()
         #if DEBUG
         print("[App] launched")
         #endif

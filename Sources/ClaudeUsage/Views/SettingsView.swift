@@ -5,6 +5,10 @@ struct SettingsView: View {
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var language: LanguageStore
 
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+    }
+
     var body: some View {
         let _ = language.current  // reactivity hint
         let t = theme.current.tokens
@@ -16,7 +20,7 @@ struct SettingsView: View {
                     Text("Claude Usage")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(t.textPrimary)
-                    Text("v1.1.0 · \("settings_title".l)")
+                    Text("v\(appVersion) · \("settings_title".l)")
                         .font(.system(size: 11))
                         .foregroundStyle(t.textTertiary)
                 }
@@ -40,6 +44,10 @@ struct SettingsView: View {
                         }
                     }
                     .padding(.horizontal, 20)
+
+                    SectionHeader(title: "section_appearance".l)
+                    AppearancePickerRow()
+                        .padding(.horizontal, 20)
 
                     SectionHeader(title: "section_widget".l)
                     WidgetSettingsRow()
@@ -204,6 +212,36 @@ private struct WidgetSettingsRow: View {
         .padding(12)
         .background(t.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+private struct AppearancePickerRow: View {
+    @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var settings: AppSettings
+    var body: some View {
+        let t = theme.current.tokens
+        HStack(spacing: 8) {
+            ForEach(AppearanceMode.allCases) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        settings.appearance = mode
+                    }
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: mode.systemSymbol)
+                            .font(.system(size: 14, weight: .bold))
+                        Text(mode.displayName)
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .foregroundStyle(settings.appearance == mode ? Color.white : t.textPrimary)
+                    .background(settings.appearance == mode ? t.accent : t.bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
 

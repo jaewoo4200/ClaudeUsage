@@ -104,6 +104,12 @@ enum L10n {
         "always_on_top_on_desc": [.ko: "다른 윈도우 위에 항상 떠 있어요", .en: "Stays above other windows"],
         "always_on_top_off_desc": [.ko: "다른 윈도우 아래로 들어갈 수 있어요", .en: "Can go behind other windows"],
 
+        // ==== Appearance (다크/라이트) ====
+        "section_appearance": [.ko: "화면 모드", .en: "Appearance"],
+        "appearance_auto": [.ko: "자동", .en: "Auto"],
+        "appearance_light": [.ko: "라이트", .en: "Light"],
+        "appearance_dark": [.ko: "다크", .en: "Dark"],
+
         // ==== 위젯 헤더 ====
         "claude_short": [.ko: "Claude", .en: "Claude"],
 
