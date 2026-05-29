@@ -136,5 +136,9 @@ enum L10n {
 
         // ==== 로그인 창 ====
         "login_window_title": [.ko: "Claude 로그인", .en: "Sign in to Claude"],
+        "login_reload": [.ko: "새로고침", .en: "Reload"],
+        "login_clear_data": [.ko: "초기화", .en: "Reset"],
+        "loading_status": [.ko: "불러오는 중…", .en: "Loading…"],
+        "login_safari_hint": [.ko: "Safari에서 로그인 후 다시 시도", .en: "Sign in via Safari, then retry"],
     ]
 }

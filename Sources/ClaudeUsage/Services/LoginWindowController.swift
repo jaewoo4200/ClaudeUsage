@@ -6,8 +6,9 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
     private var webView: WKWebView!
     private var capturedAndClosed = false
     private var pollingTimer: Timer?
+    private var statusLabel: NSTextField!
+    private var dataStore: WKWebsiteDataStore!
 
-    // claude.ai 진짜 세션 쿠키 후보 — 인증 토큰 역할만 (방문 잔재인 lastActiveOrg, intercom 등은 제외)
     private let sessionCookieCandidates: Set<String> = [
         "sessionKey",
         "__Secure-next-auth.session-token",
@@ -28,23 +29,58 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
         super.init(window: win)
 
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = WKWebsiteDataStore.default()
-        // JavaScript 자동 실행 등 기본값 OK
+        // 격리된 데이터 store — 다른 앱(Claude Desktop 등)의 캐시/쿠키와 분리
+        // 매번 fresh state로 시작 → 이전 잔재로 인한 redirect loop 방지
+        dataStore = WKWebsiteDataStore.nonPersistent()
+        config.websiteDataStore = dataStore
         config.preferences.javaScriptCanOpenWindowsAutomatically = true
 
-        let wv = WKWebView(frame: win.contentView!.bounds, configuration: config)
+        guard let contentView = win.contentView else { fatalError() }
+
+        // 툴바 영역 (상단)
+        let toolbar = NSView(frame: NSRect(x: 0, y: contentView.bounds.height - 36,
+                                            width: contentView.bounds.width, height: 36))
+        toolbar.autoresizingMask = [.width, .minYMargin]
+        toolbar.wantsLayer = true
+        toolbar.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
+
+        let reloadBtn = NSButton(title: "↻ \(L10n.t("login_reload"))", target: self, action: #selector(reload))
+        reloadBtn.bezelStyle = .rounded
+        reloadBtn.frame = NSRect(x: 12, y: 6, width: 100, height: 24)
+        toolbar.addSubview(reloadBtn)
+
+        let safariBtn = NSButton(title: "Safari ↗", target: self, action: #selector(openInSafari))
+        safariBtn.bezelStyle = .rounded
+        safariBtn.frame = NSRect(x: 120, y: 6, width: 90, height: 24)
+        toolbar.addSubview(safariBtn)
+
+        let clearBtn = NSButton(title: L10n.t("login_clear_data"), target: self, action: #selector(clearAndReload))
+        clearBtn.bezelStyle = .rounded
+        clearBtn.frame = NSRect(x: 218, y: 6, width: 100, height: 24)
+        toolbar.addSubview(clearBtn)
+
+        statusLabel = NSTextField(labelWithString: "")
+        statusLabel.font = NSFont.systemFont(ofSize: 11)
+        statusLabel.textColor = .secondaryLabelColor
+        statusLabel.frame = NSRect(x: 326, y: 9, width: 180, height: 18)
+        statusLabel.autoresizingMask = [.width]
+        toolbar.addSubview(statusLabel)
+
+        contentView.addSubview(toolbar)
+
+        // 웹뷰 영역 (툴바 아래)
+        let wvFrame = NSRect(x: 0, y: 0, width: contentView.bounds.width,
+                              height: contentView.bounds.height - 36)
+        let wv = WKWebView(frame: wvFrame, configuration: config)
         wv.autoresizingMask = [.width, .height]
         wv.navigationDelegate = self
         wv.uiDelegate = self
-        // 진짜 macOS Safari 17 UA — Google이 차단 안 하는 정상 브라우저 UA
         wv.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15"
-        win.contentView?.addSubview(wv)
+        contentView.addSubview(wv)
         webView = wv
 
-        let url = URL(string: "https://claude.ai/login")!
-        wv.load(URLRequest(url: url))
+        loadInitial()
 
-        // 1초마다도 폴링 — navigation 이벤트 안 잡혀도 캡처되도록
         pollingTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
             self?.tryCapture(reason: "poll")
         }
@@ -61,12 +97,50 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
         pollingTimer = nil
     }
 
+    // MARK: - 사용자 액션
+
+    private func loadInitial() {
+        let url = URL(string: "https://claude.ai/login")!
+        webView.load(URLRequest(url: url))
+        updateStatus("loading_status".l)
+    }
+
+    @objc private func reload() {
+        webView.reload()
+        updateStatus("loading_status".l)
+    }
+
+    @objc private func clearAndReload() {
+        // 쿠키 + 캐시 다 비우고 처음부터
+        let types = WKWebsiteDataStore.allWebsiteDataTypes()
+        dataStore.removeData(ofTypes: types, modifiedSince: .distantPast) { [weak self] in
+            DispatchQueue.main.async {
+                self?.loadInitial()
+            }
+        }
+    }
+
+    @objc private func openInSafari() {
+        // 사용자가 Safari에서 직접 로그인 후 다시 우리 창에 와서 retry할 수 있게
+        if let url = URL(string: "https://claude.ai/login") {
+            NSWorkspace.shared.open(url)
+            updateStatus("login_safari_hint".l)
+        }
+    }
+
+    private func updateStatus(_ text: String) {
+        statusLabel.stringValue = text
+    }
+
     // MARK: - WKNavigationDelegate
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         #if DEBUG
         print("[Login] didFinish: \(webView.url?.absoluteString ?? "nil")")
         #endif
+        if let url = webView.url {
+            updateStatus("📍 \(url.host ?? "")")
+        }
         tryCapture(reason: "didFinish")
     }
 
@@ -87,12 +161,11 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
         #if DEBUG
         print("[Login] didFailProvisional: \(error.localizedDescription)")
         #endif
+        updateStatus("⚠️ \(error.localizedDescription)")
     }
 
     // MARK: - WKUIDelegate (popup 처리)
 
-    // Google OAuth 등이 새 창(target=_blank, window.open)을 띄우려고 할 때
-    // 새 창을 만들지 말고 현재 webView에 그대로 로드시킴
     func webView(_ webView: WKWebView,
                  createWebViewWith configuration: WKWebViewConfiguration,
                  for navigationAction: WKNavigationAction,
@@ -111,7 +184,6 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
     private func tryCapture(reason: String) {
         guard !capturedAndClosed else { return }
 
-        // 현재 URL이 로그인/인증 페이지면 캡처하지 않음 (사용자가 폼을 보고 입력하도록)
         if let url = webView.url {
             let path = url.path
             if path.contains("/login") || path.contains("/auth") || path.contains("/oauth") || path.contains("/signin") {
@@ -119,7 +191,7 @@ final class LoginWindowController: NSWindowController, WKNavigationDelegate, WKU
             }
         }
 
-        webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { [weak self] cookies in
+        dataStore.httpCookieStore.getAllCookies { [weak self] cookies in
             guard let self = self else { return }
             let claudeCookies = cookies.filter { c in
                 let d = c.domain

@@ -206,7 +206,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.1.0.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.1.1.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon

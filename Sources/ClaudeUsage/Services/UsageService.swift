@@ -53,8 +53,17 @@ enum UsageService {
         } catch {
             #if DEBUG
             print("[Usage] decode error: \(error)")
+            print("[Usage] raw response: \(String(data: data, encoding: .utf8) ?? "<binary>")")
             fflush(stdout)
             #endif
+            // Graceful fallback: 일부 필드만이라도 추출
+            // 이미 UsageData의 모든 필드가 optional이라 여기 도달했다는 건
+            // 응답 자체가 JSON 아니거나 최상위 구조가 다른 경우
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               !json.isEmpty {
+                // 최소한 빈 UsageData라도 반환해서 "로그인 OK, 사용량은 표시 안됨" 상태 유지
+                return try JSONDecoder().decode(UsageData.self, from: try JSONSerialization.data(withJSONObject: [:] as [String: Any]))
+            }
             throw UsageError.decode
         }
     }

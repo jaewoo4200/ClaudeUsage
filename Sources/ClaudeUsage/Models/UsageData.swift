@@ -34,6 +34,16 @@ struct ExtraUsage: Codable, Equatable {
         case utilization
         case currency
     }
+
+    // 모든 필드를 graceful하게 처리 — 한 필드 null이어도 ExtraUsage 자체는 살림
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.isEnabled = (try? c.decode(Bool.self, forKey: .isEnabled)) ?? false
+        self.monthlyLimit = (try? c.decode(Double.self, forKey: .monthlyLimit)) ?? 0
+        self.usedCredits = (try? c.decode(Double.self, forKey: .usedCredits)) ?? 0
+        self.utilization = (try? c.decode(Double.self, forKey: .utilization)) ?? 0
+        self.currency = try? c.decode(String.self, forKey: .currency)
+    }
 }
 
 struct UsageData: Codable, Equatable {
