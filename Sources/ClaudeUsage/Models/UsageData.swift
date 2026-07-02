@@ -28,6 +28,7 @@ struct UsageWindow: Codable, Equatable {
 private struct UsageWindowCandidate: Equatable {
     let window: UsageWindow
     let confidence: Int
+    let path: [String]
 }
 
 struct ExtraUsage: Codable, Equatable {
@@ -111,13 +112,20 @@ struct UsageData: Codable, Equatable {
     static func decode(from data: Data) throws -> UsageData {
         let decoded = try JSONDecoder().decode(UsageData.self, from: data)
         guard let raw = try? JSONSerialization.jsonObject(with: data) else { return decoded }
-        return decoded.merging(Self.extractAdditionalWindows(from: raw))
+        return decoded.merging(Self.extractAdditionalWindows(from: raw, weeklyReset: decoded.sevenDay?.resetsAt))
     }
 
     private func merging(_ additionalWindows: [String: UsageWindow]) -> UsageData {
         var merged = additionalSevenDayWindows
+        let extractedFable = additionalWindows[CodingKeys.sevenDayFable.rawValue]
+        let normalizedFable = Self.bestFableWindow(
+            decoded: sevenDayFable,
+            extracted: extractedFable,
+            weeklyReset: sevenDay?.resetsAt
+        )
+
         for (key, window) in additionalWindows {
-            guard key != CodingKeys.sevenDayFable.rawValue || sevenDayFable == nil else { continue }
+            guard key != CodingKeys.sevenDayFable.rawValue else { continue }
             merged[key] = window
         }
         return UsageData(
@@ -126,7 +134,7 @@ struct UsageData: Codable, Equatable {
             sevenDaySonnet: sevenDaySonnet,
             sevenDayOpus: sevenDayOpus,
             sevenDayOmelette: sevenDayOmelette,
-            sevenDayFable: sevenDayFable,
+            sevenDayFable: normalizedFable,
             extraUsage: extraUsage,
             additionalSevenDayWindows: merged
         )
@@ -166,20 +174,29 @@ struct UsageData: Codable, Equatable {
         return normalized.hasPrefix("seven_day_") || normalized.contains("fable")
     }
 
-    private static func extractAdditionalWindows(from raw: Any) -> [String: UsageWindow] {
+    private static func extractAdditionalWindows(from raw: Any, weeklyReset: Date?) -> [String: UsageWindow] {
         var bestFable: UsageWindowCandidate?
         walkJSONObject(raw) { path, value in
             guard let object = value as? [String: Any],
                   isFableContext(path: path, object: object),
-                  let candidate = usageWindowCandidate(from: object) else {
+                  let candidate = usageWindowCandidate(
+                    from: object,
+                    path: path,
+                    weeklyReset: weeklyReset,
+                    allowNested: !isBroadUsageContainer(object)
+                  ) else {
                 return
             }
-            if isBetterCandidate(candidate, than: bestFable) {
+            if isBetterCandidate(candidate, than: bestFable, weeklyReset: weeklyReset) {
                 bestFable = candidate
             }
         }
 
-        guard let fable = bestFable?.window else { return [:] }
+        guard let candidate = bestFable else { return [:] }
+        let fable = UsageWindow(
+            utilization: candidate.window.utilization,
+            resetsAt: weeklyReset ?? candidate.window.resetsAt
+        )
         return [CodingKeys.sevenDayFable.rawValue: fable]
     }
 
@@ -198,16 +215,43 @@ struct UsageData: Codable, Equatable {
     }
 
     private static func isFableContext(path: [String], object: [String: Any]) -> Bool {
-        if path.joined(separator: ".").lowercased().contains("fable") {
+        if pathContains(path, "fable") {
             return true
         }
 
+        let identityKeys = [
+            "id",
+            "key",
+            "name",
+            "title",
+            "label",
+            "model",
+            "model_name",
+            "modelName",
+            "display_name",
+            "displayName",
+            "slug",
+            "type"
+        ]
+
+        let normalizedIdentityKeys = Set(identityKeys.map { $0.lowercased() })
+
         return object.contains { key, value in
-            key.lowercased().contains("fable") || stringValue(value)?.lowercased().contains("fable") == true
+            let normalizedKey = key.lowercased()
+            return normalizedKey.contains("fable")
+                || (normalizedIdentityKeys.contains(normalizedKey)
+                    && stringValue(value)?.lowercased().contains("fable") == true)
         }
     }
 
-    private static func usageWindowCandidate(from object: [String: Any]) -> UsageWindowCandidate? {
+    private static func usageWindowCandidate(
+        from object: [String: Any],
+        path: [String],
+        weeklyReset: Date?,
+        allowNested: Bool
+    ) -> UsageWindowCandidate? {
+        guard !isFiveHourPath(path) else { return nil }
+
         let directPercentKeys = [
             "utilization",
             "usage_percentage",
@@ -225,7 +269,8 @@ struct UsageData: Codable, Equatable {
                 candidates.append(
                     UsageWindowCandidate(
                         window: UsageWindow(utilization: normalizedPercent(value), resetsAt: resetDate(from: object)),
-                        confidence: key == "utilization" ? 100 : 90
+                        confidence: key == "utilization" ? 100 : 90,
+                        path: path + [key]
                     )
                 )
             }
@@ -240,83 +285,41 @@ struct UsageData: Codable, Equatable {
                 candidates.append(
                     UsageWindowCandidate(
                         window: UsageWindow(utilization: normalizedPercent(used / limit), resetsAt: resetDate(from: object)),
-                        confidence: 80
+                        confidence: 80,
+                        path: path + [usedKey, limitKey]
                     )
                 )
             }
         }
 
-        if let nested = nestedUsageWindowCandidate(from: object) {
+        if allowNested, let nested = nestedUsageWindowCandidate(from: object, path: path, weeklyReset: weeklyReset) {
             candidates.append(nested)
-        }
-        if let descendant = descendantUsageWindowCandidate(from: object) {
-            candidates.append(descendant)
         }
 
         return candidates.reduce(nil) { best, candidate in
-            isBetterCandidate(candidate, than: best) ? candidate : best
+            isBetterCandidate(candidate, than: best, weeklyReset: weeklyReset) ? candidate : best
         }
     }
 
-    private static func nestedUsageWindowCandidate(from object: [String: Any]) -> UsageWindowCandidate? {
+    private static func nestedUsageWindowCandidate(from object: [String: Any], path: [String], weeklyReset: Date?) -> UsageWindowCandidate? {
         var best: UsageWindowCandidate?
-        for value in object.values {
+        for (key, value) in object {
             guard let child = value as? [String: Any],
-                  let candidate = usageWindowCandidate(from: child) else {
+                  shouldInspectNestedFableCandidate(key: key, child: child, parentPath: path),
+                  let candidate = usageWindowCandidate(
+                    from: child,
+                    path: path + [key],
+                    weeklyReset: weeklyReset,
+                    allowNested: true
+                  ) else {
                 continue
             }
-            let adjusted = UsageWindowCandidate(window: candidate.window, confidence: candidate.confidence - 1)
-            if isBetterCandidate(adjusted, than: best) {
+            let adjusted = UsageWindowCandidate(window: candidate.window, confidence: candidate.confidence - 1, path: candidate.path)
+            if isBetterCandidate(adjusted, than: best, weeklyReset: weeklyReset) {
                 best = adjusted
             }
         }
         return best
-    }
-
-    private static func descendantUsageWindowCandidate(from object: [String: Any]) -> UsageWindowCandidate? {
-        let numbers = descendantNumbers(from: object)
-        let percentKeyHints = [
-            "utilization",
-            "percentage",
-            "percent",
-            "used_percent",
-            "usage_percent",
-            "percent_used"
-        ]
-        if let percent = numbers.first(where: { entry in
-            percentKeyHints.contains { entry.path.lowercased().contains($0) }
-        })?.value {
-            return UsageWindowCandidate(
-                window: UsageWindow(utilization: normalizedPercent(percent), resetsAt: resetDate(from: object)),
-                confidence: 70
-            )
-        }
-
-        let usedKeyHints = ["used", "consumed", "current"]
-        let limitKeyHints = ["limit", "max", "total", "quota"]
-        guard let used = numbers.first(where: { entry in
-            usedKeyHints.contains { entry.path.lowercased().contains($0) }
-        })?.value,
-        let limit = numbers.first(where: { entry in
-            limitKeyHints.contains { entry.path.lowercased().contains($0) }
-        })?.value,
-        limit > 0 else {
-            return nil
-        }
-
-        return UsageWindowCandidate(
-            window: UsageWindow(utilization: normalizedPercent(used / limit), resetsAt: resetDate(from: object)),
-            confidence: 60
-        )
-    }
-
-    private static func descendantNumbers(from object: [String: Any]) -> [(path: String, value: Double)] {
-        var values: [(path: String, value: Double)] = []
-        walkJSONObject(object) { path, value in
-            guard let number = numberValue(value) else { return }
-            values.append((path.joined(separator: "."), number))
-        }
-        return values
     }
 
     private static func resetDate(from object: [String: Any]) -> Date? {
@@ -351,22 +354,115 @@ struct UsageData: Codable, Equatable {
         return value
     }
 
-    private static func isBetterCandidate(_ candidate: UsageWindowCandidate, than current: UsageWindowCandidate?) -> Bool {
+    private static func bestFableWindow(decoded: UsageWindow?, extracted: UsageWindow?, weeklyReset: Date?) -> UsageWindow? {
+        let candidates = [
+            decoded.map {
+                UsageWindowCandidate(
+                    window: $0,
+                    confidence: 110,
+                    path: [CodingKeys.sevenDayFable.rawValue]
+                )
+            },
+            extracted.map {
+                UsageWindowCandidate(
+                    window: $0,
+                    confidence: 100,
+                    path: [CodingKeys.sevenDayFable.rawValue]
+                )
+            }
+        ].compactMap { $0 }
+
+        guard let best = candidates.reduce(nil, { best, candidate in
+            isBetterCandidate(candidate, than: best, weeklyReset: weeklyReset) ? candidate : best
+        }) else {
+            return nil
+        }
+        return UsageWindow(utilization: best.window.utilization, resetsAt: weeklyReset ?? best.window.resetsAt)
+    }
+
+    private static func isBetterCandidate(_ candidate: UsageWindowCandidate, than current: UsageWindowCandidate?, weeklyReset: Date?) -> Bool {
         guard let current else { return true }
+
+        let candidateScore = candidate.confidence + contextScore(for: candidate, weeklyReset: weeklyReset)
+        let currentScore = current.confidence + contextScore(for: current, weeklyReset: weeklyReset)
 
         let candidateUtilization = candidate.window.utilization
         let currentUtilization = current.window.utilization
         if candidateUtilization > 0, currentUtilization == 0 {
-            return true
+            return candidateScore >= currentScore - 80
         }
         if candidateUtilization == 0, currentUtilization > 0 {
-            return false
+            return candidateScore > currentScore + 80
         }
 
-        if candidate.confidence != current.confidence {
-            return candidate.confidence > current.confidence
+        if abs(candidateScore - currentScore) > 10 {
+            return candidateScore > currentScore
+        }
+
+        if candidateScore != currentScore {
+            return candidateScore > currentScore
         }
         return candidateUtilization > currentUtilization
+    }
+
+    private static func contextScore(for candidate: UsageWindowCandidate, weeklyReset: Date?) -> Int {
+        var score = 0
+        if isFiveHourPath(candidate.path) {
+            score -= 1_000
+        }
+        if pathContains(candidate.path, "seven_day") || pathContains(candidate.path, "weekly") || pathContains(candidate.path, "week") {
+            score += 30
+        }
+        if let reset = candidate.window.resetsAt, let weeklyReset {
+            if abs(reset.timeIntervalSince(weeklyReset)) < 60 {
+                score += 60
+            } else {
+                score -= 120
+            }
+        }
+        return score
+    }
+
+    private static func isBroadUsageContainer(_ object: [String: Any]) -> Bool {
+        let keys = Set(object.keys.map { $0.lowercased() })
+        return keys.contains("five_hour")
+            || keys.contains("fivehour")
+            || keys.contains("seven_day")
+            || keys.contains("sevenday")
+    }
+
+    private static func shouldInspectNestedFableCandidate(key: String, child: [String: Any], parentPath: [String]) -> Bool {
+        if key.lowercased().contains("fable") { return true }
+        if pathContains(parentPath, "fable") { return true }
+        if isFableContext(path: parentPath + [key], object: child) { return true }
+
+        let usageKeys = [
+            "usage",
+            "usage_window",
+            "usageWindow",
+            "window",
+            "limit",
+            "limits",
+            "quota",
+            "rate_limit",
+            "rateLimit",
+            "weekly",
+            "week",
+            "seven_day",
+            "sevenDay"
+        ]
+        return usageKeys.contains(key) || usageKeys.map { $0.lowercased() }.contains(key.lowercased())
+    }
+
+    private static func isFiveHourPath(_ path: [String]) -> Bool {
+        let normalized = path.joined(separator: ".").lowercased()
+        return normalized.contains("five_hour")
+            || normalized.contains("fivehour")
+            || normalized.contains("5_hour")
+    }
+
+    private static func pathContains(_ path: [String], _ value: String) -> Bool {
+        path.joined(separator: ".").lowercased().contains(value.lowercased())
     }
 }
 

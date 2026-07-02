@@ -51,7 +51,7 @@ final class UsageViewModel: ObservableObject {
 
     // Claude Fable: new model-specific usage counter from claude.ai.
     var claudeFableUtilization: Double { snapshot?.usage.sevenDayFable?.utilization ?? 0 }
-    var claudeFableResetsAt: Date? { snapshot?.usage.sevenDayFable?.resetsAt }
+    var claudeFableResetsAt: Date? { snapshot?.usage.sevenDayFable?.resetsAt ?? snapshot?.usage.sevenDay?.resetsAt }
     var hasClaudeFable: Bool { snapshot?.usage.sevenDayFable != nil }
 
     var displayMetrics: [UsageDisplayMetric] {
@@ -91,7 +91,7 @@ final class UsageViewModel: ObservableObject {
                     id: "seven_day_fable",
                     title: "claude_fable".l,
                     utilization: claudeFable.utilization,
-                    resetsAt: claudeFable.resetsAt,
+                    resetsAt: claudeFable.resetsAt ?? usage.sevenDay?.resetsAt,
                     isWeekly: true
                 )
             )
