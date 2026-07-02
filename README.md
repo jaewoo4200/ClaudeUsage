@@ -27,7 +27,7 @@
 
 ## ✨ Claude Usage란?
 
-Claude.ai의 사용량(5시간 / 7일 / Claude Design)을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다.
+Claude.ai의 사용량(5시간 / 7일 / Claude Design / Claude Fable)을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다.
 
 - 🪶 **가벼움**: 2MB dmg, RAM 80MB, CPU 0.1% 이하 — 상시 띄워둬도 부담 없음
 - 🎨 **3가지 테마**: 당근 / 토스 / 하이브리드 — 실시간 전환
@@ -206,7 +206,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.1.1.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.1.2.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성

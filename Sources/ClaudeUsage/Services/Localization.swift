@@ -60,6 +60,7 @@ enum L10n {
         "five_hour": [.ko: "5시간", .en: "5-hour"],
         "seven_day": [.ko: "7일", .en: "7-day"],
         "claude_design": [.ko: "Claude Design", .en: "Claude Design"],
+        "claude_fable": [.ko: "Claude Fable", .en: "Claude Fable"],
 
         // ==== 푸터 버튼 ====
         "show_widget": [.ko: "위젯 켜기", .en: "Show widget"],

@@ -9,7 +9,7 @@ BUILD_DIR="$PROJECT_ROOT/build"
 DERIVED="$BUILD_DIR/DerivedData"
 PRODUCTS="$DERIVED/Build/Products/Release"
 APP_NAME="ClaudeUsage"
-DMG_NAME="ClaudeUsage-1.1.1.dmg"
+DMG_NAME="ClaudeUsage-1.1.2.dmg"
 DMG_STAGING="$BUILD_DIR/dmg-staging"
 
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer

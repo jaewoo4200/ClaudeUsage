@@ -27,7 +27,7 @@
 
 ## ✨ What is Claude Usage?
 
-A native macOS app that shows your **claude.ai usage** (5-hour / 7-day / Claude Design) in real time through a menu bar item and a floating widget.
+A native macOS app that shows your **claude.ai usage** (5-hour / 7-day / Claude Design / Claude Fable) in real time through a menu bar item and a floating widget.
 
 - 🪶 **Lightweight**: 2MB dmg, 80MB RAM, < 0.1% CPU — no problem leaving it on all day
 - 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
@@ -206,7 +206,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.1.1.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.1.2.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon

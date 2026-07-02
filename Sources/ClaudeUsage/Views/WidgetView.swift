@@ -13,7 +13,32 @@ struct WidgetView: View {
             case .hybrid: HybridWidget()
             }
         }
+        .background(
+            GeometryReader { proxy in
+                Color.clear.preference(key: WidgetContentSizeKey.self, value: proxy.size)
+            }
+        )
+        .onPreferenceChange(WidgetContentSizeKey.self) { size in
+            guard size.width > 0, size.height > 0 else { return }
+            NotificationCenter.default.post(
+                name: .widgetContentSizeDidChange,
+                object: nil,
+                userInfo: ["size": size]
+            )
+        }
         .id("\(language.current.rawValue)-\(theme.current.rawValue)")  // 트리 재생성 강제
+    }
+}
+
+extension Notification.Name {
+    static let widgetContentSizeDidChange = Notification.Name("widgetContentSizeDidChange")
+}
+
+private struct WidgetContentSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
     }
 }
 
@@ -42,21 +67,11 @@ private struct DaangnWidget: View {
                 }
             }
             if vm.snapshot != nil {
-                MetricRowRing(title: "five_hour".l,
-                              utilization: vm.fiveHourUtilization,
-                              resetsAt: vm.fiveHourResetsAt,
-                              isWeekly: false,
-                              tokens: t)
-                MetricRowRing(title: "seven_day".l,
-                              utilization: vm.sevenDayUtilization,
-                              resetsAt: vm.sevenDayResetsAt,
-                              isWeekly: true,
-                              tokens: t)
-                if vm.hasClaudeDesign {
-                    MetricRowRing(title: "claude_design".l,
-                                  utilization: vm.claudeDesignUtilization,
-                                  resetsAt: vm.claudeDesignResetsAt,
-                                  isWeekly: true,
+                ForEach(vm.displayMetrics) { metric in
+                    MetricRowRing(title: metric.title,
+                                  utilization: metric.utilization,
+                                  resetsAt: metric.resetsAt,
+                                  isWeekly: metric.isWeekly,
                                   tokens: t)
                 }
             } else {
@@ -115,21 +130,11 @@ private struct TossWidget: View {
                 }
             }
             if vm.snapshot != nil {
-                MetricRowBar(title: "five_hour".l,
-                             utilization: vm.fiveHourUtilization,
-                             resetsAt: vm.fiveHourResetsAt,
-                             isWeekly: false,
-                             tokens: t)
-                MetricRowBar(title: "seven_day".l,
-                             utilization: vm.sevenDayUtilization,
-                             resetsAt: vm.sevenDayResetsAt,
-                             isWeekly: true,
-                             tokens: t)
-                if vm.hasClaudeDesign {
-                    MetricRowBar(title: "claude_design".l,
-                                 utilization: vm.claudeDesignUtilization,
-                                 resetsAt: vm.claudeDesignResetsAt,
-                                 isWeekly: true,
+                ForEach(vm.displayMetrics) { metric in
+                    MetricRowBar(title: metric.title,
+                                 utilization: metric.utilization,
+                                 resetsAt: metric.resetsAt,
+                                 isWeekly: metric.isWeekly,
                                  tokens: t)
                 }
             } else {
@@ -198,21 +203,11 @@ private struct HybridWidget: View {
                 }
             }
             if vm.snapshot != nil {
-                MetricRowHybrid(title: "five_hour".l,
-                                utilization: vm.fiveHourUtilization,
-                                resetsAt: vm.fiveHourResetsAt,
-                                isWeekly: false,
-                                tokens: t)
-                MetricRowHybrid(title: "seven_day".l,
-                                utilization: vm.sevenDayUtilization,
-                                resetsAt: vm.sevenDayResetsAt,
-                                isWeekly: true,
-                                tokens: t)
-                if vm.hasClaudeDesign {
-                    MetricRowHybrid(title: "claude_design".l,
-                                    utilization: vm.claudeDesignUtilization,
-                                    resetsAt: vm.claudeDesignResetsAt,
-                                    isWeekly: true,
+                ForEach(vm.displayMetrics) { metric in
+                    MetricRowHybrid(title: metric.title,
+                                    utilization: metric.utilization,
+                                    resetsAt: metric.resetsAt,
+                                    isWeekly: metric.isWeekly,
                                     tokens: t)
                 }
             } else {

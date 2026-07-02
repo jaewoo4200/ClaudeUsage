@@ -32,26 +32,12 @@ private struct LoadedDropdown: View {
         VStack(spacing: 14) {
             HeaderSection()
 
-            ThemedUsageCard(
-                title: "five_hour".l,
-                utilization: vm.fiveHourUtilization,
-                resetsAt: vm.fiveHourResetsAt,
-                isWeekly: false,
-                theme: theme.current
-            )
-            ThemedUsageCard(
-                title: "seven_day".l,
-                utilization: vm.sevenDayUtilization,
-                resetsAt: vm.sevenDayResetsAt,
-                isWeekly: true,
-                theme: theme.current
-            )
-            if vm.hasClaudeDesign {
+            ForEach(vm.displayMetrics) { metric in
                 ThemedUsageCard(
-                    title: "claude_design".l,
-                    utilization: vm.claudeDesignUtilization,
-                    resetsAt: vm.claudeDesignResetsAt,
-                    isWeekly: true,
+                    title: metric.title,
+                    utilization: metric.utilization,
+                    resetsAt: metric.resetsAt,
+                    isWeekly: metric.isWeekly,
                     theme: theme.current
                 )
             }

@@ -48,6 +48,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             name: AppSettings.widgetAlwaysOnTopChanged,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(resizeWidgetToContent),
+            name: .widgetContentSizeDidChange,
+            object: nil
+        )
     }
 
     @objc private func updateWidgetLevel() {
@@ -60,6 +66,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         #if DEBUG
         print("[Widget] level changed: alwaysOnTop=\(alwaysOnTop)")
         #endif
+    }
+
+    @objc private func resizeWidgetToContent(_ notification: Notification) {
+        guard let size = notification.userInfo?["size"] as? CGSize else { return }
+        resizeWidgetWindow(to: size)
+    }
+
+    private func resizeWidgetWindow(to size: CGSize) {
+        guard let panel = widgetWindow else { return }
+        let width = max(ceil(size.width), 240)
+        let height = max(ceil(size.height), 180)
+        guard width.isFinite, height.isFinite else { return }
+
+        var frame = panel.frame
+        guard abs(frame.width - width) >= 0.5 || abs(frame.height - height) >= 0.5 else { return }
+
+        let previousMaxY = frame.maxY
+        frame.size = NSSize(width: width, height: height)
+        frame.origin.y = previousMaxY - height
+
+        if let screen = panel.screen ?? NSScreen.main {
+            let visible = screen.visibleFrame
+            if frame.minX < visible.minX { frame.origin.x = visible.minX + 20 }
+            if frame.maxX > visible.maxX { frame.origin.x = visible.maxX - frame.width - 20 }
+            if frame.minY < visible.minY { frame.origin.y = visible.minY + 20 }
+            if frame.maxY > visible.maxY { frame.origin.y = visible.maxY - frame.height - 20 }
+        }
+
+        panel.setFrame(frame, display: true)
     }
 
     func toggleWidget(viewModel: UsageViewModel) {
@@ -156,6 +191,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             print("[Widget] panel origin: \(origin)")
             #endif
             widgetWindow = panel
+        }
+        if let contentView = widgetWindow?.contentView {
+            resizeWidgetWindow(to: contentView.fittingSize)
         }
         widgetWindow?.orderFrontRegardless()
         widgetVisible = true

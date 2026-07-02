@@ -2,6 +2,14 @@ import Foundation
 import SwiftUI
 import Combine
 
+struct UsageDisplayMetric: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let utilization: Double
+    let resetsAt: Date?
+    let isWeekly: Bool
+}
+
 @MainActor
 final class UsageViewModel: ObservableObject {
     enum State: Equatable {
@@ -40,6 +48,69 @@ final class UsageViewModel: ObservableObject {
     var claudeDesignUtilization: Double { snapshot?.usage.sevenDayOmelette?.utilization ?? 0 }
     var claudeDesignResetsAt: Date? { snapshot?.usage.sevenDayOmelette?.resetsAt }
     var hasClaudeDesign: Bool { snapshot?.usage.sevenDayOmelette != nil }
+
+    // Claude Fable: new model-specific usage counter from claude.ai.
+    var claudeFableUtilization: Double { snapshot?.usage.sevenDayFable?.utilization ?? 0 }
+    var claudeFableResetsAt: Date? { snapshot?.usage.sevenDayFable?.resetsAt }
+    var hasClaudeFable: Bool { snapshot?.usage.sevenDayFable != nil }
+
+    var displayMetrics: [UsageDisplayMetric] {
+        guard let usage = snapshot?.usage else { return [] }
+        var metrics: [UsageDisplayMetric] = [
+            UsageDisplayMetric(
+                id: "five_hour",
+                title: "five_hour".l,
+                utilization: usage.fiveHour?.utilization ?? 0,
+                resetsAt: usage.fiveHour?.resetsAt,
+                isWeekly: false
+            ),
+            UsageDisplayMetric(
+                id: "seven_day",
+                title: "seven_day".l,
+                utilization: usage.sevenDay?.utilization ?? 0,
+                resetsAt: usage.sevenDay?.resetsAt,
+                isWeekly: true
+            )
+        ]
+
+        if let claudeDesign = usage.sevenDayOmelette {
+            metrics.append(
+                UsageDisplayMetric(
+                    id: "seven_day_omelette",
+                    title: "claude_design".l,
+                    utilization: claudeDesign.utilization,
+                    resetsAt: claudeDesign.resetsAt,
+                    isWeekly: true
+                )
+            )
+        }
+
+        if let claudeFable = usage.sevenDayFable {
+            metrics.append(
+                UsageDisplayMetric(
+                    id: "seven_day_fable",
+                    title: "claude_fable".l,
+                    utilization: claudeFable.utilization,
+                    resetsAt: claudeFable.resetsAt,
+                    isWeekly: true
+                )
+            )
+        }
+
+        let dynamicMetrics = usage.additionalSevenDayWindows
+            .sorted { $0.key < $1.key }
+            .map { entry in
+                UsageDisplayMetric(
+                    id: entry.key,
+                    title: dynamicSevenDayTitle(for: entry.key),
+                    utilization: entry.value.utilization,
+                    resetsAt: entry.value.resetsAt,
+                    isWeekly: true
+                )
+            }
+        metrics.append(contentsOf: dynamicMetrics)
+        return metrics
+    }
 
     var plan: Plan { snapshot?.organization.plan ?? .unknown }
     var organizationName: String? { snapshot?.organization.name }
@@ -115,5 +186,19 @@ final class UsageViewModel: ObservableObject {
         case .network(let m): return "network_error_prefix".l + m
         case .decode: return "decode_failed".l
         }
+    }
+
+    private func dynamicSevenDayTitle(for key: String) -> String {
+        let normalized = key.lowercased()
+        if normalized.contains("fable") { return "claude_fable".l }
+        if normalized.contains("omelette") { return "claude_design".l }
+
+        let rawName = normalized
+            .replacingOccurrences(of: "seven_day_", with: "")
+            .replacingOccurrences(of: "_usage", with: "")
+        let words = rawName
+            .split(separator: "_")
+            .map { $0.prefix(1).uppercased() + String($0.dropFirst()) }
+        return words.isEmpty ? "seven_day".l : words.joined(separator: " ")
     }
 }

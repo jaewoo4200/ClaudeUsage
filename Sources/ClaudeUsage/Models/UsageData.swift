@@ -52,15 +52,79 @@ struct UsageData: Codable, Equatable {
     let sevenDaySonnet: UsageWindow?
     let sevenDayOpus: UsageWindow?
     let sevenDayOmelette: UsageWindow?
+    let sevenDayFable: UsageWindow?
     let extraUsage: ExtraUsage?
+    let additionalSevenDayWindows: [String: UsageWindow]
 
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case fiveHour = "five_hour"
         case sevenDay = "seven_day"
         case sevenDaySonnet = "seven_day_sonnet"
         case sevenDayOpus = "seven_day_opus"
         case sevenDayOmelette = "seven_day_omelette"
+        case sevenDayFable = "seven_day_fable"
         case extraUsage = "extra_usage"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.fiveHour = try? c.decodeIfPresent(UsageWindow.self, forKey: .fiveHour)
+        self.sevenDay = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDay)
+        self.sevenDaySonnet = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDaySonnet)
+        self.sevenDayOpus = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDayOpus)
+        self.sevenDayOmelette = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDayOmelette)
+        self.sevenDayFable = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDayFable)
+        self.extraUsage = try? c.decodeIfPresent(ExtraUsage.self, forKey: .extraUsage)
+        self.additionalSevenDayWindows = Self.decodeAdditionalSevenDayWindows(from: decoder)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(fiveHour, forKey: .fiveHour)
+        try c.encodeIfPresent(sevenDay, forKey: .sevenDay)
+        try c.encodeIfPresent(sevenDaySonnet, forKey: .sevenDaySonnet)
+        try c.encodeIfPresent(sevenDayOpus, forKey: .sevenDayOpus)
+        try c.encodeIfPresent(sevenDayOmelette, forKey: .sevenDayOmelette)
+        try c.encodeIfPresent(sevenDayFable, forKey: .sevenDayFable)
+        try c.encodeIfPresent(extraUsage, forKey: .extraUsage)
+
+        var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
+        for (key, window) in additionalSevenDayWindows {
+            guard let codingKey = DynamicCodingKey(stringValue: key) else { continue }
+            try dynamic.encode(window, forKey: codingKey)
+        }
+    }
+
+    private static func decodeAdditionalSevenDayWindows(from decoder: Decoder) -> [String: UsageWindow] {
+        guard let dynamic = try? decoder.container(keyedBy: DynamicCodingKey.self) else { return [:] }
+        let knownKeys = Set(CodingKeys.allCases.map(\.rawValue))
+
+        return dynamic.allKeys.reduce(into: [:]) { result, key in
+            let rawKey = key.stringValue
+            guard !knownKeys.contains(rawKey), shouldDisplayDynamicUsageKey(rawKey) else { return }
+            guard let window = try? dynamic.decode(UsageWindow.self, forKey: key) else { return }
+            result[rawKey] = window
+        }
+    }
+
+    private static func shouldDisplayDynamicUsageKey(_ key: String) -> Bool {
+        let normalized = key.lowercased()
+        return normalized.hasPrefix("seven_day_") || normalized.contains("fable")
+    }
+}
+
+private struct DynamicCodingKey: CodingKey {
+    let stringValue: String
+    let intValue: Int?
+
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = nil
+    }
+
+    init?(intValue: Int) {
+        self.stringValue = "\(intValue)"
+        self.intValue = intValue
     }
 }
 
