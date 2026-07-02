@@ -174,7 +174,7 @@ struct UsageData: Codable, Equatable {
                   let candidate = usageWindowCandidate(from: object) else {
                 return
             }
-            if bestFable == nil || candidate.confidence > bestFable!.confidence {
+            if isBetterCandidate(candidate, than: bestFable) {
                 bestFable = candidate
             }
         }
@@ -218,12 +218,15 @@ struct UsageData: Codable, Equatable {
             "percent",
             "percent_used"
         ]
+        var candidates: [UsageWindowCandidate] = []
 
         for key in directPercentKeys {
             if let value = numberValue(object[key]) {
-                return UsageWindowCandidate(
-                    window: UsageWindow(utilization: normalizedPercent(value), resetsAt: resetDate(from: object)),
-                    confidence: key == "utilization" ? 100 : 90
+                candidates.append(
+                    UsageWindowCandidate(
+                        window: UsageWindow(utilization: normalizedPercent(value), resetsAt: resetDate(from: object)),
+                        confidence: key == "utilization" ? 100 : 90
+                    )
                 )
             }
         }
@@ -234,14 +237,25 @@ struct UsageData: Codable, Equatable {
             guard let used = numberValue(object[usedKey]) else { continue }
             for limitKey in limitKeys {
                 guard let limit = numberValue(object[limitKey]), limit > 0 else { continue }
-                return UsageWindowCandidate(
-                    window: UsageWindow(utilization: normalizedPercent(used / limit), resetsAt: resetDate(from: object)),
-                    confidence: 80
+                candidates.append(
+                    UsageWindowCandidate(
+                        window: UsageWindow(utilization: normalizedPercent(used / limit), resetsAt: resetDate(from: object)),
+                        confidence: 80
+                    )
                 )
             }
         }
 
-        return nestedUsageWindowCandidate(from: object) ?? descendantUsageWindowCandidate(from: object)
+        if let nested = nestedUsageWindowCandidate(from: object) {
+            candidates.append(nested)
+        }
+        if let descendant = descendantUsageWindowCandidate(from: object) {
+            candidates.append(descendant)
+        }
+
+        return candidates.reduce(nil) { best, candidate in
+            isBetterCandidate(candidate, than: best) ? candidate : best
+        }
     }
 
     private static func nestedUsageWindowCandidate(from object: [String: Any]) -> UsageWindowCandidate? {
@@ -251,8 +265,9 @@ struct UsageData: Codable, Equatable {
                   let candidate = usageWindowCandidate(from: child) else {
                 continue
             }
-            if best == nil || candidate.confidence > best!.confidence {
-                best = UsageWindowCandidate(window: candidate.window, confidence: candidate.confidence - 1)
+            let adjusted = UsageWindowCandidate(window: candidate.window, confidence: candidate.confidence - 1)
+            if isBetterCandidate(adjusted, than: best) {
+                best = adjusted
             }
         }
         return best
@@ -334,6 +349,24 @@ struct UsageData: Codable, Equatable {
             return value * 100
         }
         return value
+    }
+
+    private static func isBetterCandidate(_ candidate: UsageWindowCandidate, than current: UsageWindowCandidate?) -> Bool {
+        guard let current else { return true }
+
+        let candidateUtilization = candidate.window.utilization
+        let currentUtilization = current.window.utilization
+        if candidateUtilization > 0, currentUtilization == 0 {
+            return true
+        }
+        if candidateUtilization == 0, currentUtilization > 0 {
+            return false
+        }
+
+        if candidate.confidence != current.confidence {
+            return candidate.confidence > current.confidence
+        }
+        return candidateUtilization > currentUtilization
     }
 }
 
