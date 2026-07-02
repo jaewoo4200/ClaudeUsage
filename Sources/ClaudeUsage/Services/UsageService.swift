@@ -49,7 +49,7 @@ enum UsageService {
         }
         #endif
         do {
-            return try JSONDecoder().decode(UsageData.self, from: data)
+            return try UsageData.decode(from: data)
         } catch {
             #if DEBUG
             print("[Usage] decode error: \(error)")
