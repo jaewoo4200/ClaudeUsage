@@ -219,6 +219,12 @@ struct UsageData: Codable, Equatable {
             return true
         }
 
+        return containsFableIdentity(in: object)
+    }
+
+    private static func containsFableIdentity(in value: Any, depth: Int = 0) -> Bool {
+        guard depth < 5 else { return false }
+
         let identityKeys = [
             "id",
             "key",
@@ -236,12 +242,25 @@ struct UsageData: Codable, Equatable {
 
         let normalizedIdentityKeys = Set(identityKeys.map { $0.lowercased() })
 
-        return object.contains { key, value in
-            let normalizedKey = key.lowercased()
-            return normalizedKey.contains("fable")
-                || (normalizedIdentityKeys.contains(normalizedKey)
-                    && stringValue(value)?.lowercased().contains("fable") == true)
+        if let object = value as? [String: Any] {
+            return object.contains { key, child in
+                let normalizedKey = key.lowercased()
+                if normalizedKey.contains("fable") {
+                    return true
+                }
+                if normalizedIdentityKeys.contains(normalizedKey),
+                   stringValue(child)?.lowercased().contains("fable") == true {
+                    return true
+                }
+                return containsFableIdentity(in: child, depth: depth + 1)
+            }
         }
+
+        if let array = value as? [Any] {
+            return array.contains { containsFableIdentity(in: $0, depth: depth + 1) }
+        }
+
+        return false
     }
 
     private static func usageWindowCandidate(
