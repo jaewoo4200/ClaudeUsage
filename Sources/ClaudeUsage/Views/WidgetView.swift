@@ -67,7 +67,7 @@ private struct DaangnWidget: View {
                 }
             }
             if vm.snapshot != nil {
-                ForEach(vm.displayMetrics) { metric in
+                ForEach(vm.claudeDisplayMetrics) { metric in
                     MetricRowRing(title: metric.title,
                                   utilization: metric.utilization,
                                   resetsAt: metric.resetsAt,
@@ -76,6 +76,39 @@ private struct DaangnWidget: View {
                 }
             } else {
                 EmptyStateInline()
+            }
+
+            Divider().background(t.divider)
+
+            HStack {
+                HStack(spacing: 6) {
+                    OpenAIIconDot(theme: theme.current, size: 20)
+                    Text("openai_short".l)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(t.textPrimary)
+                }
+                Spacer()
+                if vm.openAIState.isLoaded {
+                    TextPlanBadge(
+                        displayName: vm.openAIPlanDisplayName,
+                        compactName: vm.openAIPlanCompactName,
+                        theme: theme.current
+                    )
+                    .scaleEffect(0.85)
+                } else {
+                    Circle().fill(t.textTertiary).frame(width: 6, height: 6)
+                }
+            }
+            if vm.openAIState.isLoaded, !vm.openAIDisplayMetrics.isEmpty {
+                ForEach(vm.openAIDisplayMetrics) { metric in
+                    MetricRowRing(title: metric.title,
+                                  utilization: metric.utilization,
+                                  resetsAt: metric.resetsAt,
+                                  isWeekly: metric.isWeekly,
+                                  tokens: t)
+                }
+            } else {
+                OpenAIEmptyStateInline()
             }
         }
         .padding(18)
@@ -99,6 +132,8 @@ private struct MetricRowRing: View {
                 Text(title)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(tokens.textTertiary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.75)
                 CountdownText(resetsAt: resetsAt, isWeekly: isWeekly)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(tokens.textPrimary)
@@ -116,11 +151,10 @@ private struct TossWidget: View {
 
     var body: some View {
         let t = theme.current.tokens
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 13) {
             HStack {
                 Text("CLAUDE")
                     .font(.system(size: 11, weight: .bold))
-                    .tracking(0.6)
                     .foregroundStyle(t.accent)
                 Spacer()
                 if vm.snapshot != nil {
@@ -130,7 +164,7 @@ private struct TossWidget: View {
                 }
             }
             if vm.snapshot != nil {
-                ForEach(vm.displayMetrics) { metric in
+                ForEach(vm.claudeDisplayMetrics) { metric in
                     MetricRowBar(title: metric.title,
                                  utilization: metric.utilization,
                                  resetsAt: metric.resetsAt,
@@ -139,6 +173,36 @@ private struct TossWidget: View {
                 }
             } else {
                 EmptyStateInline()
+            }
+
+            Divider().background(t.divider)
+
+            HStack {
+                Text("OPENAI")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(t.textPrimary)
+                Spacer()
+                if vm.openAIState.isLoaded {
+                    TextPlanBadge(
+                        displayName: vm.openAIPlanDisplayName,
+                        compactName: vm.openAIPlanCompactName,
+                        theme: theme.current
+                    )
+                    .scaleEffect(0.85)
+                } else {
+                    Circle().fill(t.textTertiary).frame(width: 6, height: 6)
+                }
+            }
+            if vm.openAIState.isLoaded, !vm.openAIDisplayMetrics.isEmpty {
+                ForEach(vm.openAIDisplayMetrics) { metric in
+                    MetricRowBar(title: metric.title,
+                                 utilization: metric.utilization,
+                                 resetsAt: metric.resetsAt,
+                                 isWeekly: metric.isWeekly,
+                                 tokens: t)
+                }
+            } else {
+                OpenAIEmptyStateInline()
             }
         }
         .padding(18)
@@ -174,6 +238,8 @@ private struct MetricRowBar: View {
             Text(title)
                 .font(.system(size: 10))
                 .foregroundStyle(tokens.textSecondary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.75)
             LinearBar(progress: utilization, height: 5, tokens: tokens)
         }
     }
@@ -203,7 +269,7 @@ private struct HybridWidget: View {
                 }
             }
             if vm.snapshot != nil {
-                ForEach(vm.displayMetrics) { metric in
+                ForEach(vm.claudeDisplayMetrics) { metric in
                     MetricRowHybrid(title: metric.title,
                                     utilization: metric.utilization,
                                     resetsAt: metric.resetsAt,
@@ -212,6 +278,39 @@ private struct HybridWidget: View {
                 }
             } else {
                 EmptyStateInline()
+            }
+
+            Divider().background(t.divider)
+
+            HStack {
+                HStack(spacing: 7) {
+                    OpenAIIconDot(theme: theme.current, size: 22)
+                    Text("openai_short".l)
+                        .font(.system(size: 12, weight: .heavy))
+                        .foregroundStyle(t.textPrimary)
+                }
+                Spacer()
+                if vm.openAIState.isLoaded {
+                    TextPlanBadge(
+                        displayName: vm.openAIPlanDisplayName,
+                        compactName: vm.openAIPlanCompactName,
+                        theme: theme.current
+                    )
+                    .scaleEffect(0.9)
+                } else {
+                    Circle().fill(t.textTertiary).frame(width: 6, height: 6)
+                }
+            }
+            if vm.openAIState.isLoaded, !vm.openAIDisplayMetrics.isEmpty {
+                ForEach(vm.openAIDisplayMetrics) { metric in
+                    MetricRowHybrid(title: metric.title,
+                                    utilization: metric.utilization,
+                                    resetsAt: metric.resetsAt,
+                                    isWeekly: metric.isWeekly,
+                                    tokens: t)
+                }
+            } else {
+                OpenAIEmptyStateInline()
             }
         }
         .padding(18)
@@ -239,8 +338,9 @@ private struct MetricRowHybrid: View {
             HStack {
                 Text(title)
                     .font(.system(size: 10, weight: .heavy))
-                    .tracking(0.5)
                     .foregroundStyle(tokens.textTertiary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.75)
                 Spacer()
                 CountdownText(resetsAt: resetsAt, isWeekly: isWeekly)
                     .font(.system(size: 11, weight: .bold))
@@ -293,6 +393,35 @@ private struct EmptyStateInline: View {
                 .padding(.vertical, 12)
         case .loaded:
             EmptyView()
+        }
+    }
+}
+
+private struct OpenAIEmptyStateInline: View {
+    @EnvironmentObject var vm: UsageViewModel
+    @EnvironmentObject var theme: ThemeStore
+
+    var body: some View {
+        let tokens = theme.current.tokens
+        switch vm.openAIState {
+        case .loading:
+            ProgressView().controlSize(.small).padding(.vertical, 12)
+        case .unavailable:
+            Text("openai_not_connected".l)
+                .font(.system(size: 11))
+                .foregroundStyle(tokens.textTertiary)
+                .multilineTextAlignment(.leading)
+                .padding(.vertical, 12)
+        case .error:
+            Text("load_failed".l)
+                .font(.system(size: 11))
+                .foregroundStyle(tokens.warn)
+                .padding(.vertical, 12)
+        case .loaded:
+            Text("usage_unavailable".l)
+                .font(.system(size: 11))
+                .foregroundStyle(tokens.textTertiary)
+                .padding(.vertical, 12)
         }
     }
 }

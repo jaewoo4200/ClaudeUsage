@@ -2,14 +2,14 @@
   <a href="README.md">🇰🇷 한국어</a> · <b>🇺🇸 English</b>
 </div>
 
-# Claude Usage
+# Claude + GPT Usage
 
 <p align="center">
   <img src="docs/screenshots/app-icon.png" width="120" alt="App Icon">
 </p>
 
 <p align="center">
-  <b>See your Claude usage at a glance — macOS menu bar + floating widget</b>
+  <b>See Claude and OpenAI usage at a glance — macOS menu bar + floating widget</b>
 </p>
 
 <p align="center">
@@ -27,8 +27,10 @@
 
 ## ✨ What is Claude Usage?
 
-A native macOS app that shows your **claude.ai usage** (5-hour / 7-day / Claude Design / Claude Fable) in real time through a menu bar item and a floating widget.
+A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time through a menu bar item and a floating widget. It combines Claude's 5-hour, weekly, and model limits with OpenAI's 5-hour, weekly, and server-provided model-specific limits.
 
+- 🤖 **Claude + OpenAI**: Fetches both providers independently and presents them together
+- 🧭 **Future model support**: Displays server-provided limits such as GPT-5.3-Codex-Spark and GPT-5.6 models without hardcoded model names
 - 🪶 **Lightweight**: 2MB dmg, 80MB RAM, < 0.1% CPU — no problem leaving it on all day
 - 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
 - 🌏 **Multilingual**: Korean / English — toggle instantly
@@ -145,7 +147,8 @@ Removes the macOS quarantine flag (auto-added to downloaded files). After this, 
 ### 2) Sign in & first fetch
 
 - Click **[C] Sign in** in the menu bar → log in to claude.ai (Google supported)
-- Once signed in, usage updates automatically ✨
+- OpenAI usage connects automatically when you are signed in with a ChatGPT account through Codex or a ChatGPT app with Codex integration
+- Once connected, each provider updates independently ✨
 
 ## 🔒 Is it safe? Keychain explained
 
@@ -164,6 +167,12 @@ When you first sign in, ClaudeUsage saves your **claude.ai session cookies in th
 - 🍪 **Your cookies, your Mac only**: claude.ai cookies are stored only in your local Keychain (no iCloud backup — `AfterFirstUnlockThisDeviceOnly` is set).
 - 🌐 **No external transmission**: Cookies are used **only** for `claude.ai` API calls. No analytics, telemetry, or third-party servers.
 - 🔐 **We don't see your password**: You log in on claude.ai's official page directly — the app never displays a password form itself.
+
+### How is the OpenAI session handled?
+
+- ClaudeUsage only **reads** the local Codex session at `~/.codex/auth.json`. It never stores the OpenAI token separately or writes it to logs.
+- The session is sent only to `chatgpt.com` when fetching usage. No additional login window or token copy is required.
+- If the file is missing or the session expires, Claude remains available and only the OpenAI section shows a connection prompt.
 
 ### What should you do?
 
@@ -206,7 +215,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.1.6.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.2.0.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon
@@ -228,7 +237,7 @@ ClaudeUsage/
 │   └── build-dmg.sh             # Release Universal + dmg
 ├── Sources/ClaudeUsage/
 │   ├── ClaudeUsageApp.swift     # @main + AppDelegate
-│   ├── Models/                  # UsageData, Plan, ExtraUsage
+│   ├── Models/                  # Claude/OpenAI usage response and display models
 │   ├── Services/                # auth, API, ViewModel, ThemeStore, AppSettings, LanguageStore, Localization
 │   ├── Views/                   # menu bar, widget, settings + design system
 │   └── Resources/               # Info.plist, entitlements, AppIcon.icns
@@ -240,6 +249,7 @@ ClaudeUsage/
 - **SwiftUI** + AppKit (native macOS)
 - **WKWebView** (claude.ai OAuth/Google sign-in → cookie capture)
 - **Keychain Services** (secure session cookie storage)
+- **Local Codex OAuth session** (read-only access to `~/.codex/auth.json`)
 - **URLSession async/await** (usage API calls)
 - **NSPanel** (.statusBar level for the widget window)
 - **xcodegen** (project file managed as code)
@@ -249,14 +259,16 @@ ClaudeUsage/
 | Item | Detail |
 |---|---|
 | Unofficial API | `claude.ai/api/organizations/.../usage` is undocumented. May break if Anthropic changes it |
+| OpenAI usage API | `chatgpt.com/backend-api/wham/usage` is internal and may require updates if OpenAI changes its response |
 | Session expiry | When claude.ai cookies expire, you'll need to sign in again (the app shows a prompt) |
-| Single account | Only one claude.ai account at a time |
+| OpenAI connection | Requires a local Codex session; sign in again through Codex/ChatGPT if it expires |
+| Single account | One account per provider at a time |
 | Code signing | Not signed with Apple Developer ID — first run needs right-click → Open |
 
 ## 🗺️ Roadmap
 
 - [x] 🌑 **Dark mode** — added in v1.1.0
-- [ ] 🤖 **GPT / OpenAI usage** support (multi-provider)
+- [x] 🤖 **GPT / OpenAI usage** — added in v1.2.0
 - [ ] 🔔 macOS notifications at 70% / 90%
 - [ ] 📊 Usage history graph (local SQLite)
 - [ ] 👥 Multiple organization accounts
@@ -266,9 +278,10 @@ Contributions welcome — feel free to open issues or PRs.
 
 ## 📜 Disclaimer
 
-This is an **independent open-source project, not affiliated with Anthropic**.
+This is an **independent open-source project, not affiliated with Anthropic or OpenAI**.
 
 - It calls **undocumented internal APIs** of claude.ai. Behavior may break if these change.
+- OpenAI usage also relies on an **undocumented internal ChatGPT API**.
 - Use is at your own risk. Please comply with claude.ai's [Terms of Service](https://www.anthropic.com/legal/consumer-terms).
 - Only your own claude.ai cookies are stored in your local Keychain. No data is transmitted externally.
 - "Claude" and related design elements are Anthropic's property. This is a fan-made utility app.
@@ -281,7 +294,7 @@ This is an **independent open-source project, not affiliated with Anthropic**.
 
 ## 📄 License
 
-MIT License — fork, modify, and use freely. Just comply with Anthropic's ToS at your own risk.
+MIT License — fork, modify, and use freely. You are responsible for complying with each service's terms.
 
 ---
 

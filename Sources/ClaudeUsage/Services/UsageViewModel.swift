@@ -24,21 +24,43 @@ final class UsageViewModel: ObservableObject {
         }
     }
 
+    enum OpenAIState: Equatable {
+        case unavailable
+        case loading
+        case loaded(OpenAIUsageData)
+        case error(String)
+
+        var isLoaded: Bool {
+            if case .loaded = self { return true }
+            return false
+        }
+    }
+
     @Published var state: State = .loading
+    @Published var openAIState: OpenAIState = .loading
     @Published var lastUpdated: Date?
+    @Published var openAILastUpdated: Date?
     @Published var isRefreshing: Bool = false
 
     private var refreshTask: Task<Void, Never>?
     private var timerTask: Task<Void, Never>?
 
-    init() {
-        bootstrap()
+    init(autoStart: Bool = true) {
+        if autoStart {
+            bootstrap()
+        }
     }
 
     var snapshot: AccountSnapshot? {
         if case .loaded(let s) = state { return s }
         return nil
     }
+
+    var openAIUsage: OpenAIUsageData? {
+        if case .loaded(let usage) = openAIState { return usage }
+        return nil
+    }
+
     var fiveHourUtilization: Double { snapshot?.usage.fiveHour?.utilization ?? 0 }
     var sevenDayUtilization: Double { snapshot?.usage.sevenDay?.utilization ?? 0 }
     var fiveHourResetsAt: Date? { snapshot?.usage.fiveHour?.resetsAt }
@@ -54,7 +76,7 @@ final class UsageViewModel: ObservableObject {
     var claudeFableResetsAt: Date? { snapshot?.usage.sevenDayFable?.resetsAt ?? snapshot?.usage.sevenDay?.resetsAt }
     var hasClaudeFable: Bool { snapshot?.usage.sevenDayFable != nil }
 
-    var displayMetrics: [UsageDisplayMetric] {
+    var claudeDisplayMetrics: [UsageDisplayMetric] {
         guard let usage = snapshot?.usage else { return [] }
         var metrics: [UsageDisplayMetric] = [
             UsageDisplayMetric(
@@ -112,14 +134,52 @@ final class UsageViewModel: ObservableObject {
         return metrics
     }
 
+    var displayMetrics: [UsageDisplayMetric] { claudeDisplayMetrics }
+
+    var openAIDisplayMetrics: [UsageDisplayMetric] {
+        guard let openAIUsage else { return [] }
+        return openAIUsage.counters.map { counter in
+            let windowTitle = counter.kind.isWeekly ? "seven_day".l : "five_hour".l
+            let title: String
+            if let name = counter.name, !name.isEmpty {
+                title = "\(name) · \(windowTitle)"
+            } else {
+                title = windowTitle
+            }
+            return UsageDisplayMetric(
+                id: counter.id,
+                title: title,
+                utilization: counter.window.usedPercent,
+                resetsAt: counter.window.resetDate(),
+                isWeekly: counter.kind.isWeekly
+            )
+        }
+    }
+
+    var openAIPrimaryUtilization: Double {
+        openAIUsage?.rateLimit?.primaryWindow?.usedPercent ?? 0
+    }
+
+    var hasAnyLoadedProvider: Bool {
+        state.isLoaded || openAIState.isLoaded
+    }
+
+    var highestPrimaryUtilization: Double {
+        [state.isLoaded ? fiveHourUtilization : nil,
+         openAIState.isLoaded ? openAIPrimaryUtilization : nil]
+            .compactMap { $0 }
+            .max() ?? 0
+    }
+
+    var openAIPlanDisplayName: String { openAIUsage?.planDisplayName ?? "—" }
+    var openAIPlanCompactName: String { openAIUsage?.planCompactName ?? "—" }
+
     var plan: Plan { snapshot?.organization.plan ?? .unknown }
     var organizationName: String? { snapshot?.organization.name }
 
     func bootstrap() {
-        if CookieStore.load() == nil {
-            state = .needsLogin
-            return
-        }
+        state = CookieStore.load() == nil ? .needsLogin : .loading
+        openAIState = OpenAIUsageService.hasLocalSession() ? .loading : .unavailable
         startAutoRefresh()
     }
 
@@ -131,8 +191,6 @@ final class UsageViewModel: ObservableObject {
 
     func logout() {
         CookieStore.clear()
-        timerTask?.cancel()
-        refreshTask?.cancel()
         state = .needsLogin
         lastUpdated = nil
     }
@@ -159,6 +217,17 @@ final class UsageViewModel: ObservableObject {
     private func fetch() async {
         isRefreshing = true
         defer { isRefreshing = false }
+
+        async let claudeFetch: Void = fetchClaude()
+        async let openAIFetch: Void = fetchOpenAI()
+        _ = await (claudeFetch, openAIFetch)
+    }
+
+    private func fetchClaude() async {
+        guard CookieStore.load() != nil else {
+            state = .needsLogin
+            return
+        }
         do {
             let snapshot = try await UsageService.fetchSnapshot()
             state = .loaded(snapshot)
@@ -179,12 +248,42 @@ final class UsageViewModel: ObservableObject {
         }
     }
 
+    private func fetchOpenAI() async {
+        do {
+            let usage = try await OpenAIUsageService.fetchUsage()
+            openAIState = .loaded(usage)
+            openAILastUpdated = Date()
+        } catch OpenAIUsageError.notConnected {
+            openAIState = .unavailable
+        } catch OpenAIUsageError.authExpired {
+            openAIState = .error("openai_session_expired".l)
+        } catch let error as OpenAIUsageError {
+            if openAIState.isLoaded {
+                return
+            }
+            openAIState = .error(describe(error))
+        } catch {
+            if !openAIState.isLoaded {
+                openAIState = .error(error.localizedDescription)
+            }
+        }
+    }
+
     private func describe(_ e: UsageError) -> String {
         switch e {
         case .noCookie: return "no_cookie".l
         case .authExpired: return "session_expired".l
         case .network(let m): return "network_error_prefix".l + m
         case .decode: return "decode_failed".l
+        }
+    }
+
+    private func describe(_ error: OpenAIUsageError) -> String {
+        switch error {
+        case .notConnected: return "openai_not_connected".l
+        case .authExpired: return "openai_session_expired".l
+        case .network(let message): return "network_error_prefix".l + message
+        case .decode: return "openai_decode_failed".l
         }
     }
 

@@ -54,7 +54,9 @@ enum L10n {
 
         // ==== 드롭다운 헤더 ====
         "claude_usage": [.ko: "Claude 사용량", .en: "Claude Usage"],
+        "openai_usage": [.ko: "OpenAI 사용량", .en: "OpenAI Usage"],
         "logged_in": [.ko: "로그인됨", .en: "Signed in"],
+        "connected_automatically": [.ko: "자동 연결됨", .en: "Connected automatically"],
 
         // ==== 사용량 카드 ====
         "five_hour": [.ko: "5시간", .en: "5-hour"],
@@ -66,6 +68,7 @@ enum L10n {
         "show_widget": [.ko: "위젯 켜기", .en: "Show widget"],
         "hide_widget": [.ko: "위젯 숨기기", .en: "Hide widget"],
         "logout": [.ko: "로그아웃", .en: "Sign out"],
+        "claude_logout": [.ko: "Claude 로그아웃", .en: "Sign out of Claude"],
 
         // ==== 로그인 페이지 ====
         "please_login": [.ko: "Claude에 로그인해 주세요", .en: "Please sign in to Claude"],
@@ -81,7 +84,13 @@ enum L10n {
         "no_cookie": [.ko: "로그인이 필요해요", .en: "Sign-in required"],
         "session_expired": [.ko: "세션이 만료됐어요", .en: "Session expired"],
         "decode_failed": [.ko: "데이터를 읽지 못했어요", .en: "Couldn't read data"],
+        "usage_unavailable": [.ko: "표시할 수 있는 사용량 한도가 없어요", .en: "No usage limits are available"],
         "network_error_prefix": [.ko: "네트워크 오류: ", .en: "Network error: "],
+        "openai_not_connected": [.ko: "ChatGPT 또는 Codex 앱 로그인이 필요해요", .en: "Sign in to the ChatGPT or Codex app"],
+        "openai_connect_desc": [.ko: "앱 로그인 정보를 자동으로 읽어 사용량을 표시해요.", .en: "Usage is read automatically from your app sign-in."],
+        "openai_session_expired": [.ko: "ChatGPT/Codex 세션을 새로고침해 주세요", .en: "Refresh your ChatGPT/Codex session"],
+        "openai_decode_failed": [.ko: "OpenAI 사용량 데이터를 읽지 못했어요", .en: "Couldn't read OpenAI usage data"],
+        "open_usage_page": [.ko: "사용량 페이지 열기", .en: "Open usage page"],
 
         // ==== 설정 창 헤더 ====
         "settings_title": [.ko: "설정", .en: "Settings"],
@@ -113,6 +122,7 @@ enum L10n {
 
         // ==== 위젯 헤더 ====
         "claude_short": [.ko: "Claude", .en: "Claude"],
+        "openai_short": [.ko: "OpenAI", .en: "OpenAI"],
 
         // ==== 코멘트 (당근 톤) ====
         "comment_relaxed": [.ko: "아직 여유로워요 🙂", .en: "Plenty of room 🙂"],

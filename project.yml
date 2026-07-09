@@ -9,8 +9,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.9"
-    MARKETING_VERSION: "1.1.6"
-    CURRENT_PROJECT_VERSION: "8"
+    MARKETING_VERSION: "1.2.0"
+    CURRENT_PROJECT_VERSION: "9"
     PRODUCT_BUNDLE_IDENTIFIER: app.claudeusage
     GENERATE_INFOPLIST_FILE: NO
     INFOPLIST_FILE: Sources/ClaudeUsage/Resources/Info.plist
@@ -51,3 +51,14 @@ targets:
       properties:
         com.apple.security.app-sandbox: false
         com.apple.security.network.client: true
+  ClaudeUsageTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/ClaudeUsageTests
+    dependencies:
+      - target: ClaudeUsage
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.claudeusage.tests
+        GENERATE_INFOPLIST_FILE: YES

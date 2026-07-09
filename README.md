@@ -2,14 +2,14 @@
   <b>🇰🇷 한국어</b> · <a href="README.en.md">🇺🇸 English</a>
 </div>
 
-# Claude Usage
+# Claude + GPT Usage
 
 <p align="center">
   <img src="docs/screenshots/app-icon.png" width="120" alt="App Icon">
 </p>
 
 <p align="center">
-  <b>Claude 사용량을 한눈에 — macOS 메뉴바 + 떠다니는 위젯</b>
+  <b>Claude와 OpenAI 사용량을 한눈에 — macOS 메뉴바 + 떠다니는 위젯</b>
 </p>
 
 <p align="center">
@@ -27,8 +27,10 @@
 
 ## ✨ Claude Usage란?
 
-Claude.ai의 사용량(5시간 / 7일 / Claude Design / Claude Fable)을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다.
+Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다. Claude의 5시간·7일·모델별 한도뿐 아니라 OpenAI의 5시간·주간 한도와 서버가 제공하는 모델별 한도를 함께 표시합니다.
 
+- 🤖 **Claude + OpenAI**: 두 계정 상태를 독립적으로 조회하고 한 화면에 표시
+- 🧭 **새 모델 자동 대응**: GPT-5.3-Codex-Spark, GPT-5.6 계열처럼 서버가 내려주는 모델별 한도를 이름 고정 없이 표시
 - 🪶 **가벼움**: 2MB dmg, RAM 80MB, CPU 0.1% 이하 — 상시 띄워둬도 부담 없음
 - 🎨 **3가지 테마**: 당근 / 토스 / 하이브리드 — 실시간 전환
 - 🌏 **다국어**: 한국어 / English — 즉시 토글
@@ -145,7 +147,8 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 ### 2) 로그인 + 첫 사용량 조회
 
 - 메뉴바 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
-- 로그인 완료 → 자동으로 사용량 표시 ✨
+- OpenAI 사용량은 Codex 또는 Codex가 통합된 ChatGPT 앱에서 ChatGPT 계정으로 로그인되어 있으면 자동 연결
+- 로그인 완료 → 각 서비스의 사용량을 독립적으로 표시 ✨
 
 ## 🔒 안전한가요? Keychain 안내
 
@@ -164,6 +167,12 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 - 🍪 **본인 쿠키만 본인 Mac에**: claude.ai 로그인 쿠키가 본인 Mac의 Keychain에만 저장됩니다 (iCloud 백업 안 됨 — `AfterFirstUnlockThisDeviceOnly` 적용).
 - 🌐 **외부 전송 없음**: 쿠키는 오직 `claude.ai`로 API 호출할 때만 사용. analytics, telemetry, 외부 서버 전송 없음.
 - 🔐 **claude.ai 비밀번호는 안 봐요**: 로그인은 claude.ai 공식 페이지에서 직접 — 우리는 비밀번호 입력 폼 자체를 표시하지 않아요.
+
+### OpenAI 로그인은 어떻게 처리하나요?
+
+- Codex가 로컬에 저장한 `~/.codex/auth.json` 세션을 **읽기만** 합니다. ClaudeUsage가 OpenAI 토큰을 별도로 저장하거나 로그에 출력하지 않습니다.
+- 세션은 OpenAI 사용량을 가져올 때만 `chatgpt.com`으로 전송됩니다. 추가 로그인 창이나 토큰 복사는 필요하지 않습니다.
+- 파일이 없거나 세션이 만료되면 Claude 사용량은 그대로 유지되고, OpenAI 영역에만 연결 안내가 표시됩니다.
 
 ### 어떻게 해야 하나요?
 
@@ -206,7 +215,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.1.6.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.2.0.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성
@@ -228,7 +237,7 @@ ClaudeUsage/
 │   └── build-dmg.sh             # Release Universal + dmg
 ├── Sources/ClaudeUsage/
 │   ├── ClaudeUsageApp.swift     # @main + AppDelegate
-│   ├── Models/                  # UsageData, Plan, ExtraUsage
+│   ├── Models/                  # Claude/OpenAI 사용량 응답과 표시 모델
 │   ├── Services/                # 인증, API, ViewModel, ThemeStore, AppSettings, LanguageStore, Localization
 │   ├── Views/                   # 메뉴바, 위젯, 설정 + 디자인 시스템
 │   └── Resources/               # Info.plist, entitlements, AppIcon.icns
@@ -240,6 +249,7 @@ ClaudeUsage/
 - **SwiftUI** + AppKit (네이티브 macOS 앱)
 - **WKWebView** (claude.ai OAuth/Google 로그인 → 쿠키 캡처)
 - **Keychain Services** (세션 쿠키 안전 저장)
+- **Codex 로컬 OAuth 세션** (`~/.codex/auth.json` 읽기 전용)
 - **URLSession async/await** (사용량 API 호출)
 - **NSPanel** (.statusBar level 위젯 윈도우)
 - **xcodegen** (프로젝트 파일 코드 관리)
@@ -249,14 +259,16 @@ ClaudeUsage/
 | 항목 | 내용 |
 |---|---|
 | 비공식 API | `claude.ai/api/organizations/.../usage` 는 비공개 endpoint. Anthropic이 변경하면 깨질 수 있음 |
+| OpenAI 사용량 API | `chatgpt.com/backend-api/wham/usage` 는 내부 endpoint. OpenAI가 응답 형식을 변경하면 업데이트가 필요할 수 있음 |
 | 세션 만료 | claude.ai 쿠키가 만료되면 재로그인 필요 (앱이 알림 표시) |
-| 다중 계정 | 한 번에 하나의 claude.ai 계정만 지원 |
+| OpenAI 연결 | 로컬 Codex 세션이 필요하며, 만료 시 Codex/ChatGPT에서 다시 로그인해야 함 |
+| 다중 계정 | 서비스별로 한 번에 하나의 계정만 지원 |
 | 코드 서명 | Apple Developer 서명 없음 — 첫 실행 시 우클릭→열기 필요 |
 
 ## 🗺️ Roadmap (예정)
 
 - [x] 🌑 **다크 모드** 자동 대응 — v1.1.0에서 추가
-- [ ] 🤖 **GPT / OpenAI 사용량** 지원 (multi-provider 확장)
+- [x] 🤖 **GPT / OpenAI 사용량** 지원 — v1.2.0에서 추가
 - [ ] 🔔 70% / 90% 도달 시 macOS 알림
 - [ ] 📊 사용량 히스토리 그래프 (로컬 SQLite)
 - [ ] 👥 다중 organization 계정 지원
@@ -266,9 +278,10 @@ ClaudeUsage/
 
 ## 📜 Disclaimer
 
-이 프로젝트는 **Anthropic과 무관한 개인 오픈소스 프로젝트**입니다.
+이 프로젝트는 **Anthropic 및 OpenAI와 무관한 개인 오픈소스 프로젝트**입니다.
 
 - claude.ai의 **공식 문서화되지 않은 내부 API**를 호출합니다. API 변경 시 동작이 깨질 수 있습니다.
+- OpenAI 사용량 조회에도 ChatGPT의 **공식 문서화되지 않은 내부 API**를 사용합니다.
 - 사용은 본인 책임이며, claude.ai의 [이용 약관](https://www.anthropic.com/legal/consumer-terms)을 준수해주세요.
 - 본인의 claude.ai 계정 쿠키만 본인 Mac의 Keychain에 저장합니다. 외부로 데이터를 전송하지 않습니다.
 - "Claude" 명칭과 관련 디자인 요소는 Anthropic의 자산입니다. 이 앱은 fan-made/utility 앱으로 만들어졌습니다.
@@ -281,7 +294,7 @@ ClaudeUsage/
 
 ## 📄 License
 
-MIT License — 자유롭게 fork/수정/사용 가능. 다만 Anthropic의 ToS는 본인 책임으로 준수.
+MIT License — 자유롭게 fork/수정/사용 가능. 다만 각 서비스의 이용 약관은 본인 책임으로 준수.
 
 ---
 

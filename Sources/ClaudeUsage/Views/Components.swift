@@ -64,10 +64,24 @@ struct PlanBadge: View {
     let theme: ThemeKind
 
     var body: some View {
+        TextPlanBadge(
+            displayName: plan.displayName,
+            compactName: plan.compactName,
+            theme: theme
+        )
+    }
+}
+
+struct TextPlanBadge: View {
+    let displayName: String
+    let compactName: String
+    let theme: ThemeKind
+
+    var body: some View {
         let t = theme.tokens
         switch theme {
         case .daangn:
-            Text(plan.displayName)
+            Text(displayName)
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(t.accent)
                 .padding(.horizontal, 10)
@@ -75,7 +89,7 @@ struct PlanBadge: View {
                 .background(t.bgRing)
                 .clipShape(Capsule())
         case .toss:
-            Text(plan.displayName)
+            Text(displayName)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(t.accent)
                 .padding(.horizontal, 8)
@@ -83,7 +97,7 @@ struct PlanBadge: View {
                 .background(t.bgRing)
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         case .hybrid:
-            Text(plan.compactName)
+            Text(compactName)
                 .font(.system(size: 10, weight: .heavy))
                 .foregroundStyle(.white)
                 .tracking(0.5)
@@ -109,6 +123,23 @@ struct AppIconDot: View {
             Text("C")
                 .font(.system(size: size * 0.55, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white)
+        }
+    }
+}
+
+struct OpenAIIconDot: View {
+    let theme: ThemeKind
+    let size: CGFloat
+
+    var body: some View {
+        let tokens = theme.tokens
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+                .fill(tokens.textPrimary)
+                .frame(width: size, height: size)
+            Image(systemName: "sparkles")
+                .font(.system(size: size * 0.48, weight: .bold))
+                .foregroundStyle(tokens.bg)
         }
     }
 }

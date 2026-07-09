@@ -22,7 +22,7 @@ struct MenuBarLabel: View {
     private var iconImage: some View {
         // 사용량 70%+ 면 경고 모양으로, 90%+ 면 위험 모양으로 강조
         // (macOS 메뉴바는 자동으로 단색 렌더링하므로 색이 아닌 모양으로 단계 표시)
-        let level = (vm.state.isLoaded ? UsageLevel.from(vm.fiveHourUtilization) : .ok)
+        let level = vm.hasAnyLoadedProvider ? UsageLevel.from(vm.highestPrimaryUtilization) : .ok
         switch level {
         case .ok:
             switch theme.current {
@@ -46,19 +46,25 @@ struct MenuBarLabel: View {
 
     private var labelText: String {
         let _ = language.current  // language 변경 시 view invalidate를 위해 참조
-        switch vm.state {
-        case .needsLogin: return "login".l
-        case .loading: return "—"
-        case .error: return "!"
-        case .loaded:
-            let pct = Int(round(vm.fiveHourUtilization))
-            return "\(pct)%"
+        var parts: [String] = []
+        if vm.state.isLoaded {
+            parts.append("C\(Int(round(vm.fiveHourUtilization)))%")
         }
+        if vm.openAIState.isLoaded {
+            parts.append("G\(Int(round(vm.openAIPrimaryUtilization)))%")
+        }
+        if !parts.isEmpty { return parts.joined(separator: " ") }
+
+        if case .loading = vm.state { return "—" }
+        if case .loading = vm.openAIState { return "—" }
+        if case .error = vm.state { return "!" }
+        if case .error = vm.openAIState { return "!" }
+        return "login".l
     }
 
     private var textWeight: Font.Weight {
-        if case .loaded = vm.state {
-            switch UsageLevel.from(vm.fiveHourUtilization) {
+        if vm.hasAnyLoadedProvider {
+            switch UsageLevel.from(vm.highestPrimaryUtilization) {
             case .ok: return .semibold
             case .warn: return .bold
             case .danger: return .heavy
@@ -69,8 +75,8 @@ struct MenuBarLabel: View {
 
     // 메뉴바는 macOS가 dark/light mode에 따라 자동 컬러 적용하므로 .primary 사용
     private var textColor: Color {
-        if case .loaded = vm.state {
-            switch UsageLevel.from(vm.fiveHourUtilization) {
+        if vm.hasAnyLoadedProvider {
+            switch UsageLevel.from(vm.highestPrimaryUtilization) {
             case .ok: return .primary
             case .warn: return .orange
             case .danger: return .red

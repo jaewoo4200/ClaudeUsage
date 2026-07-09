@@ -17,7 +17,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 AppIconDot(theme: theme.current, size: 40)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Claude Usage")
+                    Text("Claude + GPT Usage")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(t.textPrimary)
                     Text("v\(appVersion) · \("settings_title".l)")
@@ -58,15 +58,18 @@ struct SettingsView: View {
                         .padding(.horizontal, 20)
 
                     SectionHeader(title: "section_account".l)
-                    AccountRow()
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 20)
+                    VStack(spacing: 8) {
+                        ClaudeAccountRow()
+                        OpenAIAccountRow()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
                 }
                 .padding(.top, 4)
             }
             .scrollIndicators(.visible)  // 스크롤바 항상 표시
         }
-        .frame(width: 420, height: 520)
+        .frame(width: 420, height: 600)
         .id("\(language.current.rawValue)-\(theme.current.rawValue)")  // 트리 재생성
         .background(t.bg)
     }
@@ -278,7 +281,7 @@ private struct LanguagePickerRow: View {
     }
 }
 
-private struct AccountRow: View {
+private struct ClaudeAccountRow: View {
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
     var body: some View {
@@ -291,31 +294,97 @@ private struct AccountRow: View {
                     .foregroundStyle(t.accent)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(vm.organizationName ?? "—")
+                Text(vm.organizationName ?? "Claude")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(t.textPrimary)
                     .lineLimit(1)
-                HStack(spacing: 6) {
+                if vm.state.isLoaded {
                     PlanBadge(plan: vm.plan, theme: theme.current)
                         .scaleEffect(0.85)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text("login_required".l)
+                        .font(.system(size: 11))
+                        .foregroundStyle(t.textTertiary)
                 }
             }
             Spacer()
-            Button {
-                vm.logout()
-            } label: {
-                Text("로그아웃")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(t.textTertiary)
-                    .padding(.horizontal, 10).padding(.vertical, 6)
-                    .background(t.divider)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            if vm.state.isLoaded {
+                Button {
+                    vm.logout()
+                } label: {
+                    Text("logout".l)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(t.textTertiary)
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(t.divider)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(12)
         .background(t.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+private struct OpenAIAccountRow: View {
+    @EnvironmentObject var vm: UsageViewModel
+    @EnvironmentObject var theme: ThemeStore
+
+    var body: some View {
+        let tokens = theme.current.tokens
+        HStack(spacing: 12) {
+            OpenAIIconDot(theme: theme.current, size: 36)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("ChatGPT / Codex")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(tokens.textPrimary)
+                    .lineLimit(1)
+                if vm.openAIState.isLoaded {
+                    TextPlanBadge(
+                        displayName: vm.openAIPlanDisplayName,
+                        compactName: vm.openAIPlanCompactName,
+                        theme: theme.current
+                    )
+                    .scaleEffect(0.85)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text(openAIStatus)
+                        .font(.system(size: 11))
+                        .foregroundStyle(tokens.textTertiary)
+                        .lineLimit(2)
+                }
+            }
+            Spacer()
+            Button(action: openUsagePage) {
+                Image(systemName: "arrow.up.right.square")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(tokens.textTertiary)
+                    .padding(7)
+                    .background(tokens.divider)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .help("open_usage_page".l)
+        }
+        .padding(12)
+        .background(tokens.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private var openAIStatus: String {
+        switch vm.openAIState {
+        case .loaded: return "connected_automatically".l
+        case .loading: return "loading".l
+        case .unavailable: return "openai_not_connected".l
+        case .error(let message): return message
+        }
+    }
+
+    private func openUsagePage() {
+        guard let url = URL(string: "https://chatgpt.com/codex/cloud/settings/analytics#usage") else { return }
+        NSWorkspace.shared.open(url)
     }
 }
