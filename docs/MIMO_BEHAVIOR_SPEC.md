@@ -1,14 +1,14 @@
 # Mimo behavior and reset-credit advisor
 
-Status: core mood, sensitivity, animation modes, laptop pose, local trends, and reset-credit readout implemented in v1.4.0; advanced actions and reset recommendations remain proposed
+Status: core mood, sensitivity, animation modes, local trends, and reset-credit readout implemented; nine selectable companions added in v1.5.0; advanced reset recommendations remain proposed
 
-This document turns Mimo from a moving badge into a fixed-position character whose eyes, arms, legs, expression, props, and speech react to current quota pressure and opt-in local trends.
+This document records the original Mimo behavior model. Starting with v1.5.0, Mimo is one of nine characters sharing the same state engine; see [COMPANION_CATALOG.md](COMPANION_CATALOG.md) for the complete character-specific behavior map.
 
 ## Product principles
 
 - The outer quota ring, character center, and widget footprint never move.
 - Only eyes, eyelids, mouth, arms, legs, and small in-frame effects animate.
-- Reset credits are recommendation-only. Mimo never consumes one automatically.
+- Reset credits are recommendation-only. The selected companion never consumes one automatically.
 - Trend-only behavior runs only when local history is enabled.
 - Important advice is deterministic and explainable from visible usage data.
 - Animations pause when the widget is hidden and respect Reduce Motion.
@@ -39,7 +39,7 @@ Immediate pressure is the highest visible percentage across Claude and Codex 5-h
 | Balanced | 50% or 14%p/hour | 75% or 28%p/hour | 90% or 45%p/hour |
 | Relaxed | 60% or 18%p/hour | 82% or 34%p/hour | 94% or 52%p/hour |
 
-Balanced is the default. A detected drop of at least 15 percentage points followed by pressure below 60% selects Refreshed for up to 30 minutes. Focused shows the laptop prop. Sleepy, Tired, and Refreshed use their dedicated face, limb pose, and action mark.
+Balanced is the default. A detected drop of at least 15 percentage points followed by pressure below 60% selects Refreshed for up to 30 minutes. Mimo opens its laptop while Focused; every other companion uses the character-specific prop documented in the companion catalog. Sleepy, Tired, and Refreshed use dedicated faces, poses, and action marks.
 
 ## Reset-credit data model
 

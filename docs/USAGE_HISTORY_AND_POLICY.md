@@ -16,16 +16,16 @@ The file contains only timestamps, quota percentages, model-limit identifiers an
 
 - Sampling interval: five minutes, plus immediate samples when a quota reset is detected
 - Retention: 14 days
-- Deletion: Settings > Mimo > Clear usage history
+- Deletion: Settings > Companion > Clear usage history
 - Reinstallation: deleting the `.app` bundle does not remove `usage-history.json`; the Settings action is required to delete ClaudeUsage's retained samples
 - Network: history data is never uploaded by ClaudeUsage
 - Viewer: the local chart window can filter 1 hour, 24 hours, 7 days, or 14 days and All, Claude, or Codex
 
 Clearing ClaudeUsage history does not delete Claude Code's `~/.claude/projects` files or any Codex/ChatGPT account data. Daily token totals are source-backed and may therefore reappear on the next refresh even after the local 14-day trend file is cleared.
 
-## Peak pressure and Mimo thresholds
+## Peak pressure and companion thresholds
 
-Mimo uses the highest currently visible quota percentage as its immediate pressure level. It is not a sum or average:
+The selected companion uses the highest currently visible quota percentage as its immediate pressure level. It is not a sum or average:
 
 ```text
 pressure = max(
@@ -40,7 +40,7 @@ pressure = max(
 
 An unavailable value is ignored. A model limit hidden by the user, such as the optional Spark counters, is also excluded. Beginning with v1.4.0, the history file preserves individual model-limit identifiers, labels, and percentages instead of retaining only the model maximum. Older samples remain readable and appear as a generic model-maximum series.
 
-When history is enabled, Mimo also uses the last hour of pressure and token deltas. Pressure pace is calculated from locally sampled pressure points, so it has gaps whenever ClaudeUsage was not running.
+When history is enabled, the selected companion also uses the last hour of pressure and token deltas. Pressure pace is calculated from locally sampled pressure points, so it has gaps whenever ClaudeUsage was not running.
 
 | Sensitivity | Focused | Sleepy | Tired |
 |---|---:|---:|---:|
@@ -52,7 +52,7 @@ The highest matching state wins. A quota drop of at least 15 percentage points f
 
 Animation modes affect presentation only, not the state calculation. Auto updates target poses at an adaptive cadence and transitions for only 0.16 to 0.25 seconds depending on state. Lively updates every 0.25 seconds with a 0.16-second transition, while Still performs no continuous animation. Floating-widget animation is paused when that widget is hidden, and macOS Reduce Motion is always respected.
 
-OpenAI daily token buckets may not contain the current calendar day while a Codex task is still active. In that case Mimo continues to react to the live quota-percentage trend and adds token deltas later when the official bucket becomes available.
+OpenAI daily token buckets may not contain the current calendar day while a Codex task is still active. In that case the companion continues to react to the live quota-percentage trend and adds token deltas later when the official bucket becomes available.
 
 ## Token data sources and limits
 
@@ -71,7 +71,7 @@ ClaudeUsage reads only the structured timestamp and usage-number fields needed f
 | Codex quota percentages and reset times | Codex app-server `account/rateLimits/read` | Server-backed account snapshot returned through a local RPC process |
 | Codex reset-credit count and expiry | Optional `rateLimitResetCredits` in newer `account/rateLimits/read` responses | Not a transcript or local-session scan; absent on unsupported builds/accounts |
 
-Newer Codex app-server builds may also expose `account/rateLimitResetCredit/consume`. ClaudeUsage's proposed Mimo advisor is read-only: it may explain availability and recommend when a reset is useful, but it must never consume a reset credit automatically. Any future consume action must identify the selected credit and require an explicit user confirmation.
+Newer Codex app-server builds may also expose `account/rateLimitResetCredit/consume`. ClaudeUsage's proposed companion advisor is read-only: it may explain availability and recommend when a reset is useful, but it must never consume a reset credit automatically. Any future consume action must identify the selected credit and require an explicit user confirmation.
 
 ## Provider access assessment
 
@@ -102,4 +102,4 @@ Anthropic documents interactive Claude Code commands such as `/usage` and `/cost
 
 ## Release recommendation
 
-The Mimo UI and opt-in local history can be shipped independently of cloud scraping. Before a public release that keeps automatic Claude quota fetching, obtain written clarification from Anthropic or replace that source with a documented interface. Re-check both providers' terms whenever the data source or distribution model changes.
+The companion UI and opt-in local history can be shipped independently of cloud scraping. Before a public release that keeps automatic Claude quota fetching, obtain written clarification from Anthropic or replace that source with a documented interface. Re-check both providers' terms whenever the data source or distribution model changes.

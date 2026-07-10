@@ -16,11 +16,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-3.8MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.1MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg">v1.4.0 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg">v1.5.0 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
 </p>
 
 ---
@@ -32,7 +32,7 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
 - 🤖 **Claude + Codex**: 두 계정 상태를 독립적으로 조회하고 한 화면에 표시
 - 🪟 **4가지 위젯 배치**: 세로 / 가로 / 화살표 전환 / Claude·Codex 독립 위젯 중 선택
 - 🧭 **새 모델 자동 대응**: 서버가 내려주는 모델별 한도를 이름 고정 없이 표시하며 GPT-5.3-Codex-Spark는 기본 숨김·선택 표시
-- 🧡 **조절 가능한 Mimo 펫**: 반응 민감도와 자동·활발·정지 애니메이션을 선택하고 현재 한도와 최근 속도에 맞는 표정 확인
+- 🧡 **9종 선택형 펫**: Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, Pico 중 하나를 고르고 반응 민감도와 애니메이션 조절
 - 📈 **로컬 사용량 그래프**: 5분 간격 사용량을 이 Mac에만 14일 보관하고 기간·서비스별 추이를 별도 창에서 분석; 기본값은 꺼짐
 - 🪶 **적응형 네이티브 애니메이션**: 편안할 때는 저주기로 움직이고 위젯을 숨기면 렌더링을 멈춰 상시 CPU 사용을 줄임
 - 🎨 **3가지 테마**: 당근 / 토스 / 하이브리드 — 실시간 전환
@@ -111,7 +111,7 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
   </tr>
 </table>
 
-> 위젯 배치 / 분리할 서비스 / Spark 표시 / 테마 / Mimo / 로컬 기록 / 언어 — 모두 실시간 토글 가능. 변경 즉시 모든 화면에 반영됩니다.
+> 위젯 배치 / 분리할 서비스 / Spark 표시 / 테마 / 펫 / 로컬 기록 / 언어 — 모두 실시간 토글 가능. 변경 즉시 모든 화면에 반영됩니다.
 
 ### 로컬 사용량 그래프
 
@@ -121,13 +121,21 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
 
 > 메뉴바의 그래프 아이콘 또는 설정의 **사용량 그래프 열기**에서 1시간·24시간·7일·14일과 전체·Claude·Codex 범위를 전환할 수 있습니다.
 
+### 9종 펫
+
 <p align="center">
-  <img src="docs/assets/settings-mimo.png" width="420" alt="Mimo 반응 민감도와 애니메이션 설정">
+  <img src="docs/assets/companion-lineup.png" width="700" alt="Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, Pico 펫 라인업">
+</p>
+
+> 아홉 펫은 같은 사용량·증가 속도 신호를 공유하지만 조명, 날씨, 픽셀, 궤도, 꼬리, 새싹, 날개, 배터리처럼 서로 다른 포즈와 소품으로 상태를 표현합니다. 자세한 동작은 [펫 카탈로그](docs/COMPANION_CATALOG.md)를 참고하세요.
+
+<p align="center">
+  <img src="docs/assets/settings-mimo.png" width="420" alt="9종 펫 선택과 반응 민감도 및 애니메이션 설정">
 </p>
 
 ## 🚀 설치 (사용자)
 
-1. [ClaudeUsage-1.4.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. [ClaudeUsage-1.5.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. dmg 열기 → `Applications` 폴더로 드래그
 3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
 
@@ -201,11 +209,11 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 | Claude Code 오늘 토큰·추이 | 이 Mac의 `~/.claude/projects/**/*.jsonl`에서 시각과 숫자형 usage 필드만 합산 | 예, Claude Code 로컬 기록만 |
 | Codex 5시간·주간·모델 한도 | ChatGPT/Codex에 포함된 `codex app-server`의 `account/rateLimits/read` | 아니요 |
 | Codex 일별 토큰·추이 | `codex app-server`의 `account/usage/read`가 제공하는 계정 단위 일별 버킷 | 아니요 |
-| Mimo 14일 기록 | ClaudeUsage가 사용자가 켠 경우에만 만드는 `usage-history.json` | ClaudeUsage 자체 기록 |
+| 펫 14일 기록 | ClaudeUsage가 사용자가 켠 경우에만 만드는 `usage-history.json` | ClaudeUsage 자체 기록 |
 
 일반 ChatGPT 대화나 ChatGPT Classic 기록, Codex 세션 본문을 스캔하지 않습니다. 현재 ChatGPT 앱의 Codex 통합, 독립 Codex 앱 또는 호환되는 Codex 실행 파일과 로그인된 세션을 사용합니다.
 
-### Mimo 기록은 무엇을 저장하나요?
+### 펫 기록은 무엇을 저장하나요?
 
 - 기록은 **기본적으로 꺼져 있으며**, 설정에서 직접 켠 경우에만 시작합니다.
 - 퍼센트, 모델별 한도 이름·식별자, 일별 토큰 합계, 시각을 `~/Library/Application Support/ClaudeUsage/usage-history.json`에 최대 14일 저장합니다.
@@ -214,9 +222,9 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 - 앱 번들만 삭제하거나 재설치해도 이 기록 파일은 자동으로 삭제되지 않습니다. 설정의 **사용량 기록 지우기**는 ClaudeUsage의 14일 추이 기록만 지우며, 오늘 토큰 합계는 Claude Code 로컬 로그와 Codex 계정 일별 버킷에서 다시 계산되어 곧바로 다시 표시될 수 있습니다.
 - 자세한 데이터 출처와 약관 검토는 [사용량 기록·개인정보·서비스 정책](docs/USAGE_HISTORY_AND_POLICY.md)을 확인하세요.
 
-### Mimo의 최고 사용률과 상태 기준
+### 펫의 최고 사용률과 상태 기준
 
-Mimo의 `최고 사용률`은 아래 값의 **합계나 평균이 아니라 가장 큰 퍼센트 하나**입니다.
+선택한 펫의 `최고 사용률`은 아래 값의 **합계나 평균이 아니라 가장 큰 퍼센트 하나**입니다.
 
 ```text
 max(Claude 5시간, Claude 주간, Claude 모델별 한도,
@@ -280,7 +288,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.4.0.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.5.0.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성
@@ -337,6 +345,7 @@ ClaudeUsage/
 - [x] 🤖 **Codex / OpenAI 사용량** 지원 — v1.2.0에서 추가
 - [x] 🧡 **Mimo 펫 + 14일 로컬 추이 + 4가지 위젯 배치** — v1.3.0에서 추가
 - [x] 📊 **사용량 그래프 + Mimo 민감도·애니메이션·성능 개선** — v1.4.0에서 추가
+- [x] 🎭 **9종 선택형 펫과 캐릭터별 상태 동작** — v1.5.0에서 추가
 - [ ] 🔔 70% / 90% 도달 시 macOS 알림
 - [ ] 📊 90일+ 장기 통계와 데이터 내보내기
 - [ ] 👥 다중 organization 계정 지원

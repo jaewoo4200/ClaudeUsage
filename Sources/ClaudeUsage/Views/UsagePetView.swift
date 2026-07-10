@@ -10,6 +10,7 @@ struct PetSummaryCard: View {
         let tokens = theme.current.tokens
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
         let trend = settings.usageHistoryEnabled ? history.trend() : .empty
+        let companion = settings.companionKind
         let mood = PetMood.resolve(
             snapshot: snapshot,
             trend: trend,
@@ -22,12 +23,13 @@ struct PetSummaryCard: View {
                 pressure: snapshot.pressure ?? 0,
                 theme: theme.current,
                 size: 58,
+                kind: companion,
                 animationMode: settings.mimoAnimationMode
             )
 
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 6) {
-                    Text("Mimo")
+                    Text(companion.displayName)
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(tokens.textPrimary)
                     Text(mood.title)
@@ -41,7 +43,7 @@ struct PetSummaryCard: View {
                         .clipShape(Capsule())
                 }
 
-                Text(mood.message)
+                Text(mood.message(for: companion))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(tokens.textSecondary)
                     .lineLimit(2)
@@ -96,6 +98,7 @@ struct WidgetMimoCompanion: View {
         let tokens = theme.current.tokens
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
         let trend = settings.usageHistoryEnabled ? history.trend() : .empty
+        let companion = settings.companionKind
         let mood = PetMood.resolve(
             snapshot: snapshot,
             trend: trend,
@@ -110,7 +113,7 @@ struct WidgetMimoCompanion: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Mimo, \(mood.title), \(mood.message)")
+        .accessibilityLabel("\(companion.displayName), \(mood.title), \(mood.message(for: companion))")
     }
 
     private func compactLayout(
@@ -125,6 +128,7 @@ struct WidgetMimoCompanion: View {
                 pressure: snapshot.pressure ?? 0,
                 theme: theme.current,
                 size: 66,
+                kind: settings.companionKind,
                 animationMode: settings.mimoAnimationMode,
                 animationActive: settings.floatingWidgetVisible
             )
@@ -133,7 +137,7 @@ struct WidgetMimoCompanion: View {
             VStack(alignment: .leading, spacing: 2) {
                 nameRow(mood: mood, tokens: tokens)
                     .frame(height: 16, alignment: .leading)
-                Text(mood.message)
+                Text(mood.message(for: settings.companionKind))
                     .font(.system(size: 9.2, weight: .semibold))
                     .foregroundStyle(tokens.textSecondary)
                     .lineLimit(3)
@@ -176,6 +180,7 @@ struct WidgetMimoCompanion: View {
                 pressure: snapshot.pressure ?? 0,
                 theme: theme.current,
                 size: 78,
+                kind: settings.companionKind,
                 animationMode: settings.mimoAnimationMode,
                 animationActive: settings.floatingWidgetVisible
             )
@@ -184,7 +189,7 @@ struct WidgetMimoCompanion: View {
             VStack(alignment: .leading, spacing: 2) {
                 nameRow(mood: mood, tokens: tokens)
                     .frame(height: 16, alignment: .leading)
-                Text(mood.message)
+                Text(mood.message(for: settings.companionKind))
                     .font(.system(size: 9.2, weight: .semibold))
                     .foregroundStyle(tokens.textSecondary)
                     .lineLimit(3)
@@ -215,7 +220,7 @@ struct WidgetMimoCompanion: View {
 
     private func nameRow(mood: PetMood, tokens: DesignTokens) -> some View {
         HStack(spacing: 5) {
-            Text("Mimo")
+            Text(settings.companionKind.displayName)
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(tokens.textPrimary)
                 .lineLimit(1)
@@ -261,6 +266,7 @@ struct MimoAvatar: View {
     let theme: ThemeKind
     let size: CGFloat
     var animationTime: TimeInterval? = nil
+    var kind: CompanionKind = .mimo
     var animationMode: MimoAnimationMode = .automatic
     var animationActive: Bool = true
 
@@ -283,13 +289,14 @@ struct MimoAvatar: View {
             character(tokens: tokens, stateColor: stateColor)
         }
         .frame(width: size, height: size)
-        .accessibilityLabel("Mimo, \(mood.title)")
+        .accessibilityLabel("\(kind.displayName), \(mood.title)")
     }
 
     @ViewBuilder
     private func character(tokens: DesignTokens, stateColor: Color) -> some View {
         if let animationTime {
-            MimoCharacter(
+            CompanionCharacter(
+                kind: kind,
                 mood: mood,
                 pressure: pressure,
                 theme: theme,
@@ -304,7 +311,8 @@ struct MimoAvatar: View {
             TimelineView(.periodic(from: .now, by: interval)) { context in
                 let elapsed = context.date.timeIntervalSinceReferenceDate
                 let tick = Int(elapsed / interval)
-                MimoCharacter(
+                CompanionCharacter(
+                    kind: kind,
                     mood: mood,
                     pressure: pressure,
                     theme: theme,
@@ -319,7 +327,8 @@ struct MimoAvatar: View {
                 )
             }
         } else {
-            MimoCharacter(
+            CompanionCharacter(
+                kind: kind,
                 mood: mood,
                 pressure: pressure,
                 theme: theme,
@@ -332,7 +341,7 @@ struct MimoAvatar: View {
     }
 }
 
-private struct MimoCharacter: View {
+struct MimoCharacter: View {
     let mood: PetMood
     let pressure: Double
     let theme: ThemeKind
@@ -788,7 +797,7 @@ enum TokenCountFormatter {
     }
 }
 
-private extension PetMood {
+extension PetMood {
     @MainActor
     var title: String {
         switch self {
@@ -802,7 +811,7 @@ private extension PetMood {
     }
 
     @MainActor
-    var message: String {
+    func message(for companion: CompanionKind) -> String {
         let keys: [String]
         let moodOffset: Int
         switch self {
@@ -827,5 +836,6 @@ private extension PetMood {
         }
         let timeBucket = Int(Date().timeIntervalSince1970 / 300)
         return keys[(timeBucket + moodOffset) % keys.count].l
+            .replacingOccurrences(of: "Mimo", with: companion.displayName)
     }
 }

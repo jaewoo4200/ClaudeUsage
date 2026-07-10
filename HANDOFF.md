@@ -4,13 +4,13 @@ Last updated: 2026-07-10
 
 ## 0. Handoff status
 
-- macOS functional baseline: ClaudeUsage `1.3.2` (build `12`)
+- macOS functional baseline: ClaudeUsage `1.5.0` (build `14`)
 - Windows implementation: not started
 - Recommended first target: Windows 11 x64
 - Recommended stack: .NET 10 LTS + WPF
 - Repository strategy: keep the macOS app unchanged and add a sibling `windows/` solution
 - First usable milestone: Codex usage in a Windows tray flyout
-- Full parity milestone: Claude + Codex + four widget layouts + Mimo + installer
+- Full parity milestone: Claude + Codex + four widget layouts + nine companions + installer
 
 This is a native Windows port, not a direct rebuild of the SwiftUI project. WPF is Windows-only, so the final UI, tray behavior, WebView2 login, packaging, and visual QA must be completed on a Windows machine or a Windows CI runner. A Mac can still review the C# core and documentation, but it cannot provide trustworthy WPF runtime verification.
 
@@ -47,14 +47,14 @@ Build a Windows companion with the same user-facing meaning as the macOS app:
 - Reset times and available Codex reset credits are visible.
 - The app refreshes automatically and keeps the last good snapshot during temporary failures.
 - A movable, optional always-on-top widget supports stacked, horizontal, paged, and separate-provider layouts.
-- Mimo reacts to current pressure and optional local trend history.
+- One of nine selectable companions reacts to current pressure and optional local trend history.
 - Korean and English, light/dark/auto appearance, and the three existing themes remain available.
 - Sensitive session material stays local and encrypted for the current Windows user.
 
 ### Explicit non-goals for the first milestone
 
 - Do not rewrite or refactor the macOS app while establishing the Windows port.
-- Do not ship every Mimo animation before live Codex usage works end to end.
+- Do not ship every companion animation before live Codex usage works end to end.
 - Do not build a browser scraper for ChatGPT usage settings.
 - Do not implement automatic reset-credit consumption.
 - Do not require the ChatGPT or Codex GUI to stay open.
@@ -71,7 +71,7 @@ Reasons:
 - WPF directly supports borderless, transparent, movable, topmost desktop windows.
 - `System.Windows.Forms.NotifyIcon` is a stable notification-area integration and can coexist with a WPF app.
 - WebView2 has an official WPF control.
-- WPF data binding, vector shapes, and animation are sufficient for quota rings and Mimo.
+- WPF data binding, vector shapes, and animation are sufficient for quota rings and the companion catalog.
 - The app does not need Windows App SDK features that would justify the additional packaging and runtime complexity of WinUI 3.
 
 Use the currently supported .NET 10 LTS SDK and pin exact package versions in the project files. Do not use floating `*` package versions.
@@ -127,8 +127,8 @@ Read these files before porting each subsystem. Preserve behavior, not Swift syn
 | Codex normalized counters | `Sources/ClaudeUsage/Models/OpenAIUsageData.swift` | Port models and dynamic counter construction |
 | Independent provider state and refresh | `Sources/ClaudeUsage/Services/UsageViewModel.swift` | Windows view model/orchestrator |
 | Claude Code local token total | `Sources/ClaudeUsage/Services/ClaudeLocalTokenUsageService.swift` | Scan `%USERPROFILE%\.claude\projects\**\*.jsonl` |
-| History, trend, and Mimo mood | `Sources/ClaudeUsage/Models/UsageHistory.swift` and `UsageHistoryStore.swift` | Preserve cadence, retention, and thresholds |
-| Mimo behavior catalogue | `docs/MIMO_BEHAVIOR_SPEC.md` | Port behavior state machine before detailed animation |
+| History, trend, and companion mood | `Sources/ClaudeUsage/Models/UsageHistory.swift` and `UsageHistoryStore.swift` | Preserve cadence, retention, and thresholds |
+| Companion catalog | `docs/COMPANION_CATALOG.md` and `docs/MIMO_BEHAVIOR_SPEC.md` | Port the shared state machine before detailed character animation |
 | Privacy and provider constraints | `docs/USAGE_HISTORY_AND_POLICY.md` | Keep Windows README and installer disclosure aligned |
 | Widget layouts | `Sources/ClaudeUsage/Views/WidgetView.swift` | WPF windows and layout controls |
 | Themes and usage colors | `DesignSystem.swift` and `ThemeStore.swift` | WPF resource dictionaries |
@@ -266,7 +266,7 @@ Deduplicate by `requestId|message.id|timestamp`. Numeric strings must be accepte
 
 Codex token activity comes only from `account/usage/read` daily buckets. It may lag behind a currently active task. Do not infer quota percentage from token totals.
 
-### 5.5 History and Mimo
+### 5.5 History and companions
 
 Windows history location:
 
@@ -297,7 +297,7 @@ Existing mood thresholds:
 | Calm | lower connected usage |
 | Waiting | no provider usage available |
 
-Port the deterministic state machine before recreating every body animation. The 20-action catalogue and speech-bubble priority are in `docs/MIMO_BEHAVIOR_SPEC.md`.
+Port the deterministic state machine before recreating every body animation. Character-specific behavior is in `docs/COMPANION_CATALOG.md`; the original action catalogue and speech-bubble priority remain in `docs/MIMO_BEHAVIOR_SPEC.md`.
 
 ### 5.6 Settings defaults
 
@@ -309,7 +309,8 @@ Defaults:
 |---|---|
 | Always on top | on |
 | Appearance | auto |
-| Mimo | on |
+| Companion enabled | on |
+| Selected companion | Mimo |
 | Usage history | off |
 | Widget layout | stacked |
 | Separate Claude widget | on |
@@ -466,18 +467,19 @@ Goal: reproduce the established workflows with Windows-native behavior.
 Exit criteria:
 
 - No text clipping at stress-case model names and reset values.
-- Switching layout never moves quota rings or Mimo as a side effect.
+- Switching layout never moves quota rings or the selected companion as a side effect.
 - Separate-provider windows persist independent positions.
 - Flyout and widget remain fully inside the active monitor.
 - Keyboard navigation and screen-reader labels cover every actionable control.
 
-### Phase 5: Mimo and optional history
+### Phase 5: companions and optional history
 
 Goal: restore companion behavior after data and layout contracts are stable.
 
 - [ ] Port history persistence, trend calculations, and mood tests first.
-- [ ] Implement a fixed-footprint `MimoControl` using WPF shapes/canvas.
-- [ ] Keep the body and quota ring stationary; animate eyes, arms, legs, mouth, laptop, and action marks.
+- [ ] Implement a fixed-footprint `CompanionControl` using WPF shapes/canvas, with Mimo as the first parity target.
+- [ ] Keep the body and quota ring stationary; animate only character parts, expressions, props, and action marks.
+- [ ] Add persisted selection for Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, and Pico.
 - [ ] Implement reduced-motion pose changes.
 - [ ] Port idle, provider-specific, rapid-use, reset, tired, and reset-credit actions in priority order.
 - [ ] Add a reserved speech-bubble area that cannot resize the widget.
@@ -488,7 +490,7 @@ Exit criteria:
 
 - Mood thresholds match the existing unit tests.
 - Animation changes pose without changing the control footprint.
-- Text does not overlap Mimo, quota rings, navigation, or settings.
+- Text does not overlap the companion, quota rings, navigation, or settings.
 - Disabling history stops sampling and local Claude-log scanning.
 
 ### Phase 6: packaging, CI, and release
@@ -612,7 +614,7 @@ Keep `PublishSingleFile=false` initially because WebView2 includes native runtim
 - [ ] 0%, 9%, 99%, and 100% ring labels.
 - [ ] Reset time with day/hour/minute variants.
 - [ ] Light and dark appearance across all themes.
-- [ ] Mimo still, focused laptop, tired, reset, and reduced-motion states.
+- [ ] All nine companions in still, focused, tired, reset, and reduced-motion states.
 
 ## 10. Security and policy gates
 
@@ -664,7 +666,7 @@ The Windows port is complete only when all of the following are true:
 - Dynamic Fable/GPT model counters do not require model-name code changes.
 - Codex works with its GUI closed.
 - Four widget layouts and independent positions are stable across DPI changes.
-- Mimo does not move the quota UI or resize its footprint during animation.
+- The selected companion does not move the quota UI or resize its footprint during animation.
 - History remains opt-in, local, bounded, and deletable.
 - No sensitive material is present in logs, settings, fixtures, or release artifacts.
 - Automated tests and Windows visual checks pass.

@@ -300,6 +300,194 @@ final class WidgetLayoutTests: XCTestCase {
     }
 
     @MainActor
+    func testAllCompanionKindsRenderAcrossEveryMood() throws {
+        let pressures: [PetMood: Double] = [
+            .waiting: 0,
+            .calm: 25,
+            .focused: 60,
+            .sleepy: 80,
+            .tired: 95,
+            .refreshed: 12
+        ]
+        let matrix = VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text("Companion")
+                    .frame(width: 76, alignment: .leading)
+                ForEach(PetMood.allCases, id: \.self) { mood in
+                    Text(mood.rawValue)
+                        .font(.system(size: 9, weight: .semibold))
+                        .frame(width: 62)
+                }
+            }
+            ForEach(CompanionKind.allCases) { kind in
+                HStack(spacing: 8) {
+                    Text(kind.displayName)
+                        .font(.system(size: 11, weight: .bold))
+                        .frame(width: 76, alignment: .leading)
+                    ForEach(PetMood.allCases, id: \.self) { mood in
+                        MimoAvatar(
+                            mood: mood,
+                            pressure: pressures[mood] ?? 0,
+                            theme: .hybrid,
+                            size: 62,
+                            animationTime: 0.84,
+                            kind: kind,
+                            animationMode: .still
+                        )
+                        .frame(width: 62, height: 62)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .foregroundStyle(Color.black)
+        .background(Color.white)
+
+        let matrixHost = NSHostingView(rootView: matrix)
+        matrixHost.appearance = NSAppearance(named: .aqua)
+        matrixHost.layoutSubtreeIfNeeded()
+        let matrixSize = matrixHost.fittingSize
+        matrixHost.frame = NSRect(origin: .zero, size: matrixSize)
+        matrixHost.layoutSubtreeIfNeeded()
+        let matrixBitmap = try XCTUnwrap(matrixHost.bitmapImageRepForCachingDisplay(in: matrixHost.bounds))
+        matrixHost.cacheDisplay(in: matrixHost.bounds, to: matrixBitmap)
+        let matrixPNG = try XCTUnwrap(matrixBitmap.representation(using: .png, properties: [:]))
+        XCTAssertEqual(matrixSize.width, 536, accuracy: 2)
+        XCTAssertGreaterThan(matrixPNG.count, 25_000)
+        try matrixPNG.write(
+            to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-mood-matrix.png"),
+            options: .atomic
+        )
+
+        let featuredMoods: [PetMood] = [
+            .focused, .focused, .tired,
+            .calm, .focused, .refreshed,
+            .refreshed, .focused, .sleepy
+        ]
+        let columns = Array(repeating: GridItem(.fixed(170), spacing: 12), count: 3)
+        let lineup = LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(Array(CompanionKind.allCases.enumerated()), id: \.offset) { index, kind in
+                let mood = featuredMoods[index]
+                VStack(spacing: 8) {
+                    MimoAvatar(
+                        mood: mood,
+                        pressure: pressures[mood] ?? 0,
+                        theme: .hybrid,
+                        size: 96,
+                        animationTime: 0.84,
+                        kind: kind,
+                        animationMode: .still
+                    )
+                    Text(kind.displayName)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Color(red: 0.10, green: 0.12, blue: 0.15))
+                    Text(mood.rawValue.capitalized)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.42, green: 0.46, blue: 0.50))
+                }
+                .frame(width: 170, height: 158)
+                .background(Color(red: 0.96, green: 0.97, blue: 0.98))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+        }
+        .padding(20)
+        .background(Color.white)
+
+        let lineupHost = NSHostingView(rootView: lineup)
+        lineupHost.appearance = NSAppearance(named: .aqua)
+        lineupHost.layoutSubtreeIfNeeded()
+        let lineupSize = lineupHost.fittingSize
+        lineupHost.frame = NSRect(origin: .zero, size: lineupSize)
+        lineupHost.layoutSubtreeIfNeeded()
+        let lineupBitmap = try XCTUnwrap(lineupHost.bitmapImageRepForCachingDisplay(in: lineupHost.bounds))
+        lineupHost.cacheDisplay(in: lineupHost.bounds, to: lineupBitmap)
+        let lineupPNG = try XCTUnwrap(lineupBitmap.representation(using: .png, properties: [:]))
+        XCTAssertGreaterThan(lineupPNG.count, 20_000)
+        try lineupPNG.write(
+            to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-lineup.png"),
+            options: .atomic
+        )
+    }
+
+    @MainActor
+    func testAllCompanionsKeepCompactWidgetTextInsideStableFootprint() throws {
+        let viewModel = try makeStressViewModel()
+        let themeStore = ThemeStore()
+        let languageStore = LanguageStore.shared
+        let historyURL = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-widget-grid-history.json")
+        let historyStore = UsageHistoryStore(fileURL: historyURL)
+        let originalTheme = themeStore.current
+        let originalLanguage = languageStore.current
+        let originalCompanion = UserDefaults.standard.object(forKey: "companionKind")
+        let originalHistoryEnabled = UserDefaults.standard.object(forKey: "usageHistoryEnabled")
+        let originalAnimationMode = UserDefaults.standard.object(forKey: "mimoAnimationMode")
+        defer {
+            themeStore.current = originalTheme
+            languageStore.current = originalLanguage
+            if let originalCompanion {
+                UserDefaults.standard.set(originalCompanion, forKey: "companionKind")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "companionKind")
+            }
+            if let originalHistoryEnabled {
+                UserDefaults.standard.set(originalHistoryEnabled, forKey: "usageHistoryEnabled")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "usageHistoryEnabled")
+            }
+            if let originalAnimationMode {
+                UserDefaults.standard.set(originalAnimationMode, forKey: "mimoAnimationMode")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "mimoAnimationMode")
+            }
+            try? FileManager.default.removeItem(at: historyURL)
+        }
+
+        themeStore.current = .daangn
+        languageStore.current = .ko
+        let settingsByKind = CompanionKind.allCases.map { kind in
+            let settings = AppSettings()
+            settings.companionKind = kind
+            settings.usageHistoryEnabled = false
+            settings.mimoAnimationMode = .still
+            settings.floatingWidgetVisible = false
+            return settings
+        }
+        let columns = Array(repeating: GridItem(.fixed(224), spacing: 8), count: 3)
+        let root = LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(settingsByKind.indices, id: \.self) { index in
+                WidgetMimoCompanion()
+                    .environmentObject(viewModel)
+                    .environmentObject(historyStore)
+                    .environmentObject(settingsByKind[index])
+                    .environmentObject(themeStore)
+                    .frame(width: 204)
+                    .padding(10)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+        }
+        .padding(16)
+        .background(Color(red: 0.92, green: 0.93, blue: 0.94))
+
+        let host = NSHostingView(rootView: root)
+        host.appearance = NSAppearance(named: .aqua)
+        host.layoutSubtreeIfNeeded()
+        let size = host.fittingSize
+        host.frame = NSRect(origin: .zero, size: size)
+        host.layoutSubtreeIfNeeded()
+        let bitmap = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+        host.cacheDisplay(in: host.bounds, to: bitmap)
+        let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
+        XCTAssertEqual(size.width, 720, accuracy: 2)
+        XCTAssertLessThan(size.height, 310)
+        XCTAssertGreaterThan(png.count, 25_000)
+        try png.write(
+            to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-widget-grid.png"),
+            options: .atomic
+        )
+    }
+
+    @MainActor
     func testProviderBrandIconsAndCodexLabelsRender() throws {
         XCTAssertEqual(ProviderBrand.claude.compactLabel, "C")
         XCTAssertEqual(ProviderBrand.codex.compactLabel, "G")
@@ -981,16 +1169,19 @@ final class WidgetLayoutTests: XCTestCase {
         let historyURL = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-settings-history.json")
         let historyStore = UsageHistoryStore(fileURL: historyURL)
         let originalTheme = themeStore.current
+        let originalCompanion = appSettings.companionKind
         let originalSensitivity = appSettings.mimoSensitivity
         let originalAnimation = appSettings.mimoAnimationMode
         defer {
             themeStore.current = originalTheme
+            appSettings.companionKind = originalCompanion
             appSettings.mimoSensitivity = originalSensitivity
             appSettings.mimoAnimationMode = originalAnimation
             try? FileManager.default.removeItem(at: historyURL)
         }
 
         themeStore.current = .daangn
+        appSettings.companionKind = .mimo
         appSettings.mimoSensitivity = .balanced
         appSettings.mimoAnimationMode = .still
 
@@ -1012,7 +1203,7 @@ final class WidgetLayoutTests: XCTestCase {
 
         XCTAssertEqual(size.width, 420, accuracy: 1)
         XCTAssertGreaterThan(size.height, 260)
-        XCTAssertLessThan(size.height, 520)
+        XCTAssertLessThan(size.height, 550)
         let bitmap = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
         host.cacheDisplay(in: host.bounds, to: bitmap)
         let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))

@@ -359,10 +359,11 @@ struct CompanionSettingsRow: View {
                     pressure: snapshot.pressure ?? 0,
                     theme: theme.current,
                     size: 40,
+                    kind: settings.companionKind,
                     animationMode: settings.mimoAnimationMode
                 )
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Mimo")
+                    Text(settings.companionKind.displayName)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(tokens.textPrimary)
                     Text("pet_enabled_desc".l)
@@ -377,6 +378,10 @@ struct CompanionSettingsRow: View {
                     .labelsHidden()
             }
             .padding(12)
+
+            Divider().background(tokens.divider)
+
+            companionSelector(mood: mood, pressure: snapshot.pressure ?? 0)
 
             Divider().background(tokens.divider)
 
@@ -471,6 +476,78 @@ struct CompanionSettingsRow: View {
         }
         .background(tokens.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    private func companionSelector(mood: PetMood, pressure: Double) -> some View {
+        let tokens = theme.current.tokens
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 6), count: 3)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle().fill(tokens.bgRing).frame(width: 36, height: 36)
+                    Image(systemName: "pawprint.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tokens.accent)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("companion_character".l)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tokens.textPrimary)
+                    Text("companion_character_desc".l)
+                        .font(.system(size: 10))
+                        .foregroundStyle(tokens.textTertiary)
+                }
+            }
+
+            LazyVGrid(columns: columns, spacing: 6) {
+                ForEach(CompanionKind.allCases) { kind in
+                    Button {
+                        settings.companionKind = kind
+                    } label: {
+                        HStack(spacing: 6) {
+                            MimoAvatar(
+                                mood: mood,
+                                pressure: pressure,
+                                theme: theme.current,
+                                size: 30,
+                                animationTime: 0,
+                                kind: kind,
+                                animationMode: .still
+                            )
+                            Text(kind.displayName)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(tokens.textPrimary)
+                                .lineLimit(1)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 7)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .background(
+                            settings.companionKind == kind
+                                ? tokens.accent.opacity(0.12)
+                                : tokens.bg
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(
+                                    settings.companionKind == kind ? tokens.accent : tokens.border,
+                                    lineWidth: settings.companionKind == kind ? 1.5 : 1
+                                )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .help(kind.descriptionText)
+                }
+            }
+
+            Text(settings.companionKind.descriptionText)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(tokens.textTertiary)
+                .lineLimit(2)
+        }
+        .padding(12)
     }
 
     private func companionPickerRow<Control: View>(

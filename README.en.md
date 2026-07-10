@@ -16,11 +16,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-3.8MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.1MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg">Download v1.4.0</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg">Download v1.5.0</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
@@ -32,7 +32,7 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 - 🤖 **Claude + Codex**: Fetches both providers independently and presents them together
 - 🪟 **4 widget layouts**: Choose stacked, wide, arrow-switched pages, or independent Claude/Codex widgets
 - 🧭 **Future model support**: Displays server-provided model limits without hardcoded names; GPT-5.3-Codex-Spark is hidden by default and optional
-- 🧡 **Adjustable Mimo companion**: Choose reaction sensitivity and Auto, Lively, or Still animation while expressions follow current pressure and recent pace
+- 🧡 **Nine selectable companions**: Pick Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, or Pico and adjust sensitivity and animation
 - 📈 **Local usage charts**: Optionally keep five-minute samples on this Mac for 14 days and inspect them by time range and provider
 - 🪶 **Adaptive native animation**: Uses a low update cadence while calm and stops rendering when the floating widget is hidden
 - 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
@@ -111,7 +111,7 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
   </tr>
 </table>
 
-> Layout / separate providers / Spark visibility / theme / Mimo / local history / language all update live across the app.
+> Layout / separate providers / Spark visibility / theme / companion / local history / language all update live across the app.
 
 ### Local usage charts
 
@@ -121,13 +121,21 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 
 > Open the chart from the menu-bar graph icon or **Open usage charts** in Settings, then switch between 1 hour, 24 hours, 7 days, or 14 days and All, Claude, or Codex.
 
+### Nine companions
+
 <p align="center">
-  <img src="docs/assets/settings-mimo.png" width="420" alt="Mimo reaction sensitivity and animation settings">
+  <img src="docs/assets/companion-lineup.png" width="700" alt="Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, and Pico companion lineup">
+</p>
+
+> All nine companions share the same usage and pace signals, but express them through different poses and props: light, weather, pixels, orbits, a tail, sprouts, wings, or a battery. See the [companion catalog](docs/COMPANION_CATALOG.md) for the full behavior map.
+
+<p align="center">
+  <img src="docs/assets/settings-mimo.png" width="420" alt="Nine companion choices with sensitivity and animation settings">
 </p>
 
 ## 🚀 Installation (Users)
 
-1. Download [ClaudeUsage-1.4.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. Download [ClaudeUsage-1.5.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
@@ -201,11 +209,11 @@ When you first sign in, ClaudeUsage saves your **claude.ai session cookies in th
 | Claude Code daily tokens and trend | Timestamp and numeric usage fields from `~/.claude/projects/**/*.jsonl` on this Mac | Yes, only local Claude Code records |
 | Codex 5-hour, weekly, and model limits | `account/rateLimits/read` through the `codex app-server` bundled with ChatGPT/Codex | No |
 | Codex daily tokens and trend | Account-level daily buckets returned by `account/usage/read` | No |
-| Mimo 14-day history | Opt-in `usage-history.json` written by ClaudeUsage | ClaudeUsage's own file |
+| Companion 14-day history | Opt-in `usage-history.json` written by ClaudeUsage | ClaudeUsage's own file |
 
 ClaudeUsage does not scan regular ChatGPT conversations, ChatGPT Classic history, or Codex session content. It uses the current ChatGPT app with Codex integration, a standalone Codex app, or a compatible signed-in Codex executable.
 
-### What does Mimo history store?
+### What does companion history store?
 
 - History is **off by default** and starts only after the user enables it in Settings.
 - Percentages, model-limit names and identifiers, daily token totals, and timestamps are kept for up to 14 days at `~/Library/Application Support/ClaudeUsage/usage-history.json`.
@@ -214,16 +222,16 @@ ClaudeUsage does not scan regular ChatGPT conversations, ChatGPT Classic history
 - Removing or reinstalling the app bundle does not automatically remove this history file. **Clear usage history** deletes only ClaudeUsage's 14-day trend samples; today's token total can appear again because it is recalculated from Claude Code's local logs and Codex account daily buckets.
 - See [Usage history, privacy, and provider policy](docs/USAGE_HISTORY_AND_POLICY.md) for data-source and terms details.
 
-### How Mimo calculates peak pressure
+### How companions calculate peak pressure
 
-Mimo's `peak pressure` is **one highest percentage**, not a sum or average:
+The selected companion's `peak pressure` is **one highest percentage**, not a sum or average:
 
 ```text
 max(Claude 5-hour, Claude weekly, Claude model limits,
     Codex 5-hour, Codex weekly, visible Codex model limits)
 ```
 
-When Spark visibility is off, Spark-specific limits are excluded from the calculation. With history enabled, Mimo also considers the last hour's rate of change.
+When Spark visibility is off, Spark-specific limits are excluded from the calculation. With history enabled, the selected companion also considers the last hour's rate of change.
 
 | Sensitivity | Focused starts | Sleepy starts | Tired starts |
 |---|---:|---:|---:|
@@ -280,7 +288,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.4.0.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.5.0.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon
@@ -337,6 +345,7 @@ ClaudeUsage/
 - [x] 🤖 **Codex / OpenAI usage** — added in v1.2.0
 - [x] 🧡 **Mimo companion + 14-day local trends + 4 widget layouts** — added in v1.3.0
 - [x] 📊 **Usage charts + Mimo sensitivity, animation, and performance improvements** — added in v1.4.0
+- [x] 🎭 **Nine selectable companions with character-specific state actions** — added in v1.5.0
 - [ ] 🔔 macOS notifications at 70% / 90%
 - [ ] 📊 90-day+ statistics and data export
 - [ ] 👥 Multiple organization accounts

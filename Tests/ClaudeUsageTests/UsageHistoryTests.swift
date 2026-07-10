@@ -119,6 +119,36 @@ final class UsageHistoryTests: XCTestCase {
         XCTAssertEqual(MimoAnimationMode.lively.transitionDuration(for: .calm), 0.16)
     }
 
+    func testCompanionCatalogContainsNineStableIdentifiers() throws {
+        XCTAssertEqual(
+            CompanionKind.allCases,
+            [.mimo, .lumi, .kumo, .dot, .navi, .bori, .muru, .tori, .pico]
+        )
+        let encoded = try JSONEncoder().encode(CompanionKind.allCases)
+        XCTAssertEqual(try JSONDecoder().decode([CompanionKind].self, from: encoded), CompanionKind.allCases)
+    }
+
+    @MainActor
+    func testCompanionSelectionPersistsAndDefaultsToMimo() {
+        let defaults = UserDefaults.standard
+        let key = "companionKind"
+        let original = defaults.object(forKey: key)
+        defer {
+            if let original {
+                defaults.set(original, forKey: key)
+            } else {
+                defaults.removeObject(forKey: key)
+            }
+        }
+
+        defaults.removeObject(forKey: key)
+        XCTAssertEqual(AppSettings().companionKind, .mimo)
+
+        let settings = AppSettings()
+        settings.companionKind = .pico
+        XCTAssertEqual(AppSettings().companionKind, .pico)
+    }
+
     func testHistoryDashboardSummaryRespectsProviderScope() {
         let first = UsageHistorySample(
             timestamp: Date(timeIntervalSince1970: 1_800_000_000),

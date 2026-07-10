@@ -71,6 +71,29 @@ enum WidgetLayoutMode: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum CompanionKind: String, CaseIterable, Codable, Identifiable {
+    case mimo
+    case lumi
+    case kumo
+    case dot
+    case navi
+    case bori
+    case muru
+    case tori
+    case pico
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+    }
+
+    @MainActor
+    var descriptionText: String {
+        "companion_\(rawValue)_desc".l
+    }
+}
+
 enum MimoSensitivity: String, CaseIterable, Codable, Identifiable {
     case responsive
     case balanced
@@ -198,6 +221,7 @@ final class AppSettings: ObservableObject {
     private let separateClaudeKey = "separateClaudeWidgetEnabled"
     private let separateOpenAIKey = "separateOpenAIWidgetEnabled"
     private let showOpenAISparkKey = "showOpenAISparkLimits"
+    private let companionKindKey = "companionKind"
     private let mimoSensitivityKey = "mimoSensitivity"
     private let mimoAnimationModeKey = "mimoAnimationMode"
 
@@ -247,6 +271,10 @@ final class AppSettings: ObservableObject {
 
     @Published var showOpenAISparkLimits: Bool {
         didSet { UserDefaults.standard.set(showOpenAISparkLimits, forKey: showOpenAISparkKey) }
+    }
+
+    @Published var companionKind: CompanionKind {
+        didSet { UserDefaults.standard.set(companionKind.rawValue, forKey: companionKindKey) }
     }
 
     @Published var mimoSensitivity: MimoSensitivity {
@@ -303,6 +331,13 @@ final class AppSettings: ObservableObject {
             self.showOpenAISparkLimits = false
         } else {
             self.showOpenAISparkLimits = UserDefaults.standard.bool(forKey: showOpenAISparkKey)
+        }
+
+        if let raw = UserDefaults.standard.string(forKey: companionKindKey),
+           let kind = CompanionKind(rawValue: raw) {
+            self.companionKind = kind
+        } else {
+            self.companionKind = .mimo
         }
 
         if let raw = UserDefaults.standard.string(forKey: mimoSensitivityKey),
