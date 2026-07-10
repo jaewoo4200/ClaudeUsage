@@ -240,7 +240,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.3.1.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.3.2.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성

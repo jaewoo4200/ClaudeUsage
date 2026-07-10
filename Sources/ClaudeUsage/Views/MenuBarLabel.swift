@@ -67,8 +67,8 @@ private enum MenuBarLabelRenderer {
         let utilization: Double?
     }
 
-    private static let imageHeight: CGFloat = 18
-    private static let iconSlotWidth: CGFloat = 15
+    private static let imageHeight: CGFloat = 19
+    private static let iconSlotWidth: CGFloat = 17
     private static let iconTextSpacing: CGFloat = 2
     private static let providerSpacing: CGFloat = 6
 
@@ -155,7 +155,7 @@ private enum MenuBarLabelRenderer {
         slotOriginX: CGFloat,
         colorScheme: ColorScheme
     ) {
-        let iconSize: CGFloat = provider == .claude ? 12.5 : 14.5
+        let iconSize: CGFloat = provider == .claude ? 14.5 : 16.5
         let rect = NSRect(
             x: slotOriginX + (iconSlotWidth - iconSize) / 2,
             y: (imageHeight - iconSize) / 2,
