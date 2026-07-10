@@ -211,6 +211,10 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 
 > 코드 서명을 한다면(Apple Developer ID, $99/년) 이 다이얼로그 자체가 안 떠요. 무료 오픈소스라 서명을 안 했고, 이게 macOS의 표준 절차입니다.
 
+## Windows 포트
+
+Windows 구현은 아직 시작 전입니다. Windows 11에서 이어서 작업할 때는 기술 선택, 단계별 계획, 테스트 기준, 첫 작업 프롬프트를 정리한 [Windows 포트 HANDOFF](HANDOFF.md)를 먼저 확인하세요.
+
 ## 🔧 빌드 (개발자)
 
 ### 사전 요구사항

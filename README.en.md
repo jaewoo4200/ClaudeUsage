@@ -211,6 +211,10 @@ When the dialog appears:
 
 > With code signing (Apple Developer ID, $99/year) this dialog wouldn't appear at all. Since this is a free open-source app, the dialog is part of macOS's standard process.
 
+## Windows port
+
+The Windows implementation has not started yet. Before continuing on a Windows 11 machine, read the [Windows port handoff](HANDOFF.md) for the stack decision, phased plan, test gates, and copy-paste kickoff prompt.
+
 ## 🔧 Build (Developers)
 
 ### Prerequisites
