@@ -330,6 +330,16 @@ private struct FooterRow: View {
             Spacer()
 
             Button {
+                appDelegate.openUsageHistory(viewModel: vm)
+            } label: {
+                Image(systemName: "chart.xyaxis.line")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(tokens.textTertiary)
+            }
+            .buttonStyle(.plain)
+            .help("open_usage_history".l)
+
+            Button {
                 appDelegate.openSettings(viewModel: vm)
             } label: {
                 Image(systemName: "gear")

@@ -30,11 +30,15 @@ enum ThemeKind: String, CaseIterable, Codable, Identifiable {
 @MainActor
 final class ThemeStore: ObservableObject {
     static let shared = ThemeStore()
+    static let themeChanged = Notification.Name("themeChanged")
     private let key = "selectedTheme"
 
     @Published var current: ThemeKind {
         didSet {
             UserDefaults.standard.set(current.rawValue, forKey: key)
+            if oldValue != current {
+                NotificationCenter.default.post(name: Self.themeChanged, object: current)
+            }
         }
     }
 

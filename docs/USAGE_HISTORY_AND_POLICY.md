@@ -12,17 +12,45 @@ Usage history is **off by default**. When the user enables it, the app writes on
 ~/Library/Application Support/ClaudeUsage/usage-history.json
 ```
 
-The file contains only timestamps, quota percentages, and daily token totals. It does not store prompts, responses, filenames, project names, account identifiers, cookies, or access tokens.
+The file contains only timestamps, quota percentages, model-limit identifiers and display names, and daily token totals. It does not store prompts, responses, filenames, project names, account identifiers, cookies, or access tokens.
 
 - Sampling interval: five minutes, plus immediate samples when a quota reset is detected
 - Retention: 14 days
 - Deletion: Settings > Mimo > Clear usage history
 - Reinstallation: deleting the `.app` bundle does not remove `usage-history.json`; the Settings action is required to delete ClaudeUsage's retained samples
 - Network: history data is never uploaded by ClaudeUsage
+- Viewer: the local chart window can filter 1 hour, 24 hours, 7 days, or 14 days and All, Claude, or Codex
 
 Clearing ClaudeUsage history does not delete Claude Code's `~/.claude/projects` files or any Codex/ChatGPT account data. Daily token totals are source-backed and may therefore reappear on the next refresh even after the local 14-day trend file is cleared.
 
-Mimo uses the highest currently visible quota percentage as its immediate pressure level. When history is enabled, it also uses the last hour of percentage and token deltas. A quota reset can produce the refreshed state for up to 30 minutes.
+## Peak pressure and Mimo thresholds
+
+Mimo uses the highest currently visible quota percentage as its immediate pressure level. It is not a sum or average:
+
+```text
+pressure = max(
+  Claude 5-hour,
+  Claude weekly,
+  Claude model-specific limits,
+  Codex 5-hour,
+  Codex weekly,
+  visible Codex model-specific limits
+)
+```
+
+An unavailable value is ignored. A model limit hidden by the user, such as the optional Spark counters, is also excluded. Beginning with v1.4.0, the history file preserves individual model-limit identifiers, labels, and percentages instead of retaining only the model maximum. Older samples remain readable and appear as a generic model-maximum series.
+
+When history is enabled, Mimo also uses the last hour of pressure and token deltas. Pressure pace is calculated from locally sampled pressure points, so it has gaps whenever ClaudeUsage was not running.
+
+| Sensitivity | Focused | Sleepy | Tired |
+|---|---:|---:|---:|
+| Early | 35% or 8%p/hour | 70% or 22%p/hour | 90% or 40%p/hour |
+| Balanced (default) | 50% or 14%p/hour | 75% or 28%p/hour | 90% or 45%p/hour |
+| Relaxed | 60% or 18%p/hour | 82% or 34%p/hour | 94% or 52%p/hour |
+
+The highest matching state wins. A quota drop of at least 15 percentage points followed by pressure below 60% can produce the Refreshed state for up to 30 minutes.
+
+Animation modes affect presentation only, not the state calculation. Auto updates target poses at an adaptive cadence and transitions for only 0.16 to 0.25 seconds depending on state. Lively updates every 0.25 seconds with a 0.16-second transition, while Still performs no continuous animation. Floating-widget animation is paused when that widget is hidden, and macOS Reduce Motion is always respected.
 
 OpenAI daily token buckets may not contain the current calendar day while a Codex task is still active. In that case Mimo continues to react to the live quota-percentage trend and adds token deltas later when the official bucket becomes available.
 

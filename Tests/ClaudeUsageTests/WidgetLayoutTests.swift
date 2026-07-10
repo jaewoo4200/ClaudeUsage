@@ -746,6 +746,119 @@ final class WidgetLayoutTests: XCTestCase {
     }
 
     @MainActor
+    func testHorizontalWidgetReturnsToDaangnIntrinsicSizeAfterThemeSwitches() throws {
+        let viewModel = try makeStressViewModel()
+        let themeStore = ThemeStore()
+        let languageStore = LanguageStore()
+        let appSettings = AppSettings()
+        let historyURL = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-theme-switch-history.json")
+        let historyStore = UsageHistoryStore(fileURL: historyURL)
+        let originalTheme = themeStore.current
+        let originalLayout = appSettings.widgetLayoutMode
+        let originalPetEnabled = appSettings.usagePetEnabled
+        defer {
+            themeStore.current = originalTheme
+            appSettings.widgetLayoutMode = originalLayout
+            appSettings.usagePetEnabled = originalPetEnabled
+            try? FileManager.default.removeItem(at: historyURL)
+        }
+
+        appSettings.widgetLayoutMode = .horizontal
+        appSettings.usagePetEnabled = true
+        appSettings.floatingWidgetVisible = false
+        let root = WidgetView()
+            .environmentObject(viewModel)
+            .environmentObject(themeStore)
+            .environmentObject(languageStore)
+            .environmentObject(appSettings)
+            .environmentObject(historyStore)
+        let host = NSHostingView(rootView: root)
+        host.appearance = NSAppearance(named: .aqua)
+
+        func fittingSize(for theme: ThemeKind) -> CGSize {
+            themeStore.current = theme
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            host.invalidateIntrinsicContentSize()
+            host.layoutSubtreeIfNeeded()
+            return host.fittingSize
+        }
+
+        let firstDaangn = fittingSize(for: .daangn)
+        _ = fittingSize(for: .toss)
+        _ = fittingSize(for: .hybrid)
+        let returnedDaangn = fittingSize(for: .daangn)
+
+        XCTAssertEqual(firstDaangn.width, 480, accuracy: 1)
+        XCTAssertEqual(returnedDaangn.width, firstDaangn.width, accuracy: 1)
+        XCTAssertEqual(returnedDaangn.height, firstDaangn.height, accuracy: 1)
+    }
+
+    @MainActor
+    func testUsageHistoryDashboardRendersModelSeries() throws {
+        let themeStore = ThemeStore()
+        let languageStore = LanguageStore()
+        let appSettings = AppSettings()
+        let historyURL = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-dashboard-history.json")
+        let historyStore = UsageHistoryStore(fileURL: historyURL, minimumSampleInterval: 0)
+        let originalTheme = themeStore.current
+        let originalLanguage = languageStore.current
+        let originalHistoryEnabled = appSettings.usageHistoryEnabled
+        defer {
+            themeStore.current = originalTheme
+            languageStore.current = originalLanguage
+            appSettings.usageHistoryEnabled = originalHistoryEnabled
+            try? FileManager.default.removeItem(at: historyURL)
+        }
+
+        themeStore.current = .daangn
+        languageStore.current = .ko
+        appSettings.usageHistoryEnabled = true
+        let now = Date()
+        for index in 0..<8 {
+            historyStore.record(
+                UsageHistorySnapshot(
+                    claudeFiveHour: Double(20 + index * 4),
+                    claudeWeekly: Double(12 + index),
+                    claudeModelMaximum: Double(24 + index * 3),
+                    openAIFiveHour: Double(10 + index * 3),
+                    openAIWeekly: Double(7 + index),
+                    openAIModelMaximum: nil,
+                    claudeTodayTokens: Int64(index * 10_000),
+                    openAITodayTokens: nil,
+                    claudeModelCounters: [
+                        UsageHistoryCounter(
+                            id: "seven_day_fable",
+                            label: "Claude Fable",
+                            utilization: Double(24 + index * 3)
+                        )
+                    ]
+                ),
+                at: now.addingTimeInterval(TimeInterval(index - 7) * 600),
+                force: true
+            )
+        }
+
+        let root = UsageHistoryDashboardView()
+            .environmentObject(historyStore)
+            .environmentObject(appSettings)
+            .environmentObject(themeStore)
+            .environmentObject(languageStore)
+        let host = NSHostingView(rootView: root)
+        host.appearance = NSAppearance(named: .aqua)
+        host.frame = NSRect(x: 0, y: 0, width: 760, height: 560)
+        host.layoutSubtreeIfNeeded()
+
+        let bitmap = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+        host.cacheDisplay(in: host.bounds, to: bitmap)
+        let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
+        XCTAssertGreaterThan(png.count, 10_000)
+        try png.write(
+            to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-history-dashboard.png"),
+            options: .atomic
+        )
+    }
+
+    @MainActor
     func testMimoAnimationChangesPoseWithoutChangingFootprint() throws {
         let root = HStack(spacing: 16) {
             MimoAvatar(mood: .refreshed, pressure: 18, theme: .hybrid, size: 96, animationTime: 0)
@@ -855,6 +968,57 @@ final class WidgetLayoutTests: XCTestCase {
         XCTAssertGreaterThan(png.count, 5_000)
         try png.write(
             to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-layout-settings.png"),
+            options: .atomic
+        )
+    }
+
+    @MainActor
+    func testCompanionSettingsShowsSensitivityAnimationAndHistoryControls() throws {
+        let viewModel = try makeStressViewModel()
+        let appDelegate = AppDelegate()
+        let themeStore = ThemeStore()
+        let appSettings = AppSettings()
+        let historyURL = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-settings-history.json")
+        let historyStore = UsageHistoryStore(fileURL: historyURL)
+        let originalTheme = themeStore.current
+        let originalSensitivity = appSettings.mimoSensitivity
+        let originalAnimation = appSettings.mimoAnimationMode
+        defer {
+            themeStore.current = originalTheme
+            appSettings.mimoSensitivity = originalSensitivity
+            appSettings.mimoAnimationMode = originalAnimation
+            try? FileManager.default.removeItem(at: historyURL)
+        }
+
+        themeStore.current = .daangn
+        appSettings.mimoSensitivity = .balanced
+        appSettings.mimoAnimationMode = .still
+
+        let root = CompanionSettingsRow()
+            .environmentObject(viewModel)
+            .environmentObject(appDelegate)
+            .environmentObject(themeStore)
+            .environmentObject(appSettings)
+            .environmentObject(historyStore)
+            .frame(width: 380)
+            .padding(20)
+            .background(themeStore.current.tokens.bg)
+        let host = NSHostingView(rootView: root)
+        host.appearance = NSAppearance(named: .aqua)
+        host.layoutSubtreeIfNeeded()
+        let size = host.fittingSize
+        host.frame = NSRect(origin: .zero, size: size)
+        host.layoutSubtreeIfNeeded()
+
+        XCTAssertEqual(size.width, 420, accuracy: 1)
+        XCTAssertGreaterThan(size.height, 260)
+        XCTAssertLessThan(size.height, 520)
+        let bitmap = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+        host.cacheDisplay(in: host.bounds, to: bitmap)
+        let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
+        XCTAssertGreaterThan(png.count, 8_000)
+        try png.write(
+            to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-settings.png"),
             options: .atomic
         )
     }

@@ -35,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private var loginWindow: NSWindow?
     private var loginController: LoginWindowController?  // ⬅️ retain
     private var settingsWindow: NSWindow?
+    private var historyWindow: NSWindow?
     @Published var widgetVisible: Bool = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -65,6 +66,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             name: AppSettings.widgetConfigurationChanged,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateWidgetLayoutForTheme),
+            name: ThemeStore.themeChanged,
+            object: nil
+        )
+
     }
 
     @objc private func updateWidgetLevel() {
@@ -116,6 +124,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         reconcileWidgetWindows(viewModel: widgetViewModel)
     }
 
+    @objc private func updateWidgetLayoutForTheme() {
+        guard widgetVisible, let widgetViewModel else { return }
+        DispatchQueue.main.async { [weak self, weak widgetViewModel] in
+            guard let self, let widgetViewModel else { return }
+            for panel in self.widgetWindows.values {
+                panel.contentView?.invalidateIntrinsicContentSize()
+                panel.contentView?.needsLayout = true
+                panel.contentView?.layoutSubtreeIfNeeded()
+            }
+            self.reconcileWidgetWindows(viewModel: widgetViewModel)
+        }
+    }
+
     func toggleWidget(viewModel: UsageViewModel) {
         if widgetVisible {
             hideWidget()
@@ -140,6 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         win.isReleasedWhenClosed = false
         win.center()
         let root = SettingsView()
+            .environmentObject(self)
             .environmentObject(ThemeStore.shared)
             .environmentObject(AppSettings.shared)
             .environmentObject(LanguageStore.shared)
@@ -153,19 +175,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    func openUsageHistory(viewModel: UsageViewModel) {
+        if let win = historyWindow {
+            win.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let win = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 760, height: 560),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        win.title = "usage_history_dashboard".l
+        win.minSize = NSSize(width: 640, height: 480)
+        win.isReleasedWhenClosed = false
+        win.center()
+        let root = UsageHistoryDashboardView()
+            .environmentObject(ThemeStore.shared)
+            .environmentObject(AppSettings.shared)
+            .environmentObject(LanguageStore.shared)
+            .environmentObject(viewModel)
+            .environmentObject(UsageHistoryStore.shared)
+        win.contentView = NSHostingView(rootView: root)
+        win.delegate = HistoryWindowDelegate.shared
+        HistoryWindowDelegate.shared.onClose = { [weak self] in self?.historyWindow = nil }
+        historyWindow = win
+        win.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     func showWidget(viewModel: UsageViewModel) {
         #if DEBUG
         print("[Widget] showWidget called")
         #endif
         widgetViewModel = viewModel
+        AppSettings.shared.floatingWidgetVisible = true
         reconcileWidgetWindows(viewModel: viewModel)
         widgetVisible = !widgetWindows.isEmpty
+        if !widgetVisible {
+            AppSettings.shared.floatingWidgetVisible = false
+        }
         #if DEBUG
         print("[Widget] ordered \(widgetWindows.count) panel(s) front")
         #endif
     }
 
     func hideWidget() {
+        AppSettings.shared.floatingWidgetVisible = false
         for (kind, win) in widgetWindows {
             WidgetPositionStore.save(win.frame.origin, id: kind.rawValue)
             win.orderOut(nil)
@@ -304,6 +361,12 @@ final class LoginWindowDelegate: NSObject, NSWindowDelegate {
 
 final class SettingsWindowDelegate: NSObject, NSWindowDelegate {
     static let shared = SettingsWindowDelegate()
+    var onClose: (() -> Void)?
+    func windowWillClose(_ notification: Notification) { onClose?() }
+}
+
+final class HistoryWindowDelegate: NSObject, NSWindowDelegate {
+    static let shared = HistoryWindowDelegate()
     var onClose: (() -> Void)?
     func windowWillClose(_ notification: Notification) { onClose?() }
 }

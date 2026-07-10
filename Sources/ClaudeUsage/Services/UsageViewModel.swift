@@ -181,26 +181,61 @@ final class UsageViewModel: ObservableObject {
     }
 
     func historySnapshot(includingSpark: Bool) -> UsageHistorySnapshot {
-        let claudeModelValues: [Double] = [
-            snapshot?.usage.sevenDayOmelette?.utilization,
-            snapshot?.usage.sevenDayFable?.utilization
-        ]
-        .compactMap { $0 } + (snapshot?.usage.additionalSevenDayWindows.values.map(\.utilization) ?? [])
+        var claudeModelCounters: [UsageHistoryCounter] = []
+        if let design = snapshot?.usage.sevenDayOmelette {
+            claudeModelCounters.append(
+                UsageHistoryCounter(
+                    id: "seven_day_omelette",
+                    label: "Claude Design",
+                    utilization: design.utilization
+                )
+            )
+        }
+        if let fable = snapshot?.usage.sevenDayFable {
+            claudeModelCounters.append(
+                UsageHistoryCounter(
+                    id: "seven_day_fable",
+                    label: "Claude Fable",
+                    utilization: fable.utilization
+                )
+            )
+        }
+        let additionalClaudeWindows: [String: UsageWindow] = snapshot?.usage.additionalSevenDayWindows ?? [:]
+        for (id, window) in additionalClaudeWindows {
+            claudeModelCounters.append(
+                UsageHistoryCounter(
+                    id: id,
+                    label: dynamicSevenDayTitle(for: id),
+                    utilization: window.utilization
+                )
+            )
+        }
+        claudeModelCounters.sort { $0.id < $1.id }
 
-        let openAIModelValues = openAIUsage?.counters
+        let allOpenAICounters: [OpenAIUsageCounter] = openAIUsage?.counters ?? []
+        let openAIModelCounters: [UsageHistoryCounter] = allOpenAICounters
             .filter { $0.scope != .standard }
             .filter { includingSpark || !isSparkCounter($0) }
-            .map(\.window.usedPercent) ?? []
+            .map { counter in
+                let window = counter.kind.isWeekly ? "weekly" : "5-hour"
+                return UsageHistoryCounter(
+                    id: counter.id,
+                    label: "\(counter.name ?? "Codex model") · \(window)",
+                    utilization: counter.window.usedPercent
+                )
+            }
 
         return UsageHistorySnapshot(
             claudeFiveHour: state.isLoaded ? snapshot?.usage.fiveHour?.utilization : nil,
             claudeWeekly: state.isLoaded ? snapshot?.usage.sevenDay?.utilization : nil,
-            claudeModelMaximum: claudeModelValues.max(),
+            claudeModelMaximum: claudeModelCounters.map(\.utilization).max(),
             openAIFiveHour: openAIState.isLoaded ? openAIUsage?.rateLimit?.primaryWindow?.usedPercent : nil,
             openAIWeekly: openAIState.isLoaded ? openAIUsage?.rateLimit?.secondaryWindow?.usedPercent : nil,
-            openAIModelMaximum: openAIModelValues.max(),
+            openAIModelMaximum: openAIModelCounters.map(\.utilization).max(),
             claudeTodayTokens: claudeLocalTokenUsage?.todayTokens,
-            openAITodayTokens: openAIUsage?.tokenActivity?.tokens(on: Date())
+            openAITodayTokens: openAIUsage?.tokenActivity?.tokens(on: Date()),
+            claudeModelCounters: claudeModelCounters,
+            openAIModelCounters: openAIModelCounters
         )
     }
 

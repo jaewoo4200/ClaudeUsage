@@ -335,8 +335,9 @@ struct WidgetSettingsRow: View {
     }
 }
 
-private struct CompanionSettingsRow: View {
+struct CompanionSettingsRow: View {
     @EnvironmentObject var vm: UsageViewModel
+    @EnvironmentObject var appDelegate: AppDelegate
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var settings: AppSettings
     @EnvironmentObject var history: UsageHistoryStore
@@ -345,7 +346,11 @@ private struct CompanionSettingsRow: View {
         let tokens = theme.current.tokens
         let trend = settings.usageHistoryEnabled ? history.trend() : .empty
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
-        let mood = PetMood.resolve(snapshot: snapshot, trend: trend)
+        let mood = PetMood.resolve(
+            snapshot: snapshot,
+            trend: trend,
+            sensitivity: settings.mimoSensitivity
+        )
 
         VStack(spacing: 0) {
             HStack(spacing: 12) {
@@ -353,7 +358,8 @@ private struct CompanionSettingsRow: View {
                     mood: mood,
                     pressure: snapshot.pressure ?? 0,
                     theme: theme.current,
-                    size: 40
+                    size: 40,
+                    animationMode: settings.mimoAnimationMode
                 )
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Mimo")
@@ -374,6 +380,44 @@ private struct CompanionSettingsRow: View {
 
             Divider().background(tokens.divider)
 
+            companionPickerRow(
+                icon: "gauge",
+                title: "mimo_sensitivity".l,
+                detail: String(
+                    format: "mimo_sensitivity_threshold_format".l,
+                    settings.mimoSensitivity.focusedPressure,
+                    settings.mimoSensitivity.focusedBurnRate
+                )
+            ) {
+                Picker("mimo_sensitivity".l, selection: $settings.mimoSensitivity) {
+                    ForEach(MimoSensitivity.allCases) { sensitivity in
+                        Text(sensitivity.displayName).tag(sensitivity)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 176)
+            }
+
+            Divider().background(tokens.divider)
+
+            companionPickerRow(
+                icon: "figure.run",
+                title: "mimo_animation".l,
+                detail: "mimo_animation_desc".l
+            ) {
+                Picker("mimo_animation".l, selection: $settings.mimoAnimationMode) {
+                    ForEach(MimoAnimationMode.allCases) { mode in
+                        Text(mode.displayName).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 176)
+            }
+
+            Divider().background(tokens.divider)
+
             HStack(spacing: 12) {
                 ZStack {
                     Circle().fill(tokens.bgRing).frame(width: 36, height: 36)
@@ -390,6 +434,16 @@ private struct CompanionSettingsRow: View {
                         .foregroundStyle(tokens.textTertiary)
                 }
                 Spacer()
+                Button {
+                    appDelegate.openUsageHistory(viewModel: vm)
+                } label: {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(tokens.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .help("open_usage_history".l)
+
                 Button {
                     history.clear()
                 } label: {
@@ -417,6 +471,35 @@ private struct CompanionSettingsRow: View {
         }
         .background(tokens.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    private func companionPickerRow<Control: View>(
+        icon: String,
+        title: String,
+        detail: String,
+        @ViewBuilder control: () -> Control
+    ) -> some View {
+        let tokens = theme.current.tokens
+        return HStack(spacing: 12) {
+            ZStack {
+                Circle().fill(tokens.bgRing).frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(tokens.accent)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(tokens.textPrimary)
+                Text(detail)
+                    .font(.system(size: 10))
+                    .foregroundStyle(tokens.textTertiary)
+                    .lineLimit(2)
+            }
+            Spacer(minLength: 6)
+            control()
+        }
+        .padding(12)
     }
 }
 

@@ -10,14 +10,19 @@ struct PetSummaryCard: View {
         let tokens = theme.current.tokens
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
         let trend = settings.usageHistoryEnabled ? history.trend() : .empty
-        let mood = PetMood.resolve(snapshot: snapshot, trend: trend)
+        let mood = PetMood.resolve(
+            snapshot: snapshot,
+            trend: trend,
+            sensitivity: settings.mimoSensitivity
+        )
 
         HStack(spacing: 12) {
             MimoAvatar(
                 mood: mood,
                 pressure: snapshot.pressure ?? 0,
                 theme: theme.current,
-                size: 58
+                size: 58,
+                animationMode: settings.mimoAnimationMode
             )
 
             VStack(alignment: .leading, spacing: 5) {
@@ -91,7 +96,11 @@ struct WidgetMimoCompanion: View {
         let tokens = theme.current.tokens
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
         let trend = settings.usageHistoryEnabled ? history.trend() : .empty
-        let mood = PetMood.resolve(snapshot: snapshot, trend: trend)
+        let mood = PetMood.resolve(
+            snapshot: snapshot,
+            trend: trend,
+            sensitivity: settings.mimoSensitivity
+        )
 
         Group {
             if wide {
@@ -115,7 +124,9 @@ struct WidgetMimoCompanion: View {
                 mood: mood,
                 pressure: snapshot.pressure ?? 0,
                 theme: theme.current,
-                size: 66
+                size: 66,
+                animationMode: settings.mimoAnimationMode,
+                animationActive: settings.floatingWidgetVisible
             )
             .frame(width: 66, height: 66, alignment: .top)
 
@@ -164,7 +175,9 @@ struct WidgetMimoCompanion: View {
                 mood: mood,
                 pressure: snapshot.pressure ?? 0,
                 theme: theme.current,
-                size: 78
+                size: 78,
+                animationMode: settings.mimoAnimationMode,
+                animationActive: settings.floatingWidgetVisible
             )
             .frame(width: 78, height: 78)
 
@@ -248,6 +261,8 @@ struct MimoAvatar: View {
     let theme: ThemeKind
     let size: CGFloat
     var animationTime: TimeInterval? = nil
+    var animationMode: MimoAnimationMode = .automatic
+    var animationActive: Bool = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -283,8 +298,12 @@ struct MimoAvatar: View {
                 size: size,
                 time: reduceMotion ? 0 : animationTime
             )
-        } else {
-            TimelineView(.animation(minimumInterval: 1.0 / 12.0, paused: reduceMotion)) { context in
+        } else if !reduceMotion,
+                  animationActive,
+                  let interval = animationMode.updateInterval(for: mood) {
+            TimelineView(.periodic(from: .now, by: interval)) { context in
+                let elapsed = context.date.timeIntervalSinceReferenceDate
+                let tick = Int(elapsed / interval)
                 MimoCharacter(
                     mood: mood,
                     pressure: pressure,
@@ -292,9 +311,23 @@ struct MimoAvatar: View {
                     tokens: tokens,
                     stateColor: stateColor,
                     size: size,
-                    time: reduceMotion ? 0 : context.date.timeIntervalSinceReferenceDate
+                    time: TimeInterval(tick) * interval
+                )
+                .animation(
+                    .easeInOut(duration: animationMode.transitionDuration(for: mood)),
+                    value: tick
                 )
             }
+        } else {
+            MimoCharacter(
+                mood: mood,
+                pressure: pressure,
+                theme: theme,
+                tokens: tokens,
+                stateColor: stateColor,
+                size: size,
+                time: 0
+            )
         }
     }
 }
@@ -395,56 +428,87 @@ private struct MimoLaptop: View {
         let rightTap = CGFloat(sin(time * 7.2 + .pi)) * size * 0.012
 
         ZStack {
+            // Mimo faces the display; the viewer sees the back of the lid.
             RoundedRectangle(cornerRadius: size * 0.045, style: .continuous)
-                .fill(Color(red: 0.045, green: 0.06, blue: 0.11))
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.12, green: 0.14, blue: 0.20),
+                            Color(red: 0.045, green: 0.06, blue: 0.11)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 .frame(width: size * 0.54, height: size * 0.25)
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.045, style: .continuous)
                         .stroke(Color.white.opacity(0.34), lineWidth: max(0.7, size * 0.012))
                 )
                 .shadow(color: screenAccent.opacity(0.22), radius: size * 0.035)
-                .offset(y: size * 0.125)
+                .offset(y: size * 0.205)
 
-            HStack(spacing: size * 0.025) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: size * 0.075, weight: .black))
-                Capsule()
-                    .frame(width: size * 0.105, height: max(1, size * 0.018))
-            }
-            .foregroundStyle(screenAccent)
-            .offset(y: size * 0.125)
-
-            RoundedRectangle(cornerRadius: size * 0.025, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.9), Color.white.opacity(0.56)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: size * 0.62, height: size * 0.075)
-                .overlay(alignment: .trailing) {
+            Circle()
+                .fill(screenAccent.opacity(0.95))
+                .frame(width: size * 0.095, height: size * 0.095)
+                .overlay(
                     Circle()
-                        .fill(screenAccent)
-                        .frame(width: size * 0.035, height: size * 0.035)
-                        .padding(.trailing, size * 0.055)
-                }
-                .offset(y: size * 0.285)
+                        .fill(Color.white.opacity(0.9))
+                        .frame(width: size * 0.025, height: size * 0.025)
+                )
+                .offset(y: size * 0.205)
+
+            MimoKeyboardDeck(size: size, accent: screenAccent)
+                .offset(y: size * 0.055)
 
             Circle()
                 .fill(leftHandColor)
                 .frame(width: size * 0.09, height: size * 0.09)
                 .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 0.6))
-                .offset(x: -size * 0.18, y: size * 0.22 + leftTap)
+                .offset(x: -size * 0.16, y: size * 0.015 + leftTap)
 
             Circle()
                 .fill(rightHandColor)
                 .frame(width: size * 0.09, height: size * 0.09)
                 .overlay(Circle().stroke(Color.white.opacity(0.25), lineWidth: 0.6))
-                .offset(x: size * 0.18, y: size * 0.22 + rightTap)
+                .offset(x: size * 0.16, y: size * 0.015 + rightTap)
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
+    }
+}
+
+private struct MimoKeyboardDeck: View {
+    let size: CGFloat
+    let accent: Color
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.025, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.92), Color.white.opacity(0.62)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: size * 0.58, height: size * 0.12)
+                .rotation3DEffect(.degrees(54), axis: (x: 1, y: 0, z: 0))
+
+            VStack(spacing: size * 0.018) {
+                ForEach(0..<2, id: \.self) { row in
+                    HStack(spacing: size * 0.018) {
+                        ForEach(0..<5, id: \.self) { column in
+                            Capsule()
+                                .fill((row == 1 && column == 2 ? accent : Color.black).opacity(0.48))
+                                .frame(width: size * 0.05, height: max(1, size * 0.012))
+                        }
+                    }
+                }
+            }
+            .offset(y: -size * 0.008)
+        }
+        .frame(width: size * 0.62, height: size * 0.14)
     }
 }
 

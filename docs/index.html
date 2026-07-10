@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f7f5">
-    <meta name="description" content="Claude와 Codex 사용량, 리셋 시간, 오늘 토큰을 macOS 메뉴바와 위젯에서 확인하세요.">
+    <meta name="description" content="Claude와 Codex 사용량, 리셋 시간, 로컬 14일 그래프를 macOS 메뉴바와 위젯에서 확인하세요.">
     <meta property="og:title" content="ClaudeUsage for macOS">
     <meta property="og:description" content="Claude와 Codex 사용량을 메뉴바 한 곳에서.">
     <meta property="og:type" content="website">
@@ -28,6 +28,7 @@
         <div class="nav-links">
           <a href="#usage">사용량</a>
           <a href="#layouts">위젯</a>
+          <a href="#history">그래프</a>
           <a href="#privacy">데이터</a>
           <a href="#install">설치</a>
         </div>
@@ -44,16 +45,16 @@
         <h1>ClaudeUsage</h1>
         <p class="hero-lead">Claude와 Codex의 한도, 리셋 시간, 오늘 토큰을<br class="desktop-break"> 메뉴바 한 곳에서 확인하세요.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg">
+          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            <span>v1.3.2 다운로드</span>
+            <span>v1.4.0 다운로드</span>
           </a>
-          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.3.2" target="_blank" rel="noreferrer">
+          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.4.0" target="_blank" rel="noreferrer">
             릴리스 노트
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
         </div>
-        <p class="download-meta">3.5MB DMG · Intel + Apple Silicon · 오픈소스</p>
+        <p class="download-meta">3.8MB DMG · Intel + Apple Silicon · 오픈소스</p>
       </div>
 
       <div class="hero-stage" aria-label="ClaudeUsage 가로 위젯 미리보기">
@@ -74,7 +75,7 @@
           <div><strong>5시간</strong><span>단기 한도와 리셋</span></div>
           <div><strong>주간</strong><span>Claude·Codex 장기 한도</span></div>
           <div><strong>모델별</strong><span>Fable과 서버 제공 모델</span></div>
-          <div><strong>오늘 토큰</strong><span>두 서비스 합산 추이</span></div>
+          <div><strong>14일 그래프</strong><span>서비스·모델별 로컬 추이</span></div>
         </div>
       </section>
 
@@ -147,11 +148,36 @@
           <div class="mimo-copy">
             <p class="kicker">숫자를 읽어주는 Mimo</p>
             <h2>많이 썼다면 쉬고,<br>속도가 붙으면 함께 달립니다.</h2>
-            <p>현재 퍼센트만 보지 않고, 선택한 경우 최근 14일의 증가 속도까지 함께 살펴 상태와 대사를 바꿉니다.</p>
+            <p>현재 퍼센트와 최근 증가 속도를 함께 살피고, 민감·균형·느긋 기준과 자동·활발·정지 애니메이션을 직접 고를 수 있습니다.</p>
             <div class="mimo-states" aria-label="Mimo 상태 예시">
-              <span>편안함</span><span>집중</span><span>과열</span><span>회복</span>
+              <span>편안함</span><span>집중</span><span>졸림</span><span>지침</span><span>회복</span>
+            </div>
+            <p class="performance-note">v1.4.0 자동/편안 UI 렌더링 측정: 평균 1.5%, 최대 3.6% CPU. 계정 동기화를 제외한 이 Mac의 12초 Release 표본이며 실제 수치는 환경에 따라 달라집니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section history-section" id="history">
+        <div class="section-inner history-layout">
+          <div class="history-copy">
+            <p class="kicker">내 Mac 안의 14일</p>
+            <h2>어느 한도가<br>빠르게 올랐는지.</h2>
+            <p>1시간, 24시간, 7일, 14일을 오가며 Claude와 Codex, Fable과 서버가 제공한 모델별 한도를 각각 비교합니다.</p>
+            <div class="pressure-rule">
+              <strong>최고 사용률 계산</strong>
+              <code>max(5시간, 주간, 표시 중인 모델별 한도)</code>
+              <span>합계나 평균이 아니라 가장 큰 퍼센트 하나입니다.</span>
+            </div>
+            <div class="sensitivity-list" aria-label="Mimo 민감도 기준">
+              <div><strong>민감</strong><span>35% 또는 8%p/h부터 집중</span></div>
+              <div><strong>균형</strong><span>50% 또는 14%p/h부터 집중</span></div>
+              <div><strong>느긋</strong><span>60% 또는 18%p/h부터 집중</span></div>
             </div>
           </div>
+          <figure class="history-shot">
+            <img src="assets/history-dashboard.png" alt="Claude, Codex, Claude Fable의 24시간 사용량 그래프">
+            <figcaption>기록은 기본으로 꺼져 있으며, 켠 동안 5분 간격으로 이 Mac에만 저장됩니다.</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -177,7 +203,7 @@
               <span role="cell">오늘 토큰</span><strong role="cell">로컬 로그 + 계정 버킷</strong><em role="cell">내용 미저장</em>
             </div>
             <div class="data-row" role="row">
-              <span role="cell">Mimo 추이</span><strong role="cell">선택형 로컬 기록</strong><em role="cell">최대 14일</em>
+              <span role="cell">그래프·Mimo 추이</span><strong role="cell">선택형 로컬 기록</strong><em role="cell">최대 14일</em>
             </div>
           </div>
         </div>
@@ -199,15 +225,15 @@
           </div>
 
           <ol class="install-steps">
-            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.3.2입니다.</p></li>
+            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.4.0입니다.</p></li>
             <li><span>2</span><strong>Applications로 이동</strong><p>아이콘을 폴더로 드래그합니다.</p></li>
             <li><span>3</span><strong>처음 한 번 열기 허용</strong><p>서명되지 않은 오픈소스 앱 안내를 확인합니다.</p></li>
           </ol>
 
           <div class="final-download">
             <img src="assets/app-icon.png" alt="" width="72" height="72">
-            <div><strong>ClaudeUsage 1.3.2</strong><span>무료 · MIT License · 3.5MB</span></div>
-            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg">
+            <div><strong>ClaudeUsage 1.4.0</strong><span>무료 · MIT License · Universal</span></div>
+            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               <span>DMG 받기</span>
             </a>

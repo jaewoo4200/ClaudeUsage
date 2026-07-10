@@ -73,6 +73,126 @@ final class UsageHistoryTests: XCTestCase {
         XCTAssertEqual(PetMood.resolve(snapshot: snapshot(pressure: 35, tokens: nil), trend: fastTrend), .tired)
     }
 
+    func testMimoSensitivityChangesFocusedThreshold() {
+        let current = snapshot(pressure: 42, tokens: nil)
+
+        XCTAssertEqual(
+            PetMood.resolve(snapshot: current, trend: .empty, sensitivity: .responsive),
+            .focused
+        )
+        XCTAssertEqual(
+            PetMood.resolve(snapshot: current, trend: .empty, sensitivity: .balanced),
+            .calm
+        )
+        XCTAssertEqual(
+            PetMood.resolve(snapshot: current, trend: .empty, sensitivity: .relaxed),
+            .calm
+        )
+    }
+
+    func testPressureUsesHighestIndividualModelCounter() {
+        let snapshot = UsageHistorySnapshot(
+            claudeFiveHour: 41,
+            claudeWeekly: 23,
+            claudeModelMaximum: 43,
+            openAIFiveHour: 32,
+            openAIWeekly: 8,
+            openAIModelMaximum: nil,
+            claudeTodayTokens: nil,
+            openAITodayTokens: nil,
+            claudeModelCounters: [
+                UsageHistoryCounter(id: "seven_day_fable", label: "Claude Fable", utilization: 43)
+            ]
+        )
+
+        XCTAssertEqual(snapshot.pressure, 43)
+        XCTAssertEqual(snapshot.pressureSource?.id, "seven_day_fable")
+        XCTAssertEqual(snapshot.pressureSource?.provider, .claude)
+    }
+
+    func testMimoAnimationModesUseAdaptiveCadence() {
+        XCTAssertEqual(MimoAnimationMode.automatic.updateInterval(for: .calm), 1.4)
+        XCTAssertEqual(MimoAnimationMode.automatic.updateInterval(for: .focused), 0.45)
+        XCTAssertEqual(MimoAnimationMode.lively.updateInterval(for: .calm), 0.25)
+        XCTAssertNil(MimoAnimationMode.still.updateInterval(for: .focused))
+        XCTAssertEqual(MimoAnimationMode.automatic.transitionDuration(for: .calm), 0.22)
+        XCTAssertEqual(MimoAnimationMode.lively.transitionDuration(for: .calm), 0.16)
+    }
+
+    func testHistoryDashboardSummaryRespectsProviderScope() {
+        let first = UsageHistorySample(
+            timestamp: Date(timeIntervalSince1970: 1_800_000_000),
+            snapshot: UsageHistorySnapshot(
+                claudeFiveHour: 80,
+                claudeWeekly: 20,
+                claudeModelMaximum: nil,
+                openAIFiveHour: 35,
+                openAIWeekly: 10,
+                openAIModelMaximum: nil,
+                claudeTodayTokens: nil,
+                openAITodayTokens: nil
+            )
+        )
+        let second = UsageHistorySample(
+            timestamp: Date(timeIntervalSince1970: 1_800_000_300),
+            snapshot: UsageHistorySnapshot(
+                claudeFiveHour: 50,
+                claudeWeekly: 20,
+                claudeModelMaximum: nil,
+                openAIFiveHour: 40,
+                openAIWeekly: 10,
+                openAIModelMaximum: nil,
+                claudeTodayTokens: nil,
+                openAITodayTokens: nil
+            )
+        )
+
+        XCTAssertEqual(UsageHistoryDashboardView.pressure(in: second, scope: .claude), 50)
+        XCTAssertEqual(UsageHistoryDashboardView.pressure(in: second, scope: .codex), 40)
+        XCTAssertEqual(UsageHistoryDashboardView.detectedResetCount([first, second], scope: .claude), 1)
+        XCTAssertEqual(UsageHistoryDashboardView.detectedResetCount([first, second], scope: .codex), 0)
+    }
+
+    @MainActor
+    func testHistoryPersistsModelCountersAndLoadsLegacySamples() throws {
+        let url = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-history-schema-test.json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let store = UsageHistoryStore(fileURL: url, minimumSampleInterval: 0)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let model = UsageHistoryCounter(
+            id: "seven_day_fable",
+            label: "Claude Fable",
+            utilization: 47
+        )
+
+        store.record(
+            UsageHistorySnapshot(
+                claudeFiveHour: 30,
+                claudeWeekly: 20,
+                claudeModelMaximum: 47,
+                openAIFiveHour: nil,
+                openAIWeekly: nil,
+                openAIModelMaximum: nil,
+                claudeTodayTokens: nil,
+                openAITodayTokens: nil,
+                claudeModelCounters: [model]
+            ),
+            at: now,
+            force: true
+        )
+
+        let reloaded = UsageHistoryStore(fileURL: url, minimumSampleInterval: 0)
+        XCTAssertEqual(reloaded.samples.first?.claudeModelCounters, [model])
+
+        let legacyJSON = """
+        [{"timestamp":0,"claudeFiveHour":12,"claudeWeekly":8}]
+        """
+        try Data(legacyJSON.utf8).write(to: url, options: .atomic)
+        let legacy = UsageHistoryStore(fileURL: url, minimumSampleInterval: 0)
+        XCTAssertEqual(legacy.samples.first?.snapshot.pressure, 12)
+        XCTAssertEqual(legacy.samples.first?.snapshot.claudeModelCounters, [])
+    }
+
     @MainActor
     func testRecordingUsesFiveMinuteCadenceButCapturesReset() {
         let url = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-history-cadence-test.json")

@@ -16,11 +16,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-3.5MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-3.8MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg">Download v1.3.2</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg">Download v1.4.0</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
@@ -32,9 +32,9 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 - 🤖 **Claude + Codex**: Fetches both providers independently and presents them together
 - 🪟 **4 widget layouts**: Choose stacked, wide, arrow-switched pages, or independent Claude/Codex widgets
 - 🧭 **Future model support**: Displays server-provided model limits without hardcoded names; GPT-5.3-Codex-Spark is hidden by default and optional
-- 🧡 **Larger Mimo companion**: Changes expressions and phrases with usage pressure and recent pace, with an extra-large wide-layout appearance
-- 📈 **Optional local history**: Keeps five-minute usage and token trends on this Mac for 14 days; off by default
-- 🪶 **Lightweight native app**: A SwiftUI menu-bar app; local history runs only when the user enables it
+- 🧡 **Adjustable Mimo companion**: Choose reaction sensitivity and Auto, Lively, or Still animation while expressions follow current pressure and recent pace
+- 📈 **Local usage charts**: Optionally keep five-minute samples on this Mac for 14 days and inspect them by time range and provider
+- 🪶 **Adaptive native animation**: Uses a low update cadence while calm and stops rendering when the floating widget is hidden
 - 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
 - 🌏 **Multilingual**: Korean / English — toggle instantly
 - 🔄 **Auto-refresh every 60s** plus manual refresh
@@ -113,9 +113,21 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 
 > Layout / separate providers / Spark visibility / theme / Mimo / local history / language all update live across the app.
 
+### Local usage charts
+
+<p align="center">
+  <img src="docs/assets/history-dashboard.png" width="700" alt="24-hour Claude and Codex usage chart">
+</p>
+
+> Open the chart from the menu-bar graph icon or **Open usage charts** in Settings, then switch between 1 hour, 24 hours, 7 days, or 14 days and All, Claude, or Codex.
+
+<p align="center">
+  <img src="docs/assets/settings-mimo.png" width="420" alt="Mimo reaction sensitivity and animation settings">
+</p>
+
 ## 🚀 Installation (Users)
 
-1. Download [ClaudeUsage-1.3.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. Download [ClaudeUsage-1.4.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.4.0/ClaudeUsage-1.4.0.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
@@ -196,10 +208,32 @@ ClaudeUsage does not scan regular ChatGPT conversations, ChatGPT Classic history
 ### What does Mimo history store?
 
 - History is **off by default** and starts only after the user enables it in Settings.
-- Percentages, daily token totals, and timestamps are kept for up to 14 days at `~/Library/Application Support/ClaudeUsage/usage-history.json`.
+- Percentages, model-limit names and identifiers, daily token totals, and timestamps are kept for up to 14 days at `~/Library/Application Support/ClaudeUsage/usage-history.json`.
+- Starting with v1.4.0, model-specific limit identifiers, display names, and percentages are retained so Fable and future server-provided limits remain separate in charts.
 - Prompts, responses, filenames, project names, cookies, and access tokens are not stored. All history can be deleted immediately in Settings.
 - Removing or reinstalling the app bundle does not automatically remove this history file. **Clear usage history** deletes only ClaudeUsage's 14-day trend samples; today's token total can appear again because it is recalculated from Claude Code's local logs and Codex account daily buckets.
 - See [Usage history, privacy, and provider policy](docs/USAGE_HISTORY_AND_POLICY.md) for data-source and terms details.
+
+### How Mimo calculates peak pressure
+
+Mimo's `peak pressure` is **one highest percentage**, not a sum or average:
+
+```text
+max(Claude 5-hour, Claude weekly, Claude model limits,
+    Codex 5-hour, Codex weekly, visible Codex model limits)
+```
+
+When Spark visibility is off, Spark-specific limits are excluded from the calculation. With history enabled, Mimo also considers the last hour's rate of change.
+
+| Sensitivity | Focused starts | Sleepy starts | Tired starts |
+|---|---:|---:|---:|
+| Early | 35% or 8%p/h | 70% or 22%p/h | 90% or 40%p/h |
+| Balanced (default) | 50% or 14%p/h | 75% or 28%p/h | 90% or 45%p/h |
+| Relaxed | 60% or 18%p/h | 82% or 34%p/h | 94% or 52%p/h |
+
+A drop of at least 15 percentage points followed by pressure below 60% produces the Refreshed state for up to 30 minutes. In Auto animation mode, target poses update about every 1.4 seconds while calm and every 0.45 seconds while Focused or Refreshed, with only 0.16 to 0.25 seconds of smooth transition depending on state. Lively uses 0.25-second updates; Still performs no continuous rendering.
+
+> **Performance note:** On 2026-07-10, a 12-second horizontal-widget render-path sample on this Mac measured the installed v1.3.2 at about 31% average and 46.4% peak CPU. The v1.4.0 Release UI harness measured 1.5% average and 3.6% peak in Auto/Calm. The latter disabled account synchronization to isolate UI cost, so real usage varies with refresh activity and hardware.
 
 ### What should you do?
 
@@ -246,7 +280,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.3.2.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.4.0.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon
@@ -302,8 +336,9 @@ ClaudeUsage/
 - [x] 🌑 **Dark mode** — added in v1.1.0
 - [x] 🤖 **Codex / OpenAI usage** — added in v1.2.0
 - [x] 🧡 **Mimo companion + 14-day local trends + 4 widget layouts** — added in v1.3.0
+- [x] 📊 **Usage charts + Mimo sensitivity, animation, and performance improvements** — added in v1.4.0
 - [ ] 🔔 macOS notifications at 70% / 90%
-- [ ] 📊 Long-term usage analysis view
+- [ ] 📊 90-day+ statistics and data export
 - [ ] 👥 Multiple organization accounts
 - [ ] 🖥️ macOS Sonoma+ desktop widget (WidgetKit)
 

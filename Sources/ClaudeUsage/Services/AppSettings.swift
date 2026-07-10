@@ -71,6 +71,118 @@ enum WidgetLayoutMode: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum MimoSensitivity: String, CaseIterable, Codable, Identifiable {
+    case responsive
+    case balanced
+    case relaxed
+
+    var id: String { rawValue }
+
+    @MainActor
+    var displayName: String {
+        switch self {
+        case .responsive: return "mimo_sensitivity_responsive".l
+        case .balanced: return "mimo_sensitivity_balanced".l
+        case .relaxed: return "mimo_sensitivity_relaxed".l
+        }
+    }
+
+    var focusedPressure: Double {
+        switch self {
+        case .responsive: return 35
+        case .balanced: return 50
+        case .relaxed: return 60
+        }
+    }
+
+    var focusedBurnRate: Double {
+        switch self {
+        case .responsive: return 8
+        case .balanced: return 14
+        case .relaxed: return 18
+        }
+    }
+
+    var sleepyPressure: Double {
+        switch self {
+        case .responsive: return 70
+        case .balanced: return 75
+        case .relaxed: return 82
+        }
+    }
+
+    var sleepyBurnRate: Double {
+        switch self {
+        case .responsive: return 22
+        case .balanced: return 28
+        case .relaxed: return 34
+        }
+    }
+
+    var tiredPressure: Double {
+        switch self {
+        case .responsive: return 90
+        case .balanced: return 90
+        case .relaxed: return 94
+        }
+    }
+
+    var tiredBurnRate: Double {
+        switch self {
+        case .responsive: return 40
+        case .balanced: return 45
+        case .relaxed: return 52
+        }
+    }
+}
+
+enum MimoAnimationMode: String, CaseIterable, Codable, Identifiable {
+    case automatic
+    case lively
+    case still
+
+    var id: String { rawValue }
+
+    @MainActor
+    var displayName: String {
+        switch self {
+        case .automatic: return "mimo_animation_auto".l
+        case .lively: return "mimo_animation_lively".l
+        case .still: return "mimo_animation_still".l
+        }
+    }
+
+    func updateInterval(for mood: PetMood) -> TimeInterval? {
+        switch self {
+        case .still:
+            return nil
+        case .lively:
+            return 0.25
+        case .automatic:
+            switch mood {
+            case .focused, .refreshed: return 0.45
+            case .waiting, .calm: return 1.4
+            case .sleepy, .tired: return 1.8
+            }
+        }
+    }
+
+    func transitionDuration(for mood: PetMood) -> TimeInterval {
+        switch self {
+        case .still:
+            return 0
+        case .lively:
+            return 0.16
+        case .automatic:
+            switch mood {
+            case .focused, .refreshed: return 0.16
+            case .waiting, .calm: return 0.22
+            case .sleepy, .tired: return 0.25
+            }
+        }
+    }
+}
+
 @MainActor
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
@@ -86,6 +198,8 @@ final class AppSettings: ObservableObject {
     private let separateClaudeKey = "separateClaudeWidgetEnabled"
     private let separateOpenAIKey = "separateOpenAIWidgetEnabled"
     private let showOpenAISparkKey = "showOpenAISparkLimits"
+    private let mimoSensitivityKey = "mimoSensitivity"
+    private let mimoAnimationModeKey = "mimoAnimationMode"
 
     @Published var widgetAlwaysOnTop: Bool {
         didSet {
@@ -135,6 +249,16 @@ final class AppSettings: ObservableObject {
         didSet { UserDefaults.standard.set(showOpenAISparkLimits, forKey: showOpenAISparkKey) }
     }
 
+    @Published var mimoSensitivity: MimoSensitivity {
+        didSet { UserDefaults.standard.set(mimoSensitivity.rawValue, forKey: mimoSensitivityKey) }
+    }
+
+    @Published var mimoAnimationMode: MimoAnimationMode {
+        didSet { UserDefaults.standard.set(mimoAnimationMode.rawValue, forKey: mimoAnimationModeKey) }
+    }
+
+    @Published var floatingWidgetVisible = false
+
     init() {
         // widget always-on-top
         if UserDefaults.standard.object(forKey: "widgetAlwaysOnTop") == nil {
@@ -179,6 +303,20 @@ final class AppSettings: ObservableObject {
             self.showOpenAISparkLimits = false
         } else {
             self.showOpenAISparkLimits = UserDefaults.standard.bool(forKey: showOpenAISparkKey)
+        }
+
+        if let raw = UserDefaults.standard.string(forKey: mimoSensitivityKey),
+           let sensitivity = MimoSensitivity(rawValue: raw) {
+            self.mimoSensitivity = sensitivity
+        } else {
+            self.mimoSensitivity = .balanced
+        }
+
+        if let raw = UserDefaults.standard.string(forKey: mimoAnimationModeKey),
+           let mode = MimoAnimationMode(rawValue: raw) {
+            self.mimoAnimationMode = mode
+        } else {
+            self.mimoAnimationMode = .automatic
         }
     }
 

@@ -1,6 +1,6 @@
 # Mimo behavior and reset-credit advisor
 
-Status: proposed
+Status: core mood, sensitivity, animation modes, laptop pose, local trends, and reset-credit readout implemented in v1.4.0; advanced actions and reset recommendations remain proposed
 
 This document turns Mimo from a moving badge into a fixed-position character whose eyes, arms, legs, expression, props, and speech react to current quota pressure and opt-in local trends.
 
@@ -28,6 +28,18 @@ The rate-limit API uses `usedPercent`. User-facing recommendation rules use rema
 ```text
 remainingPercent = 100 - usedPercent
 ```
+
+## Implemented pressure and sensitivity rules
+
+Immediate pressure is the highest visible percentage across Claude and Codex 5-hour, weekly, and model-specific limits. It is not a sum or average. Hidden optional model counters are excluded.
+
+| Sensitivity | Focused | Sleepy | Tired |
+|---|---:|---:|---:|
+| Early | 35% or 8%p/hour | 70% or 22%p/hour | 90% or 40%p/hour |
+| Balanced | 50% or 14%p/hour | 75% or 28%p/hour | 90% or 45%p/hour |
+| Relaxed | 60% or 18%p/hour | 82% or 34%p/hour | 94% or 52%p/hour |
+
+Balanced is the default. A detected drop of at least 15 percentage points followed by pressure below 60% selects Refreshed for up to 30 minutes. Focused shows the laptop prop. Sleepy, Tired, and Refreshed use their dedicated face, limb pose, and action mark.
 
 ## Reset-credit data model
 
@@ -76,7 +88,7 @@ Example bubbles:
 - Priority order: expiry/recommendation, reset event, critical usage, rapid activity, idle phrase.
 - Never cover a quota ring, provider name, navigation arrow, or settings control.
 
-## Behavior catalogue
+## Planned behavior catalogue
 
 Mimo has a base mood plus one action. This prevents unrelated animations from competing.
 
@@ -117,10 +129,15 @@ Provider pace should be calculated independently from existing five-minute snaps
 
 ## Performance and accessibility
 
-- Use 8-12 animation frames per second only while visible.
-- Run active gestures in 3-5 second bursts, followed by a still interval.
+- Auto updates target poses every 1.4 seconds while Waiting or Calm, every 0.45 seconds while Focused or Refreshed, and every 1.8 seconds while Sleepy or Tired.
+- Lively uses 0.25-second target-pose updates; Still has no continuous timeline.
+- Auto transitions last 0.16 seconds while Focused or Refreshed, 0.22 seconds while Waiting or Calm, and 0.25 seconds while Sleepy or Tired. Lively transitions last 0.16 seconds.
+- Interpolate briefly between target poses instead of rebuilding the full character at display refresh rate.
+- Pause the floating widget timeline when the widget is hidden.
 - With Reduce Motion enabled, switch poses without continuous limb movement.
 - Bubble text must be exposed as one accessibility announcement and must not repeat on every refresh.
+
+Reference measurement on 2026-07-10: a 12-second horizontal-widget render-path sample on this Mac dropped from roughly 31% average / 46.4% peak CPU in the installed v1.3.2 build to 1.5% average / 3.6% peak in the v1.4.0 Release UI harness. The v1.4.0 harness disabled account synchronization to isolate UI cost, so this is not a promise for every refresh state or Mac.
 - Keep behavior deterministic within a time bucket so widget recreation does not cause random jumps.
 
 ## Suggested implementation order
