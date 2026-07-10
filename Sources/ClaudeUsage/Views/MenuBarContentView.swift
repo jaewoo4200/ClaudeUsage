@@ -15,23 +15,51 @@ struct MenuBarContentView: View {
 
 private struct DashboardDropdown: View {
     @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var settings: AppSettings
+    @State private var scrollHeight: CGFloat = 360
 
     var body: some View {
         let tokens = theme.current.tokens
         VStack(spacing: 14) {
             ScrollView {
                 VStack(spacing: 16) {
+                    if settings.usagePetEnabled {
+                        PetSummaryCard()
+                    }
                     ClaudeProviderSection()
                     Divider().background(tokens.divider)
                     OpenAIProviderSection()
                 }
                 .padding(.trailing, 2)
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear.preference(
+                            key: MenuScrollContentHeightKey.self,
+                            value: proxy.size.height
+                        )
+                    }
+                )
             }
-            .frame(maxHeight: 620)
+            .frame(height: scrollHeight)
+            .onPreferenceChange(MenuScrollContentHeightKey.self) { measuredHeight in
+                guard measuredHeight > 0 else { return }
+                let clampedHeight = min(ceil(measuredHeight), 560)
+                if abs(scrollHeight - clampedHeight) >= 0.5 {
+                    scrollHeight = clampedHeight
+                }
+            }
 
             Divider().background(tokens.divider)
             FooterRow()
         }
+    }
+}
+
+private struct MenuScrollContentHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
@@ -96,8 +124,10 @@ private struct ClaudeProviderSection: View {
 private struct OpenAIProviderSection: View {
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var settings: AppSettings
 
     var body: some View {
+        let metrics = vm.openAIDisplayMetrics(includingSpark: settings.showOpenAISparkLimits)
         VStack(spacing: 12) {
             ProviderHeaderSection(
                 title: "openai_usage".l,
@@ -109,10 +139,10 @@ private struct OpenAIProviderSection: View {
 
             switch vm.openAIState {
             case .loaded:
-                if vm.openAIDisplayMetrics.isEmpty {
+                if metrics.isEmpty {
                     ProviderMessageView(message: "usage_unavailable".l)
                 } else {
-                    ForEach(vm.openAIDisplayMetrics) { metric in
+                    ForEach(metrics) { metric in
                         ThemedUsageCard(
                             title: metric.title,
                             utilization: metric.utilization,
@@ -169,9 +199,9 @@ private struct ProviderHeaderSection: View {
         HStack(spacing: 10) {
             Group {
                 if isOpenAI {
-                    OpenAIIconDot(theme: theme.current, size: 36)
+                    CodexProviderIcon(size: 36)
                 } else {
-                    AppIconDot(theme: theme.current, size: 36)
+                    ClaudeProviderIcon(size: 36)
                 }
             }
             VStack(alignment: .leading, spacing: 2) {

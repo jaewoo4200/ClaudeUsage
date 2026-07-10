@@ -2,14 +2,14 @@
   <a href="README.md">🇰🇷 한국어</a> · <b>🇺🇸 English</b>
 </div>
 
-# Claude + GPT Usage
+# Claude + Codex Usage
 
 <p align="center">
   <img src="docs/screenshots/app-icon.png" width="120" alt="App Icon">
 </p>
 
 <p align="center">
-  <b>See Claude and OpenAI usage at a glance — macOS menu bar + floating widget</b>
+  <b>See Claude and Codex usage at a glance — macOS menu bar + floating widget</b>
 </p>
 
 <p align="center">
@@ -29,9 +29,12 @@
 
 A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time through a menu bar item and a floating widget. It combines Claude's 5-hour, weekly, and model limits with OpenAI's 5-hour, weekly, and server-provided model-specific limits.
 
-- 🤖 **Claude + OpenAI**: Fetches both providers independently and presents them together
-- 🧭 **Future model support**: Displays server-provided limits such as GPT-5.3-Codex-Spark and GPT-5.6 models without hardcoded model names
-- 🪶 **Lightweight**: 2MB dmg, 80MB RAM, < 0.1% CPU — no problem leaving it on all day
+- 🤖 **Claude + Codex**: Fetches both providers independently and presents them together
+- 🪟 **4 widget layouts**: Choose stacked, wide, arrow-switched pages, or independent Claude/Codex widgets
+- 🧭 **Future model support**: Displays server-provided model limits without hardcoded names; GPT-5.3-Codex-Spark is hidden by default and optional
+- 🧡 **Larger Mimo companion**: Changes expressions and phrases with usage pressure and recent pace, with an extra-large wide-layout appearance
+- 📈 **Optional local history**: Keeps five-minute usage and token trends on this Mac for 14 days; off by default
+- 🪶 **Lightweight native app**: A SwiftUI menu-bar app; local history runs only when the user enables it
 - 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
 - 🌏 **Multilingual**: Korean / English — toggle instantly
 - 🔄 **Auto-refresh every 60s** plus manual refresh
@@ -108,7 +111,7 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
   </tr>
 </table>
 
-> Theme / always-on-top / language — all toggle live and reflect instantly across menu bar, widget, and settings.
+> Layout / separate providers / Spark visibility / theme / Mimo / local history / language all update live across the app.
 
 ## 🚀 Installation (Users)
 
@@ -170,9 +173,31 @@ When you first sign in, ClaudeUsage saves your **claude.ai session cookies in th
 
 ### How is the OpenAI session handled?
 
-- ClaudeUsage only **reads** the local Codex session at `~/.codex/auth.json`. It never stores the OpenAI token separately or writes it to logs.
-- The session is sent only to `chatgpt.com` when fetching usage. No additional login window or token copy is required.
-- If the file is missing or the session expires, Claude remains available and only the OpenAI section shows a connection prompt.
+- ClaudeUsage uses the documented local interface exposed by `codex app-server`, bundled with ChatGPT/Codex. It does not read the OpenAI token file directly or store a copy.
+- It calls only `account/rateLimits/read` and `account/usage/read`. No additional login window or token copy is required.
+- If Codex/ChatGPT is unavailable or its session expires, Claude remains available and only the OpenAI section shows a connection prompt.
+
+### Where does each usage number actually come from?
+
+`Local interface` does not mean reading local conversation logs. ClaudeUsage asks a Codex process running on this Mac, and that process returns server-backed snapshots for the signed-in ChatGPT account.
+
+| Displayed value | Data source | Reads conversation logs directly |
+|---|---|---|
+| Claude 5-hour, weekly, and model limits | claude.ai usage request authenticated with the user's Keychain session | No |
+| Claude Code daily tokens and trend | Timestamp and numeric usage fields from `~/.claude/projects/**/*.jsonl` on this Mac | Yes, only local Claude Code records |
+| Codex 5-hour, weekly, and model limits | `account/rateLimits/read` through the `codex app-server` bundled with ChatGPT/Codex | No |
+| Codex daily tokens and trend | Account-level daily buckets returned by `account/usage/read` | No |
+| Mimo 14-day history | Opt-in `usage-history.json` written by ClaudeUsage | ClaudeUsage's own file |
+
+ClaudeUsage does not scan regular ChatGPT conversations, ChatGPT Classic history, or Codex session content. It uses the current ChatGPT app with Codex integration, a standalone Codex app, or a compatible signed-in Codex executable.
+
+### What does Mimo history store?
+
+- History is **off by default** and starts only after the user enables it in Settings.
+- Percentages, daily token totals, and timestamps are kept for up to 14 days at `~/Library/Application Support/ClaudeUsage/usage-history.json`.
+- Prompts, responses, filenames, project names, cookies, and access tokens are not stored. All history can be deleted immediately in Settings.
+- Removing or reinstalling the app bundle does not automatically remove this history file. **Clear usage history** deletes only ClaudeUsage's 14-day trend samples; today's token total can appear again because it is recalculated from Claude Code's local logs and Codex account daily buckets.
+- See [Usage history, privacy, and provider policy](docs/USAGE_HISTORY_AND_POLICY.md) for data-source and terms details.
 
 ### What should you do?
 
@@ -215,7 +240,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.2.0.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.3.1.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon
@@ -249,7 +274,8 @@ ClaudeUsage/
 - **SwiftUI** + AppKit (native macOS)
 - **WKWebView** (claude.ai OAuth/Google sign-in → cookie capture)
 - **Keychain Services** (secure session cookie storage)
-- **Local Codex OAuth session** (read-only access to `~/.codex/auth.json`)
+- **Codex app-server JSON-RPC** (documented local usage interface)
+- **Local Claude Code JSONL aggregation** (optional token trends; no content retained)
 - **URLSession async/await** (usage API calls)
 - **NSPanel** (.statusBar level for the widget window)
 - **xcodegen** (project file managed as code)
@@ -259,18 +285,19 @@ ClaudeUsage/
 | Item | Detail |
 |---|---|
 | Unofficial API | `claude.ai/api/organizations/.../usage` is undocumented. May break if Anthropic changes it |
-| OpenAI usage API | `chatgpt.com/backend-api/wham/usage` is internal and may require updates if OpenAI changes its response |
 | Session expiry | When claude.ai cookies expire, you'll need to sign in again (the app shows a prompt) |
-| OpenAI connection | Requires a local Codex session; sign in again through Codex/ChatGPT if it expires |
+| OpenAI connection | Requires Codex or ChatGPT with `codex app-server` and a signed-in local session |
+| Token trends | OpenAI daily buckets may lag behind an active task. Claude uses only today's Claude Code logs on this Mac; neither maps 1:1 to quota percentages |
 | Single account | One account per provider at a time |
 | Code signing | Not signed with Apple Developer ID — first run needs right-click → Open |
 
 ## 🗺️ Roadmap
 
 - [x] 🌑 **Dark mode** — added in v1.1.0
-- [x] 🤖 **GPT / OpenAI usage** — added in v1.2.0
+- [x] 🤖 **Codex / OpenAI usage** — added in v1.2.0
+- [x] 🧡 **Mimo companion + 14-day local trends + 4 widget layouts** — added in v1.3.0
 - [ ] 🔔 macOS notifications at 70% / 90%
-- [ ] 📊 Usage history graph (local SQLite)
+- [ ] 📊 Long-term usage analysis view
 - [ ] 👥 Multiple organization accounts
 - [ ] 🖥️ macOS Sonoma+ desktop widget (WidgetKit)
 
@@ -281,8 +308,9 @@ Contributions welcome — feel free to open issues or PRs.
 This is an **independent open-source project, not affiliated with Anthropic or OpenAI**.
 
 - It calls **undocumented internal APIs** of claude.ai. Behavior may break if these change.
-- OpenAI usage also relies on an **undocumented internal ChatGPT API**.
-- Use is at your own risk. Please comply with claude.ai's [Terms of Service](https://www.anthropic.com/legal/consumer-terms).
+- OpenAI usage now uses only the documented Codex `app-server` interface; the direct private `wham/usage` call has been removed.
+- Anthropic's consumer terms restrict automated access without an API key or explicit permission. Review the [policy assessment](docs/USAGE_HISTORY_AND_POLICY.md) before public distribution.
+- Use is at your own risk and must comply with Anthropic's [Consumer Terms](https://www.anthropic.com/legal/consumer-terms) and OpenAI's [Terms of Use](https://openai.com/policies/row-terms-of-use/).
 - Only your own claude.ai cookies are stored in your local Keychain. No data is transmitted externally.
 - "Claude" and related design elements are Anthropic's property. This is a fan-made utility app.
 

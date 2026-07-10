@@ -17,7 +17,7 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 AppIconDot(theme: theme.current, size: 40)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Claude + GPT Usage")
+                    Text("Claude + Codex Usage")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(t.textPrimary)
                     Text("v\(appVersion) · \("settings_title".l)")
@@ -51,6 +51,10 @@ struct SettingsView: View {
 
                     SectionHeader(title: "section_widget".l)
                     WidgetSettingsRow()
+                        .padding(.horizontal, 20)
+
+                    SectionHeader(title: "section_companion".l)
+                    CompanionSettingsRow()
                         .padding(.horizontal, 20)
 
                     SectionHeader(title: "section_language".l)
@@ -183,38 +187,236 @@ private struct ThemeRow: View {
     }
 }
 
-private struct WidgetSettingsRow: View {
+struct WidgetSettingsRow: View {
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var settings: AppSettings
+
     var body: some View {
         let t = theme.current.tokens
-        HStack(spacing: 12) {
-            ZStack {
-                Circle().fill(t.bgRing).frame(width: 36, height: 36)
-                Image(systemName: "rectangle.on.rectangle")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(t.accent)
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                settingIcon("rectangle.3.group")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("widget_layout".l)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(t.textPrimary)
+                    Text(settings.widgetLayoutMode.descriptionText)
+                        .font(.system(size: 11))
+                        .foregroundStyle(t.textTertiary)
+                        .lineLimit(2)
+                }
+                Spacer()
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text("always_on_top".l)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(t.textPrimary)
-                Text(settings.widgetAlwaysOnTop
-                     ? "always_on_top_on_desc".l
-                     : "always_on_top_off_desc".l)
-                    .font(.system(size: 11))
-                    .foregroundStyle(t.textTertiary)
+            .padding(12)
+
+            Picker("widget_layout".l, selection: $settings.widgetLayoutMode) {
+                ForEach(WidgetLayoutMode.allCases) { mode in
+                    Label(mode.displayName, systemImage: mode.systemSymbol)
+                        .tag(mode)
+                        .help(mode.descriptionText)
+                }
             }
-            Spacer()
-            Toggle("", isOn: $settings.widgetAlwaysOnTop)
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, 10)
+            .padding(.bottom, 10)
+
+            if settings.widgetLayoutMode == .separate {
+                Divider().background(t.divider)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("separate_widgets".l)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(t.textTertiary)
+                    HStack(spacing: 8) {
+                        separateProviderToggle(
+                            title: "show_claude_widget".l,
+                            provider: .claude,
+                            isOn: $settings.separateClaudeWidgetEnabled,
+                            isLastEnabled: settings.separateClaudeWidgetEnabled
+                                && !settings.separateOpenAIWidgetEnabled
+                        )
+                        separateProviderToggle(
+                            title: "show_openai_widget".l,
+                            provider: .codex,
+                            isOn: $settings.separateOpenAIWidgetEnabled,
+                            isLastEnabled: settings.separateOpenAIWidgetEnabled
+                                && !settings.separateClaudeWidgetEnabled
+                        )
+                    }
+                }
+                .padding(10)
+            }
+
+            Divider().background(t.divider)
+
+            HStack(spacing: 12) {
+                settingIcon("rectangle.on.rectangle")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("always_on_top".l)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(t.textPrimary)
+                    Text(settings.widgetAlwaysOnTop
+                         ? "always_on_top_on_desc".l
+                         : "always_on_top_off_desc".l)
+                        .font(.system(size: 11))
+                        .foregroundStyle(t.textTertiary)
+                }
+                Spacer()
+                Toggle("", isOn: $settings.widgetAlwaysOnTop)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .tint(t.accent)
+                    .labelsHidden()
+            }
+            .padding(12)
+
+            Divider().background(t.divider)
+
+            HStack(spacing: 12) {
+                settingIcon("bolt.fill")
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("show_spark_limits".l)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(t.textPrimary)
+                        .lineLimit(2)
+                    Text("show_spark_limits_desc".l)
+                        .font(.system(size: 11))
+                        .foregroundStyle(t.textTertiary)
+                        .lineLimit(2)
+                }
+                Spacer()
+                Toggle("", isOn: $settings.showOpenAISparkLimits)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .tint(t.accent)
+                    .labelsHidden()
+            }
+            .padding(12)
+        }
+        .background(t.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .animation(.easeInOut(duration: 0.18), value: settings.widgetLayoutMode)
+    }
+
+    private func settingIcon(_ systemName: String) -> some View {
+        ZStack {
+            Circle().fill(theme.current.tokens.bgRing).frame(width: 36, height: 36)
+            Image(systemName: systemName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(theme.current.tokens.accent)
+        }
+    }
+
+    private func separateProviderToggle(
+        title: String,
+        provider: ProviderBrand,
+        isOn: Binding<Bool>,
+        isLastEnabled: Bool
+    ) -> some View {
+        HStack(spacing: 6) {
+            ProviderBrandIcon(provider: provider, size: 18)
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(theme.current.tokens.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: 2)
+            Toggle("", isOn: isOn)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .tint(theme.current.tokens.accent)
+                .labelsHidden()
+                .disabled(isLastEnabled)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity)
+        .background(theme.current.tokens.bg)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
+private struct CompanionSettingsRow: View {
+    @EnvironmentObject var vm: UsageViewModel
+    @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var settings: AppSettings
+    @EnvironmentObject var history: UsageHistoryStore
+
+    var body: some View {
+        let tokens = theme.current.tokens
+        let trend = settings.usageHistoryEnabled ? history.trend() : .empty
+        let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
+        let mood = PetMood.resolve(snapshot: snapshot, trend: trend)
+
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                MimoAvatar(
+                    mood: mood,
+                    pressure: snapshot.pressure ?? 0,
+                    theme: theme.current,
+                    size: 40
+                )
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Mimo")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tokens.textPrimary)
+                    Text("pet_enabled_desc".l)
+                        .font(.system(size: 11))
+                        .foregroundStyle(tokens.textTertiary)
+                }
+                Spacer()
+                Toggle("", isOn: $settings.usagePetEnabled)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .tint(tokens.accent)
+                    .labelsHidden()
+            }
+            .padding(12)
+
+            Divider().background(tokens.divider)
+
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(tokens.bgRing).frame(width: 36, height: 36)
+                    Image(systemName: "chart.xyaxis.line")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tokens.accent)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("usage_history".l)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tokens.textPrimary)
+                    Text("usage_history_local_desc".l)
+                        .font(.system(size: 11))
+                        .foregroundStyle(tokens.textTertiary)
+                }
+                Spacer()
+                Button {
+                    history.clear()
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(history.hasSamples ? tokens.textTertiary : tokens.divider)
+                }
+                .buttonStyle(.plain)
+                .disabled(!history.hasSamples)
+                .help("clear_usage_history".l)
+
+                Toggle("", isOn: Binding(
+                    get: { settings.usageHistoryEnabled },
+                    set: { enabled in
+                        settings.usageHistoryEnabled = enabled
+                        if enabled { vm.refreshNow() }
+                    }
+                ))
                 .toggleStyle(.switch)
                 .controlSize(.small)
-                .tint(t.accent)
+                .tint(tokens.accent)
                 .labelsHidden()
+            }
+            .padding(12)
         }
-        .padding(12)
-        .background(t.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(tokens.bgSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
@@ -287,12 +489,7 @@ private struct ClaudeAccountRow: View {
     var body: some View {
         let t = theme.current.tokens
         HStack(spacing: 12) {
-            ZStack {
-                Circle().fill(t.bgRing).frame(width: 36, height: 36)
-                Image(systemName: "person.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(t.accent)
-            }
+            ClaudeProviderIcon(size: 36)
             VStack(alignment: .leading, spacing: 2) {
                 Text(vm.organizationName ?? "Claude")
                     .font(.system(size: 13, weight: .semibold))
@@ -336,9 +533,9 @@ private struct OpenAIAccountRow: View {
     var body: some View {
         let tokens = theme.current.tokens
         HStack(spacing: 12) {
-            OpenAIIconDot(theme: theme.current, size: 36)
+            CodexProviderIcon(size: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text("ChatGPT / Codex")
+                Text("Codex")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(tokens.textPrimary)
                     .lineLimit(1)

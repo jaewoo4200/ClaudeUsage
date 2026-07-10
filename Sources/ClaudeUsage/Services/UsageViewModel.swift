@@ -40,13 +40,16 @@ final class UsageViewModel: ObservableObject {
     @Published var openAIState: OpenAIState = .loading
     @Published var lastUpdated: Date?
     @Published var openAILastUpdated: Date?
+    @Published var claudeLocalTokenUsage: ClaudeLocalTokenUsage?
     @Published var isRefreshing: Bool = false
 
     private var refreshTask: Task<Void, Never>?
     private var timerTask: Task<Void, Never>?
+    private var lastLocalTokenFetchAt: Date?
 
     init(autoStart: Bool = true) {
-        if autoStart {
+        let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if autoStart && !isRunningTests {
             bootstrap()
         }
     }
@@ -137,27 +140,68 @@ final class UsageViewModel: ObservableObject {
     var displayMetrics: [UsageDisplayMetric] { claudeDisplayMetrics }
 
     var openAIDisplayMetrics: [UsageDisplayMetric] {
+        openAIDisplayMetrics(includingSpark: true)
+    }
+
+    func openAIDisplayMetrics(includingSpark: Bool) -> [UsageDisplayMetric] {
         guard let openAIUsage else { return [] }
-        return openAIUsage.counters.map { counter in
-            let windowTitle = counter.kind.isWeekly ? "seven_day".l : "five_hour".l
-            let title: String
-            if let name = counter.name, !name.isEmpty {
-                title = "\(name) · \(windowTitle)"
-            } else {
-                title = windowTitle
+        return openAIUsage.counters
+            .filter { includingSpark || !isSparkCounter($0) }
+            .map { counter in
+                let windowTitle = counter.kind.isWeekly ? "seven_day".l : "five_hour".l
+                let title: String
+                if let name = counter.name, !name.isEmpty {
+                    title = "\(name) · \(windowTitle)"
+                } else {
+                    title = windowTitle
+                }
+                return UsageDisplayMetric(
+                    id: counter.id,
+                    title: title,
+                    utilization: counter.window.usedPercent,
+                    resetsAt: counter.window.resetDate(),
+                    isWeekly: counter.kind.isWeekly
+                )
             }
-            return UsageDisplayMetric(
-                id: counter.id,
-                title: title,
-                utilization: counter.window.usedPercent,
-                resetsAt: counter.window.resetDate(),
-                isWeekly: counter.kind.isWeekly
-            )
-        }
+    }
+
+    private func isSparkCounter(_ counter: OpenAIUsageCounter) -> Bool {
+        let identity = "\(counter.id) \(counter.name ?? "")".lowercased()
+        return identity.contains("codex-spark")
+            || identity.contains("codex_spark")
+            || identity.contains("codex spark")
     }
 
     var openAIPrimaryUtilization: Double {
         openAIUsage?.rateLimit?.primaryWindow?.usedPercent ?? 0
+    }
+
+    var currentHistorySnapshot: UsageHistorySnapshot {
+        historySnapshot(includingSpark: AppSettings.shared.showOpenAISparkLimits)
+    }
+
+    func historySnapshot(includingSpark: Bool) -> UsageHistorySnapshot {
+        let claudeModelValues: [Double] = [
+            snapshot?.usage.sevenDayOmelette?.utilization,
+            snapshot?.usage.sevenDayFable?.utilization
+        ]
+        .compactMap { $0 } + (snapshot?.usage.additionalSevenDayWindows.values.map(\.utilization) ?? [])
+
+        let openAIModelValues = openAIUsage?.counters
+            .filter { $0.scope != .standard }
+            .filter { includingSpark || !isSparkCounter($0) }
+            .map(\.window.usedPercent) ?? []
+
+        return UsageHistorySnapshot(
+            claudeFiveHour: state.isLoaded ? snapshot?.usage.fiveHour?.utilization : nil,
+            claudeWeekly: state.isLoaded ? snapshot?.usage.sevenDay?.utilization : nil,
+            claudeModelMaximum: claudeModelValues.max(),
+            openAIFiveHour: openAIState.isLoaded ? openAIUsage?.rateLimit?.primaryWindow?.usedPercent : nil,
+            openAIWeekly: openAIState.isLoaded ? openAIUsage?.rateLimit?.secondaryWindow?.usedPercent : nil,
+            openAIModelMaximum: openAIModelValues.max(),
+            claudeTodayTokens: claudeLocalTokenUsage?.todayTokens,
+            openAITodayTokens: openAIUsage?.tokenActivity?.tokens(on: Date())
+        )
     }
 
     var hasAnyLoadedProvider: Bool {
@@ -215,12 +259,32 @@ final class UsageViewModel: ObservableObject {
     }
 
     private func fetch() async {
+        guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
 
+        let shouldRecordHistory = AppSettings.shared.usageHistoryEnabled
         async let claudeFetch: Void = fetchClaude()
         async let openAIFetch: Void = fetchOpenAI()
-        _ = await (claudeFetch, openAIFetch)
+        async let localTokenFetch: ClaudeLocalTokenUsage? = fetchLocalClaudeTokens(enabled: shouldRecordHistory)
+        let (_, _, localTokens) = await (claudeFetch, openAIFetch, localTokenFetch)
+
+        if shouldRecordHistory {
+            claudeLocalTokenUsage = localTokens
+            UsageHistoryStore.shared.record(currentHistorySnapshot)
+        }
+    }
+
+    private func fetchLocalClaudeTokens(enabled: Bool) async -> ClaudeLocalTokenUsage? {
+        guard enabled else { return nil }
+        let now = Date()
+        if let lastLocalTokenFetchAt,
+           now.timeIntervalSince(lastLocalTokenFetchAt) < 5 * 60 {
+            return claudeLocalTokenUsage
+        }
+        let usage = await ClaudeLocalTokenUsageService.fetch(now: now)
+        lastLocalTokenFetchAt = now
+        return usage
     }
 
     private func fetchClaude() async {

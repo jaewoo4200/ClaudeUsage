@@ -47,15 +47,19 @@ enum CookieStore {
 enum WidgetPositionStore {
     private static let key = "widget.position"
 
-    static func save(_ point: NSPoint) {
+    static func save(_ point: NSPoint, id: String = "combined") {
         let dict = ["x": point.x, "y": point.y]
-        UserDefaults.standard.set(dict, forKey: key)
+        UserDefaults.standard.set(dict, forKey: storageKey(for: id))
     }
 
-    static func load() -> NSPoint? {
-        guard let dict = UserDefaults.standard.dictionary(forKey: key),
+    static func load(id: String = "combined") -> NSPoint? {
+        guard let dict = UserDefaults.standard.dictionary(forKey: storageKey(for: id)),
               let x = dict["x"] as? Double,
               let y = dict["y"] as? Double else { return nil }
         return NSPoint(x: x, y: y)
+    }
+
+    private static func storageKey(for id: String) -> String {
+        id == "combined" ? key : "\(key).\(id)"
     }
 }

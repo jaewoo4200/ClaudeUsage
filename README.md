@@ -2,14 +2,14 @@
   <b>🇰🇷 한국어</b> · <a href="README.en.md">🇺🇸 English</a>
 </div>
 
-# Claude + GPT Usage
+# Claude + Codex Usage
 
 <p align="center">
   <img src="docs/screenshots/app-icon.png" width="120" alt="App Icon">
 </p>
 
 <p align="center">
-  <b>Claude와 OpenAI 사용량을 한눈에 — macOS 메뉴바 + 떠다니는 위젯</b>
+  <b>Claude와 Codex 사용량을 한눈에 — macOS 메뉴바 + 떠다니는 위젯</b>
 </p>
 
 <p align="center">
@@ -29,9 +29,12 @@
 
 Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다. Claude의 5시간·7일·모델별 한도뿐 아니라 OpenAI의 5시간·주간 한도와 서버가 제공하는 모델별 한도를 함께 표시합니다.
 
-- 🤖 **Claude + OpenAI**: 두 계정 상태를 독립적으로 조회하고 한 화면에 표시
-- 🧭 **새 모델 자동 대응**: GPT-5.3-Codex-Spark, GPT-5.6 계열처럼 서버가 내려주는 모델별 한도를 이름 고정 없이 표시
-- 🪶 **가벼움**: 2MB dmg, RAM 80MB, CPU 0.1% 이하 — 상시 띄워둬도 부담 없음
+- 🤖 **Claude + Codex**: 두 계정 상태를 독립적으로 조회하고 한 화면에 표시
+- 🪟 **4가지 위젯 배치**: 세로 / 가로 / 화살표 전환 / Claude·Codex 독립 위젯 중 선택
+- 🧭 **새 모델 자동 대응**: 서버가 내려주는 모델별 한도를 이름 고정 없이 표시하며 GPT-5.3-Codex-Spark는 기본 숨김·선택 표시
+- 🧡 **큰 Mimo 펫**: 현재 한도와 최근 사용 속도에 따라 표정과 대사가 달라지며 가로 위젯에서는 더 크게 표시
+- 📈 **선택형 로컬 기록**: 5분 간격 사용량과 토큰 추이를 이 Mac에만 14일 보관하며 기본값은 꺼짐
+- 🪶 **네이티브 경량 앱**: SwiftUI 메뉴바 앱이며 로컬 기록은 사용자가 켠 경우에만 동작
 - 🎨 **3가지 테마**: 당근 / 토스 / 하이브리드 — 실시간 전환
 - 🌏 **다국어**: 한국어 / English — 즉시 토글
 - 🔄 **60초 자동 새로고침** + 수동 새로고침
@@ -108,7 +111,7 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
   </tr>
 </table>
 
-> 테마 / 위젯 항상 위에 표시 / 언어 — 모두 실시간 토글 가능. 변경 즉시 모든 화면에 반영됩니다.
+> 위젯 배치 / 분리할 서비스 / Spark 표시 / 테마 / Mimo / 로컬 기록 / 언어 — 모두 실시간 토글 가능. 변경 즉시 모든 화면에 반영됩니다.
 
 ## 🚀 설치 (사용자)
 
@@ -170,9 +173,31 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 
 ### OpenAI 로그인은 어떻게 처리하나요?
 
-- Codex가 로컬에 저장한 `~/.codex/auth.json` 세션을 **읽기만** 합니다. ClaudeUsage가 OpenAI 토큰을 별도로 저장하거나 로그에 출력하지 않습니다.
-- 세션은 OpenAI 사용량을 가져올 때만 `chatgpt.com`으로 전송됩니다. 추가 로그인 창이나 토큰 복사는 필요하지 않습니다.
-- 파일이 없거나 세션이 만료되면 Claude 사용량은 그대로 유지되고, OpenAI 영역에만 연결 안내가 표시됩니다.
+- ChatGPT/Codex 앱에 포함된 `codex app-server`의 공식 문서화된 로컬 인터페이스를 사용합니다. ClaudeUsage가 OpenAI 토큰 파일을 직접 읽거나 별도로 저장하지 않습니다.
+- `account/rateLimits/read`와 `account/usage/read`만 호출하므로 추가 로그인 창이나 토큰 복사는 필요하지 않습니다.
+- Codex/ChatGPT 앱을 찾을 수 없거나 세션이 만료되면 Claude 사용량은 그대로 유지되고, OpenAI 영역에만 연결 안내가 표시됩니다.
+
+### 사용량 데이터는 정확히 어디서 오나요?
+
+`로컬 인터페이스`는 로컬 대화 기록을 읽는다는 뜻이 아닙니다. Mac에서 실행되는 Codex 프로세스에 요청하고, 그 프로세스가 로그인된 ChatGPT 계정의 서버 기반 사용량 스냅샷을 돌려주는 방식입니다.
+
+| 표시값 | 데이터 출처 | 대화 기록 직접 읽기 |
+|---|---|---|
+| Claude 5시간·주간·모델 한도 | Keychain의 본인 세션으로 claude.ai 사용량 조회 | 아니요 |
+| Claude Code 오늘 토큰·추이 | 이 Mac의 `~/.claude/projects/**/*.jsonl`에서 시각과 숫자형 usage 필드만 합산 | 예, Claude Code 로컬 기록만 |
+| Codex 5시간·주간·모델 한도 | ChatGPT/Codex에 포함된 `codex app-server`의 `account/rateLimits/read` | 아니요 |
+| Codex 일별 토큰·추이 | `codex app-server`의 `account/usage/read`가 제공하는 계정 단위 일별 버킷 | 아니요 |
+| Mimo 14일 기록 | ClaudeUsage가 사용자가 켠 경우에만 만드는 `usage-history.json` | ClaudeUsage 자체 기록 |
+
+일반 ChatGPT 대화나 ChatGPT Classic 기록, Codex 세션 본문을 스캔하지 않습니다. 현재 ChatGPT 앱의 Codex 통합, 독립 Codex 앱 또는 호환되는 Codex 실행 파일과 로그인된 세션을 사용합니다.
+
+### Mimo 기록은 무엇을 저장하나요?
+
+- 기록은 **기본적으로 꺼져 있으며**, 설정에서 직접 켠 경우에만 시작합니다.
+- 퍼센트, 일별 토큰 합계, 시각만 `~/Library/Application Support/ClaudeUsage/usage-history.json`에 최대 14일 저장합니다.
+- 프롬프트, 응답, 파일명, 프로젝트명, 쿠키, 토큰은 기록하지 않으며 설정에서 즉시 전체 삭제할 수 있습니다.
+- 앱 번들만 삭제하거나 재설치해도 이 기록 파일은 자동으로 삭제되지 않습니다. 설정의 **사용량 기록 지우기**는 ClaudeUsage의 14일 추이 기록만 지우며, 오늘 토큰 합계는 Claude Code 로컬 로그와 Codex 계정 일별 버킷에서 다시 계산되어 곧바로 다시 표시될 수 있습니다.
+- 자세한 데이터 출처와 약관 검토는 [사용량 기록·개인정보·서비스 정책](docs/USAGE_HISTORY_AND_POLICY.md)을 확인하세요.
 
 ### 어떻게 해야 하나요?
 
@@ -215,7 +240,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.2.0.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.3.1.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성
@@ -249,7 +274,8 @@ ClaudeUsage/
 - **SwiftUI** + AppKit (네이티브 macOS 앱)
 - **WKWebView** (claude.ai OAuth/Google 로그인 → 쿠키 캡처)
 - **Keychain Services** (세션 쿠키 안전 저장)
-- **Codex 로컬 OAuth 세션** (`~/.codex/auth.json` 읽기 전용)
+- **Codex app-server JSON-RPC** (문서화된 로컬 사용량 인터페이스)
+- **Claude Code 로컬 JSONL 집계** (선택형 토큰 추이, 내용 미저장)
 - **URLSession async/await** (사용량 API 호출)
 - **NSPanel** (.statusBar level 위젯 윈도우)
 - **xcodegen** (프로젝트 파일 코드 관리)
@@ -259,18 +285,19 @@ ClaudeUsage/
 | 항목 | 내용 |
 |---|---|
 | 비공식 API | `claude.ai/api/organizations/.../usage` 는 비공개 endpoint. Anthropic이 변경하면 깨질 수 있음 |
-| OpenAI 사용량 API | `chatgpt.com/backend-api/wham/usage` 는 내부 endpoint. OpenAI가 응답 형식을 변경하면 업데이트가 필요할 수 있음 |
 | 세션 만료 | claude.ai 쿠키가 만료되면 재로그인 필요 (앱이 알림 표시) |
-| OpenAI 연결 | 로컬 Codex 세션이 필요하며, 만료 시 Codex/ChatGPT에서 다시 로그인해야 함 |
+| OpenAI 연결 | `codex app-server`가 포함된 Codex 또는 ChatGPT 앱과 로그인된 로컬 세션이 필요 |
+| 토큰 추이 | OpenAI 일별 bucket은 현재 작업보다 늦게 반영될 수 있음. Claude는 이 Mac의 오늘 Claude Code 로그만 집계하며 둘 다 한도 퍼센트와 1:1 대응하지 않음 |
 | 다중 계정 | 서비스별로 한 번에 하나의 계정만 지원 |
 | 코드 서명 | Apple Developer 서명 없음 — 첫 실행 시 우클릭→열기 필요 |
 
 ## 🗺️ Roadmap (예정)
 
 - [x] 🌑 **다크 모드** 자동 대응 — v1.1.0에서 추가
-- [x] 🤖 **GPT / OpenAI 사용량** 지원 — v1.2.0에서 추가
+- [x] 🤖 **Codex / OpenAI 사용량** 지원 — v1.2.0에서 추가
+- [x] 🧡 **Mimo 펫 + 14일 로컬 추이 + 4가지 위젯 배치** — v1.3.0에서 추가
 - [ ] 🔔 70% / 90% 도달 시 macOS 알림
-- [ ] 📊 사용량 히스토리 그래프 (로컬 SQLite)
+- [ ] 📊 장기 사용량 분석 화면
 - [ ] 👥 다중 organization 계정 지원
 - [ ] 🖥️ macOS Sonoma+ 데스크탑 위젯 (WidgetKit)
 
@@ -281,8 +308,9 @@ ClaudeUsage/
 이 프로젝트는 **Anthropic 및 OpenAI와 무관한 개인 오픈소스 프로젝트**입니다.
 
 - claude.ai의 **공식 문서화되지 않은 내부 API**를 호출합니다. API 변경 시 동작이 깨질 수 있습니다.
-- OpenAI 사용량 조회에도 ChatGPT의 **공식 문서화되지 않은 내부 API**를 사용합니다.
-- 사용은 본인 책임이며, claude.ai의 [이용 약관](https://www.anthropic.com/legal/consumer-terms)을 준수해주세요.
+- OpenAI 사용량은 Codex의 문서화된 `app-server` 인터페이스만 사용하며, 비공개 `wham/usage` 직접 호출은 제거했습니다.
+- Anthropic 소비자 약관은 API 키 또는 명시적 허용이 없는 자동 접근을 제한합니다. 공개 배포 전 [정책 검토 문서](docs/USAGE_HISTORY_AND_POLICY.md)를 확인하세요.
+- 사용은 본인 책임이며 Anthropic의 [이용 약관](https://www.anthropic.com/legal/consumer-terms)과 OpenAI의 [이용 약관](https://openai.com/policies/row-terms-of-use/)을 준수해야 합니다.
 - 본인의 claude.ai 계정 쿠키만 본인 Mac의 Keychain에 저장합니다. 외부로 데이터를 전송하지 않습니다.
 - "Claude" 명칭과 관련 디자인 요소는 Anthropic의 자산입니다. 이 앱은 fan-made/utility 앱으로 만들어졌습니다.
 

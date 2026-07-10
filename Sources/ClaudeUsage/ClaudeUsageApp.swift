@@ -6,6 +6,8 @@ struct ClaudeUsageApp: App {
     @StateObject private var viewModel = UsageViewModel()
     @StateObject private var themeStore = ThemeStore.shared
     @StateObject private var languageStore = LanguageStore.shared
+    @StateObject private var appSettings = AppSettings.shared
+    @StateObject private var usageHistory = UsageHistoryStore.shared
 
     var body: some Scene {
         MenuBarExtra {
@@ -14,6 +16,8 @@ struct ClaudeUsageApp: App {
                 .environmentObject(appDelegate)
                 .environmentObject(themeStore)
                 .environmentObject(languageStore)
+                .environmentObject(appSettings)
+                .environmentObject(usageHistory)
         } label: {
             MenuBarLabel()
                 .environmentObject(viewModel)
@@ -26,7 +30,8 @@ struct ClaudeUsageApp: App {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
-    private var widgetWindow: FloatingPanel?
+    private var widgetWindows: [WidgetPanelKind: FloatingPanel] = [:]
+    private weak var widgetViewModel: UsageViewModel?
     private var loginWindow: NSWindow?
     private var loginController: LoginWindowController?  // ⬅️ retain
     private var settingsWindow: NSWindow?
@@ -54,27 +59,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             name: .widgetContentSizeDidChange,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateConfiguredWidgetWindows),
+            name: AppSettings.widgetConfigurationChanged,
+            object: nil
+        )
     }
 
     @objc private func updateWidgetLevel() {
-        guard let panel = widgetWindow else { return }
         let alwaysOnTop = AppSettings.shared.widgetAlwaysOnTop
-        panel.level = alwaysOnTop ? .statusBar : .normal
-        panel.collectionBehavior = alwaysOnTop
-            ? [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-            : [.canJoinAllSpaces, .stationary]
+        for panel in widgetWindows.values {
+            panel.level = alwaysOnTop ? .statusBar : .normal
+            panel.collectionBehavior = alwaysOnTop
+                ? [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+                : [.canJoinAllSpaces, .stationary]
+        }
         #if DEBUG
         print("[Widget] level changed: alwaysOnTop=\(alwaysOnTop)")
         #endif
     }
 
     @objc private func resizeWidgetToContent(_ notification: Notification) {
-        guard let size = notification.userInfo?["size"] as? CGSize else { return }
-        resizeWidgetWindow(to: size)
+        guard let size = notification.userInfo?["size"] as? CGSize,
+              let panelID = notification.userInfo?["panelID"] as? String,
+              let kind = WidgetPanelKind(rawValue: panelID) else { return }
+        resizeWidgetWindow(kind, to: size)
     }
 
-    private func resizeWidgetWindow(to size: CGSize) {
-        guard let panel = widgetWindow else { return }
+    private func resizeWidgetWindow(_ kind: WidgetPanelKind, to size: CGSize) {
+        guard let panel = widgetWindows[kind] else { return }
         let width = max(ceil(size.width), 240)
         let height = max(ceil(size.height), 180)
         guard width.isFinite, height.isFinite else { return }
@@ -97,6 +111,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         panel.setFrame(frame, display: true)
     }
 
+    @objc private func updateConfiguredWidgetWindows() {
+        guard widgetVisible, let widgetViewModel else { return }
+        reconcileWidgetWindows(viewModel: widgetViewModel)
+    }
+
     func toggleWidget(viewModel: UsageViewModel) {
         if widgetVisible {
             hideWidget()
@@ -117,7 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             backing: .buffered,
             defer: false
         )
-        win.title = "Claude + GPT Usage"
+        win.title = "Claude + Codex Usage"
         win.isReleasedWhenClosed = false
         win.center()
         let root = SettingsView()
@@ -125,6 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             .environmentObject(AppSettings.shared)
             .environmentObject(LanguageStore.shared)
             .environmentObject(viewModel)
+            .environmentObject(UsageHistoryStore.shared)
         win.contentView = NSHostingView(rootView: root)
         win.delegate = SettingsWindowDelegate.shared
         SettingsWindowDelegate.shared.onClose = { [weak self] in self?.settingsWindow = nil }
@@ -137,77 +157,117 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         #if DEBUG
         print("[Widget] showWidget called")
         #endif
-        if widgetWindow == nil {
-            let host = NSHostingView(rootView: WidgetView()
-                .environmentObject(viewModel)
-                .environmentObject(ThemeStore.shared)
-                .environmentObject(LanguageStore.shared))
-            host.translatesAutoresizingMaskIntoConstraints = true
-            let fitting = host.fittingSize
-            let w = max(fitting.width, 240)
-            let h = max(fitting.height, 180)
-            #if DEBUG
-            print("[Widget] hosting fitting size: \(w) x \(h)")
-            #endif
-
-            let panel = FloatingPanel(
-                contentRect: NSRect(x: 0, y: 0, width: w, height: h),
-                styleMask: [.nonactivatingPanel, .borderless],
-                backing: .buffered,
-                defer: false
-            )
-            host.frame = NSRect(x: 0, y: 0, width: w, height: h)
-            panel.contentView = host
-            panel.isOpaque = false
-            panel.backgroundColor = .clear
-            panel.hasShadow = true  // NSPanel 시스템 shadow (boundary 안에서 잘리지 않음)
-            let alwaysOnTop = AppSettings.shared.widgetAlwaysOnTop
-            panel.level = alwaysOnTop ? .statusBar : .normal
-            panel.collectionBehavior = alwaysOnTop
-                ? [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-                : [.canJoinAllSpaces, .stationary]
-            panel.isMovableByWindowBackground = true
-            panel.hidesOnDeactivate = false
-
-            var origin: NSPoint
-            if let saved = WidgetPositionStore.load() {
-                origin = saved
-            } else if let screen = NSScreen.main {
-                let visible = screen.visibleFrame
-                origin = NSPoint(x: visible.maxX - w - 20, y: visible.maxY - h - 20)
-            } else {
-                origin = NSPoint(x: 100, y: 100)
-            }
-            // 화면 밖으로 나가지 않도록 보정
-            if let screen = NSScreen.main {
-                let visible = screen.visibleFrame
-                if origin.x < visible.minX { origin.x = visible.minX + 20 }
-                if origin.x + w > visible.maxX { origin.x = visible.maxX - w - 20 }
-                if origin.y < visible.minY { origin.y = visible.minY + 20 }
-                if origin.y + h > visible.maxY { origin.y = visible.maxY - h - 20 }
-            }
-            panel.setFrameOrigin(origin)
-            #if DEBUG
-            print("[Widget] panel origin: \(origin)")
-            #endif
-            widgetWindow = panel
-        }
-        if let contentView = widgetWindow?.contentView {
-            resizeWidgetWindow(to: contentView.fittingSize)
-        }
-        widgetWindow?.orderFrontRegardless()
-        widgetVisible = true
+        widgetViewModel = viewModel
+        reconcileWidgetWindows(viewModel: viewModel)
+        widgetVisible = !widgetWindows.isEmpty
         #if DEBUG
-        print("[Widget] panel ordered front. isVisible=\(widgetWindow?.isVisible ?? false), frame=\(widgetWindow?.frame ?? .zero)")
+        print("[Widget] ordered \(widgetWindows.count) panel(s) front")
         #endif
     }
 
     func hideWidget() {
-        if let win = widgetWindow {
-            WidgetPositionStore.save(win.frame.origin)
+        for (kind, win) in widgetWindows {
+            WidgetPositionStore.save(win.frame.origin, id: kind.rawValue)
             win.orderOut(nil)
         }
         widgetVisible = false
+    }
+
+    private func reconcileWidgetWindows(viewModel: UsageViewModel) {
+        let desired = desiredWidgetKinds()
+        let desiredSet = Set(desired)
+        let obsolete = widgetWindows.keys.filter { !desiredSet.contains($0) }
+        for kind in obsolete {
+            removeWidgetWindow(kind)
+        }
+
+        for (slot, kind) in desired.enumerated() where widgetWindows[kind] == nil {
+            widgetWindows[kind] = makeWidgetWindow(kind, slot: slot, viewModel: viewModel)
+        }
+
+        for kind in desired {
+            guard let panel = widgetWindows[kind] else { continue }
+            if let contentView = panel.contentView {
+                contentView.layoutSubtreeIfNeeded()
+                resizeWidgetWindow(kind, to: contentView.fittingSize)
+            }
+            panel.orderFrontRegardless()
+        }
+        updateWidgetLevel()
+    }
+
+    private func desiredWidgetKinds() -> [WidgetPanelKind] {
+        let settings = AppSettings.shared
+        guard settings.widgetLayoutMode == .separate else { return [.combined] }
+
+        var kinds: [WidgetPanelKind] = []
+        if settings.separateClaudeWidgetEnabled { kinds.append(.claude) }
+        if settings.separateOpenAIWidgetEnabled { kinds.append(.openAI) }
+        return kinds.isEmpty ? [.claude] : kinds
+    }
+
+    private func makeWidgetWindow(
+        _ kind: WidgetPanelKind,
+        slot: Int,
+        viewModel: UsageViewModel
+    ) -> FloatingPanel {
+        let host = NSHostingView(rootView: WidgetView(panelID: kind.rawValue, provider: kind.provider)
+            .environmentObject(viewModel)
+            .environmentObject(ThemeStore.shared)
+            .environmentObject(LanguageStore.shared)
+            .environmentObject(AppSettings.shared)
+            .environmentObject(UsageHistoryStore.shared))
+        host.translatesAutoresizingMaskIntoConstraints = true
+        host.layoutSubtreeIfNeeded()
+        let fitting = host.fittingSize
+        let width = max(fitting.width, 240)
+        let height = max(fitting.height, 180)
+
+        let panel = FloatingPanel(
+            contentRect: NSRect(x: 0, y: 0, width: width, height: height),
+            styleMask: [.nonactivatingPanel, .borderless],
+            backing: .buffered,
+            defer: false
+        )
+        panel.isReleasedWhenClosed = false
+        host.frame = NSRect(x: 0, y: 0, width: width, height: height)
+        panel.contentView = host
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = true
+        panel.isMovableByWindowBackground = true
+        panel.hidesOnDeactivate = false
+
+        var origin = WidgetPositionStore.load(id: kind.rawValue)
+            ?? defaultWidgetOrigin(size: NSSize(width: width, height: height), slot: slot)
+        origin = clampedWidgetOrigin(origin, size: NSSize(width: width, height: height), screen: NSScreen.main)
+        panel.setFrameOrigin(origin)
+        return panel
+    }
+
+    private func removeWidgetWindow(_ kind: WidgetPanelKind) {
+        guard let panel = widgetWindows.removeValue(forKey: kind) else { return }
+        WidgetPositionStore.save(panel.frame.origin, id: kind.rawValue)
+        panel.orderOut(nil)
+        panel.contentView = nil
+    }
+
+    private func defaultWidgetOrigin(size: NSSize, slot: Int) -> NSPoint {
+        guard let visible = NSScreen.main?.visibleFrame else { return NSPoint(x: 100, y: 100) }
+        return NSPoint(
+            x: visible.maxX - size.width - 20 - CGFloat(slot) * (size.width + 16),
+            y: visible.maxY - size.height - 20
+        )
+    }
+
+    private func clampedWidgetOrigin(_ origin: NSPoint, size: NSSize, screen: NSScreen?) -> NSPoint {
+        guard let visible = screen?.visibleFrame else { return origin }
+        let maximumX = max(visible.minX + 20, visible.maxX - size.width - 20)
+        let maximumY = max(visible.minY + 20, visible.maxY - size.height - 20)
+        return NSPoint(
+            x: min(max(origin.x, visible.minX + 20), maximumX),
+            y: min(max(origin.y, visible.minY + 20), maximumY)
+        )
     }
 
     func presentLogin(onCookies: @escaping (String) -> Void) {

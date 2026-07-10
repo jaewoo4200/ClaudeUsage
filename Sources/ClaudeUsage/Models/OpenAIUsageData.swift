@@ -86,6 +86,11 @@ struct OpenAIRateLimit: Decodable, Equatable {
         case primaryWindow = "primary_window"
         case secondaryWindow = "secondary_window"
     }
+
+    init(primaryWindow: OpenAIUsageWindow?, secondaryWindow: OpenAIUsageWindow?) {
+        self.primaryWindow = primaryWindow
+        self.secondaryWindow = secondaryWindow
+    }
 }
 
 struct OpenAIAdditionalRateLimit: Decodable, Equatable {
@@ -97,6 +102,12 @@ struct OpenAIAdditionalRateLimit: Decodable, Equatable {
         case limitName = "limit_name"
         case meteredFeature = "metered_feature"
         case rateLimit = "rate_limit"
+    }
+
+    init(limitName: String?, meteredFeature: String?, rateLimit: OpenAIRateLimit?) {
+        self.limitName = limitName
+        self.meteredFeature = meteredFeature
+        self.rateLimit = rateLimit
     }
 }
 
@@ -123,17 +134,79 @@ struct OpenAIUsageCounter: Identifiable, Equatable {
     let scope: Scope
 }
 
+struct OpenAITokenUsageSummary: Codable, Equatable {
+    let lifetimeTokens: Int64?
+    let peakDailyTokens: Int64?
+    let longestRunningTurnSeconds: Int64?
+    let currentStreakDays: Int?
+    let longestStreakDays: Int?
+}
+
+struct OpenAITokenDailyBucket: Codable, Equatable {
+    let startDate: String
+    let tokens: Int64
+}
+
+struct OpenAITokenActivity: Codable, Equatable {
+    let summary: OpenAITokenUsageSummary?
+    let dailyBuckets: [OpenAITokenDailyBucket]
+
+    func tokens(on date: Date, calendar: Calendar = .current) -> Int64? {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        let key = formatter.string(from: date)
+        return dailyBuckets.first { $0.startDate == key }?.tokens
+    }
+}
+
+struct OpenAIRateLimitResetCredit: Equatable, Identifiable {
+    let id: String
+    let resetType: String?
+    let status: String
+    let grantedAt: Date?
+    let expiresAt: Date?
+    let title: String?
+    let description: String?
+
+    func isUsable(at date: Date = Date()) -> Bool {
+        guard status.lowercased() == "available" else { return false }
+        return expiresAt.map { $0 > date } ?? true
+    }
+}
+
+struct OpenAIRateLimitResetCredits: Equatable {
+    let availableCount: Int
+    let credits: [OpenAIRateLimitResetCredit]
+
+    func usableCredits(at date: Date = Date()) -> [OpenAIRateLimitResetCredit] {
+        credits.filter { $0.isUsable(at: date) }
+    }
+
+    func usableCount(at date: Date = Date()) -> Int {
+        credits.isEmpty ? max(0, availableCount) : usableCredits(at: date).count
+    }
+
+    func earliestExpiry(at date: Date = Date()) -> Date? {
+        usableCredits(at: date).compactMap(\.expiresAt).min()
+    }
+}
+
 struct OpenAIUsageData: Decodable, Equatable {
     let planType: String?
     let rateLimit: OpenAIRateLimit?
     let codeReviewRateLimit: OpenAIRateLimit?
     let additionalRateLimits: [OpenAIAdditionalRateLimit]
+    let tokenActivity: OpenAITokenActivity?
+    let rateLimitResetCredits: OpenAIRateLimitResetCredits?
 
     enum CodingKeys: String, CodingKey {
         case planType = "plan_type"
         case rateLimit = "rate_limit"
         case codeReviewRateLimit = "code_review_rate_limit"
         case additionalRateLimits = "additional_rate_limits"
+        case tokenActivity = "token_activity"
     }
 
     init(from decoder: Decoder) throws {
@@ -141,12 +214,30 @@ struct OpenAIUsageData: Decodable, Equatable {
         planType = try? container.decodeIfPresent(String.self, forKey: .planType)
         rateLimit = try? container.decodeIfPresent(OpenAIRateLimit.self, forKey: .rateLimit)
         codeReviewRateLimit = try? container.decodeIfPresent(OpenAIRateLimit.self, forKey: .codeReviewRateLimit)
+        tokenActivity = try? container.decodeIfPresent(OpenAITokenActivity.self, forKey: .tokenActivity)
+        rateLimitResetCredits = nil
 
         let lossy = try? container.decodeIfPresent(
             [LossyOpenAIAdditionalRateLimit].self,
             forKey: .additionalRateLimits
         )
         additionalRateLimits = lossy?.compactMap(\.value) ?? []
+    }
+
+    init(
+        planType: String?,
+        rateLimit: OpenAIRateLimit?,
+        codeReviewRateLimit: OpenAIRateLimit?,
+        additionalRateLimits: [OpenAIAdditionalRateLimit],
+        tokenActivity: OpenAITokenActivity? = nil,
+        rateLimitResetCredits: OpenAIRateLimitResetCredits? = nil
+    ) {
+        self.planType = planType
+        self.rateLimit = rateLimit
+        self.codeReviewRateLimit = codeReviewRateLimit
+        self.additionalRateLimits = additionalRateLimits
+        self.tokenActivity = tokenActivity
+        self.rateLimitResetCredits = rateLimitResetCredits
     }
 
     var planDisplayName: String {
@@ -248,7 +339,7 @@ struct OpenAIUsageData: Decodable, Equatable {
 
     private static func displayName(for entry: OpenAIAdditionalRateLimit) -> String {
         if let limitName = firstNonEmpty(entry.limitName) { return limitName }
-        guard let feature = firstNonEmpty(entry.meteredFeature) else { return "OpenAI model" }
+        guard let feature = firstNonEmpty(entry.meteredFeature) else { return "Codex model" }
         return feature
             .split { !$0.isLetter && !$0.isNumber }
             .map { $0.prefix(1).uppercased() + $0.dropFirst() }

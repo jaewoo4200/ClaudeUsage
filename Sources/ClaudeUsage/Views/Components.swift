@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // MARK: - Ring (당근 스타일)
 
@@ -20,7 +21,6 @@ struct RingView: View {
                 .trim(from: 0, to: p)
                 .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.easeOut(duration: 0.4), value: p)
             Text(label)
                 .font(.system(size: size * 0.28, weight: .heavy, design: .rounded))
                 .foregroundStyle(tokens.textPrimary)
@@ -50,7 +50,6 @@ struct LinearBar: View {
                         ? AnyShapeStyle(LinearGradient(colors: [color, color.opacity(0.85)], startPoint: .leading, endPoint: .trailing))
                         : AnyShapeStyle(color))
                     .frame(width: geo.size.width * p)
-                    .animation(.easeOut(duration: 0.4), value: p)
             }
         }
         .frame(height: height)
@@ -127,19 +126,134 @@ struct AppIconDot: View {
     }
 }
 
-struct OpenAIIconDot: View {
-    let theme: ThemeKind
+enum ProviderBrand {
+    case claude
+    case codex
+
+    var compactLabel: String {
+        switch self {
+        case .claude: return "C"
+        case .codex: return "G"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .claude: return "Claude"
+        case .codex: return "Codex"
+        }
+    }
+}
+
+struct ClaudeProviderIcon: View {
     let size: CGFloat
 
     var body: some View {
-        let tokens = theme.tokens
+        ProviderBrandIcon(provider: .claude, size: size)
+    }
+}
+
+struct CodexProviderIcon: View {
+    let size: CGFloat
+
+    var body: some View {
+        ProviderBrandIcon(provider: .codex, size: size)
+    }
+}
+
+struct ProviderBrandIcon: View {
+    let provider: ProviderBrand
+    let size: CGFloat
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
-                .fill(tokens.textPrimary)
-                .frame(width: size, height: size)
-            Image(systemName: "sparkles")
-                .font(.system(size: size * 0.48, weight: .bold))
-                .foregroundStyle(tokens.bg)
+            if let image = ProviderBrandIconLoader.image(for: provider, colorScheme: colorScheme) {
+                Image(nsImage: image)
+                    .renderingMode(.original)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+                    .aspectRatio(contentMode: .fit)
+            } else {
+                fallback
+            }
         }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var fallback: some View {
+        switch provider {
+        case .claude:
+            ZStack {
+                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+                    .fill(Color(red: 0.85, green: 0.43, blue: 0.29))
+                Text("C")
+                    .font(.system(size: size * 0.52, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+        case .codex:
+            ZStack {
+                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+                    .fill(Color(red: 0.09, green: 0.09, blue: 0.11))
+                Text(provider.compactLabel)
+                    .font(.system(size: size * 0.52, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+        }
+    }
+}
+
+@MainActor
+enum ProviderBrandIconLoader {
+    private static var cache: [String: NSImage] = [:]
+
+    static func image(for provider: ProviderBrand, colorScheme: ColorScheme) -> NSImage? {
+        let key = "\(provider)-\(colorScheme == .dark ? "dark" : "light")"
+        if let cached = cache[key] { return cached }
+
+        let image: NSImage?
+        switch provider {
+        case .claude:
+            image = installedAppIcon(named: "Claude.app")
+        case .codex:
+            image = installedAppIcon(named: "Codex.app")
+                ?? installedCodexIcon(colorScheme: colorScheme)
+                ?? installedAppIcon(named: "ChatGPT.app")
+        }
+        if let image { cache[key] = image }
+        return image
+    }
+
+    private static func installedAppIcon(named appName: String) -> NSImage? {
+        for path in applicationPaths(named: appName) where FileManager.default.fileExists(atPath: path) {
+            return NSWorkspace.shared.icon(forFile: path)
+        }
+        return nil
+    }
+
+    private static func installedCodexIcon(colorScheme: ColorScheme) -> NSImage? {
+        let preferredNames = colorScheme == .dark
+            ? ["icon-codex-dark-color", "icon-codex-light"]
+            : ["icon-codex-light", "icon-codex-dark-color"]
+
+        for appPath in applicationPaths(named: "ChatGPT.app") {
+            guard let bundle = Bundle(url: URL(fileURLWithPath: appPath)) else { continue }
+            for name in preferredNames {
+                if let url = bundle.url(forResource: name, withExtension: "png"),
+                   let image = NSImage(contentsOf: url) {
+                    return image
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func applicationPaths(named appName: String) -> [String] {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return ["/Applications/\(appName)", "\(home)/Applications/\(appName)"]
     }
 }
