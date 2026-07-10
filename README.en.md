@@ -16,11 +16,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-2.0MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-3.5MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="#-installation-users">Install</a> · <a href="#-read-before-first-launch">First-launch guide</a> · <a href="#-is-it-safe-keychain-explained">Is it safe? (Keychain)</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg">Download v1.3.2</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
@@ -49,7 +49,7 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
   <img src="docs/screenshots/menubar.png" width="200" alt="Menu Bar">
 </p>
 
-> The menu bar always shows your usage like `[C] 38%`. Above 70% it changes to ⚠️, above 90% to 🛑 — using shape rather than color (macOS forces menu-bar items to be monochrome).
+> The menu bar shows the Claude icon and percentage alongside the Codex icon and percentage. Each provider refreshes independently.
 
 ### Dropdown (3 themes)
 
@@ -115,9 +115,11 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 
 ## 🚀 Installation (Users)
 
-1. Download the latest `ClaudeUsage-x.x.x.dmg` from [Releases](https://github.com/jaewoo4200/ClaudeUsage/releases)
+1. Download [ClaudeUsage-1.3.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
+
+> **Requirement for Codex usage:** ChatGPT/Codex or a compatible Codex executable must be installed, with a valid signed-in Codex session. **The GUI app does not need to stay open.** ClaudeUsage starts a local `codex app-server` process whenever it refreshes.
 
 ## 🔑 Read before first launch
 
@@ -150,7 +152,7 @@ Removes the macOS quarantine flag (auto-added to downloaded files). After this, 
 ### 2) Sign in & first fetch
 
 - Click **[C] Sign in** in the menu bar → log in to claude.ai (Google supported)
-- OpenAI usage connects automatically when you are signed in with a ChatGPT account through Codex or a ChatGPT app with Codex integration
+- OpenAI usage connects automatically when Codex or a ChatGPT app with Codex integration is installed and signed in. Its GUI can remain closed.
 - Once connected, each provider updates independently ✨
 
 ## 🔒 Is it safe? Keychain explained
@@ -173,7 +175,7 @@ When you first sign in, ClaudeUsage saves your **claude.ai session cookies in th
 
 ### How is the OpenAI session handled?
 
-- ClaudeUsage uses the documented local interface exposed by `codex app-server`, bundled with ChatGPT/Codex. It does not read the OpenAI token file directly or store a copy.
+- ClaudeUsage uses the local `codex app-server` interface from an installed ChatGPT/Codex app or compatible Codex executable. It starts that process itself when refreshing, so the ChatGPT/Codex GUI does not need to stay open. It does not read the OpenAI token file directly or store a copy.
 - It calls only `account/rateLimits/read` and `account/usage/read`. No additional login window or token copy is required.
 - If Codex/ChatGPT is unavailable or its session expires, Claude remains available and only the OpenAI section shows a connection prompt.
 
@@ -286,7 +288,7 @@ ClaudeUsage/
 |---|---|
 | Unofficial API | `claude.ai/api/organizations/.../usage` is undocumented. May break if Anthropic changes it |
 | Session expiry | When claude.ai cookies expire, you'll need to sign in again (the app shows a prompt) |
-| OpenAI connection | Requires Codex or ChatGPT with `codex app-server` and a signed-in local session |
+| OpenAI connection | Requires Codex/ChatGPT or a compatible executable with `codex app-server` and a signed-in local session; the GUI may remain closed |
 | Token trends | OpenAI daily buckets may lag behind an active task. Claude uses only today's Claude Code logs on this Mac; neither maps 1:1 to quota percentages |
 | Single account | One account per provider at a time |
 | Code signing | Not signed with Apple Developer ID — first run needs right-click → Open |

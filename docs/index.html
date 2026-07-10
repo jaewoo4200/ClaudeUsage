@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f7f5">
+    <meta name="description" content="Claude와 Codex 사용량, 리셋 시간, 오늘 토큰을 macOS 메뉴바와 위젯에서 확인하세요.">
+    <meta property="og:title" content="ClaudeUsage for macOS">
+    <meta property="og:description" content="Claude와 Codex 사용량을 메뉴바 한 곳에서.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jaewoo4200.github.io/ClaudeUsage/">
+    <meta property="og:image" content="https://jaewoo4200.github.io/ClaudeUsage/assets/widget-horizontal.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>ClaudeUsage - Claude와 Codex 사용량을 메뉴바에서</title>
+    <link rel="canonical" href="https://jaewoo4200.github.io/ClaudeUsage/">
+    <link rel="icon" type="image/png" href="assets/app-icon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+
+    <nav class="site-nav" aria-label="주요 탐색">
+      <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="ClaudeUsage 홈">
+          <img src="assets/app-icon.png" alt="" width="30" height="30">
+          <span>ClaudeUsage</span>
+        </a>
+        <div class="nav-links">
+          <a href="#usage">사용량</a>
+          <a href="#layouts">위젯</a>
+          <a href="#privacy">데이터</a>
+          <a href="#install">설치</a>
+        </div>
+        <a class="nav-github" href="https://github.com/jaewoo4200/ClaudeUsage" target="_blank" rel="noreferrer">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.4 4 5 5 0 0 0 19.3.5S18.2.1 15 1.8a13.4 13.4 0 0 0-7 0C4.8.1 3.7.5 3.7.5A5 5 0 0 0 3.6 4a5.4 5.4 0 0 0-1.4 3.7c0 5.3 3.5 6.5 6.8 6.9A4.8 4.8 0 0 0 8 18v4M8 19c-3 .9-3-1.7-4-2"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="live-dot"></span> macOS 13+ · Universal</p>
+        <h1>ClaudeUsage</h1>
+        <p class="hero-lead">Claude와 Codex의 한도, 리셋 시간, 오늘 토큰을<br class="desktop-break"> 메뉴바 한 곳에서 확인하세요.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>v1.3.2 다운로드</span>
+          </a>
+          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.3.2" target="_blank" rel="noreferrer">
+            릴리스 노트
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+          </a>
+        </div>
+        <p class="download-meta">3.5MB DMG · Intel + Apple Silicon · 오픈소스</p>
+      </div>
+
+      <div class="hero-stage" aria-label="ClaudeUsage 가로 위젯 미리보기">
+        <div class="menu-preview">
+          <span>실시간 메뉴바</span>
+          <img src="assets/menu-label.png" alt="Claude 68%, Codex 20% 메뉴바 표시">
+        </div>
+        <picture>
+          <source media="(max-width: 620px)" srcset="assets/widget-paged.png">
+          <img class="hero-widget" src="assets/widget-horizontal.png" alt="Claude, Codex, Mimo가 함께 보이는 ClaudeUsage 가로 위젯">
+        </picture>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="signal-band" aria-label="주요 기능">
+        <div class="section-inner signal-grid">
+          <div><strong>5시간</strong><span>단기 한도와 리셋</span></div>
+          <div><strong>주간</strong><span>Claude·Codex 장기 한도</span></div>
+          <div><strong>모델별</strong><span>Fable과 서버 제공 모델</span></div>
+          <div><strong>오늘 토큰</strong><span>두 서비스 합산 추이</span></div>
+        </div>
+      </section>
+
+      <section class="section providers" id="usage">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="kicker">두 계정, 한 화면</p>
+            <h2>웹을 오가지 않아도<br>남은 여유가 보입니다.</h2>
+            <p>Claude와 Codex를 독립적으로 조회합니다. 한쪽 연결이 끊겨도 다른 쪽 사용량은 그대로 유지됩니다.</p>
+          </div>
+
+          <div class="provider-layout">
+            <div class="provider-copy">
+              <img class="provider-identity" src="assets/provider-icons.png" alt="Claude와 Codex 앱 아이콘">
+              <dl class="source-list">
+                <div>
+                  <dt><span class="source-mark claude"></span>Claude</dt>
+                  <dd>5시간, 7일, Fable과 모델별 한도</dd>
+                </div>
+                <div>
+                  <dt><span class="source-mark codex"></span>Codex</dt>
+                  <dd>5시간, 주간, 모델별 한도와 초기화권</dd>
+                </div>
+                <div>
+                  <dt><span class="source-mark mimo"></span>Mimo</dt>
+                  <dd>현재 부담과 최근 속도를 표정과 말로 안내</dd>
+                </div>
+              </dl>
+            </div>
+            <figure class="product-shot dropdown-shot">
+              <img src="assets/menu-dropdown.png" alt="Mimo와 Claude, Codex 사용량이 표시된 메뉴바 드롭다운">
+              <figcaption>메뉴바를 누르면 세부 한도와 연결 상태를 바로 확인할 수 있습니다.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section layouts" id="layouts">
+        <div class="section-inner">
+          <div class="section-heading compact">
+            <p class="kicker">내 화면에 맞게</p>
+            <h2>세로, 가로, 전환, 분리.</h2>
+            <p>작업 공간과 확인 습관에 맞춰 네 가지 위젯 배치를 고를 수 있습니다.</p>
+          </div>
+
+          <div class="layout-showcase">
+            <figure class="layout-main">
+              <img src="assets/widget-horizontal.png" alt="Claude와 Codex를 좌우로 배치한 가로 위젯">
+              <figcaption><strong>가로</strong><span>두 서비스와 오늘의 여유를 한눈에</span></figcaption>
+            </figure>
+            <div class="layout-side">
+              <figure>
+                <img src="assets/widget-paged.png" alt="화살표로 Claude와 Codex를 전환하는 위젯">
+                <figcaption><strong>전환</strong><span>원래 크기에서 좌우로 넘겨 보기</span></figcaption>
+              </figure>
+              <figure class="settings-figure">
+                <img src="assets/settings-layout.png" alt="세로, 가로, 전환, 분리 위젯 배치 설정">
+                <figcaption><strong>분리</strong><span>Claude와 Codex 위젯을 따로 띄우기</span></figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section mimo-section">
+        <div class="section-inner mimo-layout">
+          <div class="mimo-visual" aria-label="노트북으로 작업하는 Mimo 애니메이션 프레임">
+            <img src="assets/mimo-laptop-frames.png" alt="노트북을 두드리며 눈을 움직이는 Mimo의 세 애니메이션 프레임">
+          </div>
+          <div class="mimo-copy">
+            <p class="kicker">숫자를 읽어주는 Mimo</p>
+            <h2>많이 썼다면 쉬고,<br>속도가 붙으면 함께 달립니다.</h2>
+            <p>현재 퍼센트만 보지 않고, 선택한 경우 최근 14일의 증가 속도까지 함께 살펴 상태와 대사를 바꿉니다.</p>
+            <div class="mimo-states" aria-label="Mimo 상태 예시">
+              <span>편안함</span><span>집중</span><span>과열</span><span>회복</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section data-section" id="privacy">
+        <div class="section-inner data-layout">
+          <div class="section-heading inverse">
+            <p class="kicker">로컬 우선</p>
+            <h2>대화 내용 대신<br>필요한 숫자만.</h2>
+            <p>프롬프트, 응답, 프로젝트명은 저장하지 않습니다. 사용량 기록은 기본으로 꺼져 있고, 켠 경우에도 이 Mac에만 최대 14일 보관됩니다.</p>
+            <a class="text-link" href="https://github.com/jaewoo4200/ClaudeUsage/blob/main/docs/USAGE_HISTORY_AND_POLICY.md" target="_blank" rel="noreferrer">
+              데이터·정책 문서 보기
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
+            </a>
+          </div>
+          <div class="data-table" role="table" aria-label="사용량 데이터 출처">
+            <div class="data-row" role="row">
+              <span role="cell">Claude 한도</span><strong role="cell">claude.ai 세션</strong><em role="cell">Keychain</em>
+            </div>
+            <div class="data-row" role="row">
+              <span role="cell">Codex 한도</span><strong role="cell">codex app-server</strong><em role="cell">토큰 복사 없음</em>
+            </div>
+            <div class="data-row" role="row">
+              <span role="cell">오늘 토큰</span><strong role="cell">로컬 로그 + 계정 버킷</strong><em role="cell">내용 미저장</em>
+            </div>
+            <div class="data-row" role="row">
+              <span role="cell">Mimo 추이</span><strong role="cell">선택형 로컬 기록</strong><em role="cell">최대 14일</em>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section install-section" id="install">
+        <div class="section-inner">
+          <div class="install-top">
+            <div class="section-heading compact">
+              <p class="kicker">설치 전 확인</p>
+              <h2>Codex 앱은 켜 둘 필요가 없습니다.</h2>
+              <p>ChatGPT/Codex 앱 또는 호환 Codex 실행 파일이 <strong>설치되어 있고 로그인</strong>되어 있으면 됩니다. ClaudeUsage가 조회할 때 로컬 <code>codex app-server</code>를 직접 시작합니다.</p>
+            </div>
+            <div class="requirement-list">
+              <div><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg><span>macOS 13 이상</span></div>
+              <div><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg><span>Intel·Apple Silicon</span></div>
+              <div><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 6-11 11-5-5"/></svg><span>Codex 설치 + 로그인</span></div>
+            </div>
+          </div>
+
+          <ol class="install-steps">
+            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.3.2입니다.</p></li>
+            <li><span>2</span><strong>Applications로 이동</strong><p>아이콘을 폴더로 드래그합니다.</p></li>
+            <li><span>3</span><strong>처음 한 번 열기 허용</strong><p>서명되지 않은 오픈소스 앱 안내를 확인합니다.</p></li>
+          </ol>
+
+          <div class="final-download">
+            <img src="assets/app-icon.png" alt="" width="72" height="72">
+            <div><strong>ClaudeUsage 1.3.2</strong><span>무료 · MIT License · 3.5MB</span></div>
+            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>DMG 받기</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="section-inner footer-inner">
+        <div class="brand footer-brand"><img src="assets/app-icon.png" alt="" width="26" height="26"><span>ClaudeUsage</span></div>
+        <p>Anthropic 및 OpenAI와 무관한 개인 오픈소스 프로젝트입니다.</p>
+        <div class="footer-links"><a href="https://github.com/jaewoo4200/ClaudeUsage">GitHub</a><a href="https://github.com/jaewoo4200/ClaudeUsage/releases">Releases</a><a href="https://github.com/jaewoo4200/ClaudeUsage/blob/main/README.en.md">English</a></div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -29,6 +29,8 @@ ClaudeUsage.xcodeproj/
 *.swp
 *.swo
 .swift-version
+*.profraw
+output/
 
 # 개인 데이터
 .claude-widget.json

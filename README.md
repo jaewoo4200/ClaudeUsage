@@ -16,11 +16,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-2.0MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-3.5MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="#-설치-사용자">설치하기</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a> · <a href="#-안전한가요-keychain-안내">Keychain이 안전한가요?</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg">v1.3.2 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
 </p>
 
 ---
@@ -49,7 +49,7 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
   <img src="docs/screenshots/menubar.png" width="200" alt="Menu Bar">
 </p>
 
-> 메뉴바에 `[C] 38%` 처럼 사용량이 항상 표시됩니다. 70%↑면 ⚠️, 90%↑면 🛑로 모양 변화.
+> 메뉴바에 Claude 아이콘과 퍼센트, Codex 아이콘과 퍼센트가 함께 표시됩니다. 각 서비스는 독립적으로 갱신됩니다.
 
 ### 드롭다운 (3가지 테마)
 
@@ -115,9 +115,11 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
 
 ## 🚀 설치 (사용자)
 
-1. [Releases](https://github.com/jaewoo4200/ClaudeUsage/releases)에서 최신 `ClaudeUsage-x.x.x.dmg` 다운로드
+1. [ClaudeUsage-1.3.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.3.2/ClaudeUsage-1.3.2.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. dmg 열기 → `Applications` 폴더로 드래그
 3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
+
+> **Codex 사용량 표시 조건:** ChatGPT/Codex 앱 또는 호환되는 Codex 실행 파일이 설치되어 있고, 해당 Codex 세션에 로그인되어 있어야 합니다. **GUI 앱을 계속 켜 둘 필요는 없습니다.** ClaudeUsage가 조회할 때 로컬 `codex app-server` 프로세스를 직접 시작합니다.
 
 ## 🔑 처음 실행할 때 읽어주세요
 
@@ -150,7 +152,7 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 ### 2) 로그인 + 첫 사용량 조회
 
 - 메뉴바 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
-- OpenAI 사용량은 Codex 또는 Codex가 통합된 ChatGPT 앱에서 ChatGPT 계정으로 로그인되어 있으면 자동 연결
+- OpenAI 사용량은 Codex 또는 Codex가 통합된 ChatGPT 앱이 설치되어 있고 ChatGPT 계정으로 로그인되어 있으면 자동 연결. GUI 앱은 꺼져 있어도 됩니다.
 - 로그인 완료 → 각 서비스의 사용량을 독립적으로 표시 ✨
 
 ## 🔒 안전한가요? Keychain 안내
@@ -173,7 +175,7 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 
 ### OpenAI 로그인은 어떻게 처리하나요?
 
-- ChatGPT/Codex 앱에 포함된 `codex app-server`의 공식 문서화된 로컬 인터페이스를 사용합니다. ClaudeUsage가 OpenAI 토큰 파일을 직접 읽거나 별도로 저장하지 않습니다.
+- 설치된 ChatGPT/Codex 앱 또는 호환 Codex 실행 파일의 `codex app-server` 로컬 인터페이스를 사용합니다. ClaudeUsage가 조회 시 해당 프로세스를 직접 시작하므로 ChatGPT/Codex GUI를 계속 실행할 필요가 없고, OpenAI 토큰 파일을 직접 읽거나 별도로 저장하지도 않습니다.
 - `account/rateLimits/read`와 `account/usage/read`만 호출하므로 추가 로그인 창이나 토큰 복사는 필요하지 않습니다.
 - Codex/ChatGPT 앱을 찾을 수 없거나 세션이 만료되면 Claude 사용량은 그대로 유지되고, OpenAI 영역에만 연결 안내가 표시됩니다.
 
@@ -286,7 +288,7 @@ ClaudeUsage/
 |---|---|
 | 비공식 API | `claude.ai/api/organizations/.../usage` 는 비공개 endpoint. Anthropic이 변경하면 깨질 수 있음 |
 | 세션 만료 | claude.ai 쿠키가 만료되면 재로그인 필요 (앱이 알림 표시) |
-| OpenAI 연결 | `codex app-server`가 포함된 Codex 또는 ChatGPT 앱과 로그인된 로컬 세션이 필요 |
+| OpenAI 연결 | `codex app-server`가 포함된 Codex/ChatGPT 또는 호환 실행 파일과 로그인된 로컬 세션이 필요. GUI 앱은 꺼져 있어도 됨 |
 | 토큰 추이 | OpenAI 일별 bucket은 현재 작업보다 늦게 반영될 수 있음. Claude는 이 Mac의 오늘 Claude Code 로그만 집계하며 둘 다 한도 퍼센트와 1:1 대응하지 않음 |
 | 다중 계정 | 서비스별로 한 번에 하나의 계정만 지원 |
 | 코드 서명 | Apple Developer 서명 없음 — 첫 실행 시 우클릭→열기 필요 |
