@@ -1,0 +1,7 @@
+{
+  "packageName": "replace.with.permanent.package.identity",
+  "publisher": "CN=Exact certificate subject",
+  "publisherDisplayName": "Jaewoo Lee",
+  "displayName": "ClaudeUsage",
+  "notes": "Freeze packageName and publisher before the first public MSIX. The signing certificate subject must exactly match publisher."
+}

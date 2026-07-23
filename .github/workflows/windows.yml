@@ -1,0 +1,194 @@
+name: Windows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/windows.yml"
+      - ".github/workflows/windows-release.yml"
+      - "global.json"
+      - "LICENSE"
+      - "windows/**"
+  pull_request:
+    paths:
+      - ".github/workflows/windows.yml"
+      - ".github/workflows/windows-release.yml"
+      - "global.json"
+      - "LICENSE"
+      - "windows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-package:
+    name: Test and package win-x64
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      NUGET_XMLDOC_MODE: skip
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          global-json-file: global.json
+
+      - name: Fix reproducible source timestamp
+        shell: pwsh
+        run: |
+          $epoch = (& git show -s --format=%ct HEAD).Trim()
+          if ($epoch -notmatch '^\d+$') {
+            throw "Unable to read source commit timestamp."
+          }
+          "SOURCE_DATE_EPOCH=$epoch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Acquire pinned Windows SDK packaging tools
+        shell: pwsh
+        run: |
+          $tools = ./windows/scripts/get-windows-sdk-tools.ps1 `
+            -DestinationRoot (Join-Path $env:RUNNER_TEMP "windows-sdk-tools")
+          "WINDOWS_MAKEAPPX_PATH=$($tools.MakeAppxPath)" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "WINDOWS_SIGNTOOL_PATH=$($tools.SignToolPath)" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Restore win-x64 dependencies
+        run: dotnet restore windows/ClaudeUsage.Windows.sln --runtime win-x64 --configfile windows/NuGet.Config --locked-mode
+
+      - name: Run tests
+        run: dotnet test windows/ClaudeUsage.Windows.sln --configuration Release --no-restore --logger "console;verbosity=normal"
+
+      - name: Validate non-mutating Windows smoke harnesses
+        shell: pwsh
+        run: |
+          $windowsPowerShell = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+          foreach ($script in @(
+              "windows\scripts\test-msix-smoke-static.ps1",
+              "windows\scripts\test-portable-movement-smoke-static.ps1")) {
+            & $windowsPowerShell `
+              -NoLogo `
+              -NoProfile `
+              -NonInteractive `
+              -ExecutionPolicy Bypass `
+              -File $script
+            if ($LASTEXITCODE -ne 0) {
+              throw "Windows PowerShell 5.1 safety validation failed for '$script'."
+            }
+          }
+
+      - name: Resolve CI package asset URL
+        shell: pwsh
+        run: |
+          $versionOutput = dotnet msbuild windows/src/ClaudeUsage.Windows/ClaudeUsage.Windows.csproj `
+            -nologo `
+            -getProperty:Version
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the Windows project version."
+          }
+          $projectVersion = ($versionOutput |
+            Where-Object { $_ -match '^\d' } |
+            Select-Object -Last 1).Trim()
+          if ([string]::IsNullOrWhiteSpace($projectVersion)) {
+            throw "The Windows project version is empty."
+          }
+          $assetName = "ClaudeUsage-Windows-$projectVersion-win-x64.msix"
+          $assetUri = "https://artifacts.invalid/claudeusage/$([Uri]::EscapeDataString($assetName))"
+          "WINDOWS_CI_PACKAGE_URI=$assetUri" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "WINDOWS_PROJECT_VERSION=$projectVersion" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Build unsigned structural artifacts
+        shell: pwsh
+        run: |
+          ./windows/scripts/package.ps1 `
+            -Runtime win-x64 `
+            -SkipRestore `
+            -SkipTests `
+            -IncludeMsix `
+            -RequireMsix `
+            -MakeAppxPath $env:WINDOWS_MAKEAPPX_PATH `
+            -PackageName "jaewoo4200.ClaudeUsage.CI" `
+            -Publisher "CN=ClaudeUsage CI" `
+            -AppInstallerUri "https://artifacts.invalid/claudeusage/ClaudeUsage.appinstaller" `
+            -PackageUri $env:WINDOWS_CI_PACKAGE_URI
+
+      - name: Validate package metadata, SBOM, licenses, and checksums
+        shell: pwsh
+        run: |
+          ./windows/scripts/validate-package.ps1 `
+            -ArtifactRoot windows/artifacts `
+            -Runtime win-x64 `
+            -ExpectedVersion $env:WINDOWS_PROJECT_VERSION `
+            -RequireMsix `
+            -RequireAppInstaller
+
+      - name: Smoke exact portable ZIP
+        shell: pwsh
+        run: |
+          ./windows/scripts/test-portable-smoke.ps1 `
+            -ZipPath "windows/artifacts/ClaudeUsage-Windows-$env:WINDOWS_PROJECT_VERSION-win-x64.zip"
+
+      - name: Rebuild and verify deterministic ZIP and MSIX
+        shell: pwsh
+        run: |
+          $artifactBase = "ClaudeUsage-Windows-$env:WINDOWS_PROJECT_VERSION-win-x64"
+          $zip = Get-Item "windows/artifacts/$artifactBase.zip"
+          $msix = Get-Item "windows/artifacts/$artifactBase.msix"
+          $firstHash = (Get-FileHash -LiteralPath $zip.FullName -Algorithm SHA256).Hash
+          $firstMsixHash = (Get-FileHash -LiteralPath $msix.FullName -Algorithm SHA256).Hash
+          ./windows/scripts/package.ps1 `
+            -Runtime win-x64 `
+            -SkipRestore `
+            -SkipTests `
+            -IncludeMsix `
+            -RequireMsix `
+            -MakeAppxPath $env:WINDOWS_MAKEAPPX_PATH `
+            -PackageName "jaewoo4200.ClaudeUsage.CI" `
+            -Publisher "CN=ClaudeUsage CI" `
+            -AppInstallerUri "https://artifacts.invalid/claudeusage/ClaudeUsage.appinstaller" `
+            -PackageUri $env:WINDOWS_CI_PACKAGE_URI
+          $zip = Get-Item "windows/artifacts/$artifactBase.zip"
+          $msix = Get-Item "windows/artifacts/$artifactBase.msix"
+          $secondHash = (Get-FileHash -LiteralPath $zip.FullName -Algorithm SHA256).Hash
+          $secondMsixHash = (Get-FileHash -LiteralPath $msix.FullName -Algorithm SHA256).Hash
+          if ($firstHash -cne $secondHash) {
+            throw "Portable ZIP is not reproducible: $firstHash != $secondHash"
+          }
+          if ($firstMsixHash -cne $secondMsixHash) {
+            throw "Unsigned MSIX is not reproducible: $firstMsixHash != $secondMsixHash"
+          }
+          ./windows/scripts/validate-package.ps1 `
+            -ArtifactRoot windows/artifacts `
+            -Runtime win-x64 `
+            -ExpectedVersion $env:WINDOWS_PROJECT_VERSION `
+            -RequireMsix `
+            -RequireAppInstaller
+
+      - name: Upload unsigned CI verification artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ClaudeUsage-Windows-win-x64-unsigned-ci
+          path: |
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.zip
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.zip.sha256
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.msix
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.msix.sha256
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.spdx.json
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.spdx.json.sha256
+            windows/artifacts/ClaudeUsage.appinstaller
+            windows/artifacts/ClaudeUsage.appinstaller.sha256
+            windows/artifacts/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14

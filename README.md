@@ -253,9 +253,41 @@ Spark 표시를 끄면 Spark 전용 한도는 계산에서도 제외됩니다. �
 
 > 코드 서명을 한다면(Apple Developer ID, $99/년) 이 다이얼로그 자체가 안 떠요. 무료 오픈소스라 서명을 안 했고, 이게 macOS의 표준 절차입니다.
 
-## Windows 포트
+## 🪟 Windows 11 x64 알파
 
-Windows 구현은 아직 시작 전입니다. Windows 11에서 이어서 작업할 때는 기술 선택, 단계별 계획, 테스트 기준, 첫 작업 프롬프트를 정리한 [Windows 포트 HANDOFF](HANDOFF.md)를 먼저 확인하세요.
+macOS 정식 배포판과 별도로, `windows/`에 **Windows 11 x64 개발자 알파**가 있습니다. .NET 10 WPF 기반 알림 영역 앱이며 Claude와 Codex를 한 플라이아웃과 떠다니는 위젯에서 독립적으로 조회합니다. 세로·가로·전환·분리 배치, 3개 테마, 한국어/영어, 9종 펫, 선택형 14일 로컬 기록을 포함합니다.
+
+> Windows 빌드는 현재 **서명되지 않은 self-contained ZIP**입니다. .NET 런타임은 ZIP에 포함되지만 Claude 로그인에는 Microsoft Edge WebView2 Evergreen Runtime이 필요합니다. Windows 11 x64만 검증 대상으로 삼으며, 서명 설치 프로그램/MSIX와 `win-arm64` 배포는 아직 제공하지 않습니다.
+
+### Windows 알파 설치
+
+1. [GitHub Releases](https://github.com/jaewoo4200/ClaudeUsage/releases)의 Windows prerelease에 `ClaudeUsage-Windows-<version>-win-x64.zip`과 `.zip.sha256`이 첨부되어 있으면 두 파일을 함께 받습니다. 아직 자산이 게시되지 않았다면 아래 개발자 빌드를 사용하세요.
+2. PowerShell에서 `Get-FileHash .\ClaudeUsage-Windows-*-win-x64.zip -Algorithm SHA256` 결과와 `.sha256` 파일을 비교합니다.
+3. ZIP 전체를 폴더에 압축 해제한 뒤 `ClaudeUsage.Windows.exe`를 실행합니다. 압축 파일 안에서 직접 실행하지 마세요. 미서명 알파라 SmartScreen 경고가 나타날 수 있습니다.
+4. Codex는 공식 앱/CLI에서 로그인되어 있어야 하며 필요하면 `codex login`을 실행합니다. Claude는 앱의 **Claude 로그인** 창에서 로그인합니다.
+
+### Windows 데이터 출처와 개인정보
+
+| 표시값 | Windows 데이터 출처 | 로컬 저장/접근 |
+|---|---|---|
+| Codex 한도·오늘 토큰 | 설치된 Codex의 `codex app-server` | `%USERPROFILE%\.codex\auth.json`을 직접 읽거나 토큰을 복사하지 않음 |
+| Claude 5시간·주간·모델 한도 | 격리된 WebView2 로그인 세션으로 `claude.ai` 조회 | Claude 세션 쿠키 헤더를 `%LOCALAPPDATA%\ClaudeUsage\claude-session.dat`에 현재 사용자 범위 DPAPI로 암호화 |
+| 로컬 추이·펫 상태 | 사용자가 기록을 켠 경우의 사용량 숫자 | `%LOCALAPPDATA%\ClaudeUsage\usage-history.json`, 5분 간격·최대 14일/4,200개 |
+| Claude Code 오늘 토큰 | 기록을 켠 경우 `%USERPROFILE%\.claude\projects\**\*.jsonl`의 시각·숫자형 usage 필드만 합산 | 프롬프트·응답·파일명·프로젝트명은 기록하지 않음 |
+
+Claude 로그인용 WebView2 프로필은 `%TEMP%\ClaudeUsage\WebView2\login-*`에 세션마다 따로 만들고 종료 시 삭제를 시도합니다. 일반 설정은 `%LOCALAPPDATA%\ClaudeUsage\settings.json`에 저장되며 쿠키는 이 파일에 넣지 않습니다. 기록과 JSONL 스캔은 **기본적으로 꺼져 있고 같은 선택 설정으로만 활성화**됩니다.
+
+Claude 클라우드 사용량은 Anthropic이 문서화하지 않은 `claude.ai/api/organizations/.../usage` endpoint에 의존하므로 예고 없이 변경되거나 제한될 수 있습니다. Codex-only 동작은 이 경로와 분리되어 있습니다.
+
+### Windows 개발자 빌드
+
+```powershell
+dotnet restore windows/ClaudeUsage.Windows.sln --runtime win-x64 --configfile windows/NuGet.Config
+dotnet test windows/ClaudeUsage.Windows.sln -c Release --no-restore
+pwsh -File windows/scripts/package.ps1 -Runtime win-x64 -SkipRestore -SkipTests
+```
+
+패키징 스크립트는 `windows/artifacts/`에 self-contained ZIP과 SHA-256 파일을 만듭니다. 전체 실행·진단·개인정보 설명은 [Windows README](windows/README.md), 초기 설계 맥락은 [Windows 포트 HANDOFF](HANDOFF.md)를 참고하세요.
 
 ## 🔧 빌드 (개발자)
 

@@ -285,6 +285,46 @@ figcaption { color: #747b82; font-size: 12px; line-height: 1.55; }
 .final-download span { color: var(--muted); font-size: 12px; }
 .final-download .button-primary span { color: #fff; font-size: 15px; }
 
+.windows-section { background: #eef4f8; border-top: 1px solid #dce6ed; }
+.windows-alpha-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 36px; }
+.windows-alpha-heading .kicker { color: var(--blue); }
+.alpha-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #aebed0;
+  border-radius: 5px;
+  background: rgba(255,255,255,.65);
+  color: #34516e;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: .08em;
+}
+.windows-alpha-grid { margin-top: 60px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #cbd9e3; border-bottom: 1px solid #cbd9e3; }
+.windows-alpha-grid article { min-height: 220px; padding: 28px; border-left: 1px solid #cbd9e3; background: rgba(255,255,255,.34); }
+.windows-alpha-grid article:last-child { border-right: 1px solid #cbd9e3; }
+.windows-alpha-grid article > span { color: var(--blue); font-size: 11px; font-weight: 800; }
+.windows-alpha-grid h3 { margin: 15px 0 0; font-size: 20px; }
+.windows-alpha-grid p { margin: 12px 0 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+.windows-alpha-grid code, .windows-warning code, .windows-release-note code, .windows-english code {
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: rgba(255,255,255,.8);
+  color: #354b60;
+  font-size: .92em;
+}
+.windows-paths { margin-top: 30px; border-top: 1px solid #cbd9e3; }
+.windows-paths > div { min-height: 52px; display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 18px; border-bottom: 1px solid #cbd9e3; }
+.windows-paths strong { font-size: 12px; }
+.windows-paths code { color: #475c70; font-size: 12px; overflow-wrap: anywhere; }
+.windows-warning { margin: 30px 0 0; padding: 18px 20px; border-left: 3px solid #718ba5; background: rgba(255,255,255,.55); color: #52616f; font-size: 13px; line-height: 1.65; }
+.windows-alpha-actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 10px; }
+.windows-release-note { margin: 16px 0 0; color: #63717e; font-size: 12px; line-height: 1.6; }
+.windows-english { margin-top: 34px; padding-top: 22px; border-top: 1px solid #cbd9e3; color: #52616f; }
+.windows-english summary { cursor: pointer; color: var(--ink); font-size: 13px; font-weight: 760; }
+.windows-english p { max-width: 850px; margin: 16px 0 0; font-size: 13px; line-height: 1.7; }
+
 footer { padding: 34px 0; border-top: 1px solid var(--line); background: var(--paper); }
 .footer-inner { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 30px; }
 .footer-inner p { margin: 0; color: #7b8187; font-size: 12px; text-align: center; }
@@ -305,6 +345,9 @@ footer { padding: 34px 0; border-top: 1px solid var(--line); background: var(--p
   .history-layout { gap: 54px; }
   .history-copy { max-width: 620px; }
   .install-top { gap: 44px; }
+  .windows-alpha-grid { grid-template-columns: 1fr; }
+  .windows-alpha-grid article { min-height: 0; border-right: 1px solid #cbd9e3; border-bottom: 1px solid #cbd9e3; }
+  .windows-alpha-grid article:last-child { border-bottom: 0; }
   .footer-inner { grid-template-columns: 1fr; justify-items: center; gap: 14px; }
 }
 
@@ -343,6 +386,12 @@ footer { padding: 34px 0; border-top: 1px solid var(--line); background: var(--p
   .final-download { grid-template-columns: auto 1fr; padding: 22px; }
   .final-download img { width: 56px; height: 56px; border-radius: 13px; }
   .final-download .button { grid-column: 1 / -1; width: 100%; margin-top: 8px; }
+  .windows-alpha-heading { grid-template-columns: 1fr; gap: 22px; }
+  .alpha-badge { justify-self: start; }
+  .windows-alpha-grid { margin-top: 42px; }
+  .windows-paths > div { grid-template-columns: 1fr; gap: 5px; padding: 13px 0; }
+  .windows-alpha-actions { flex-direction: column; }
+  .windows-alpha-actions .button { width: 100%; }
   .footer-links { flex-wrap: wrap; justify-content: center; }
 }
 

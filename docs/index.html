@@ -31,6 +31,7 @@
           <a href="#history">그래프</a>
           <a href="#privacy">데이터</a>
           <a href="#install">설치</a>
+          <a href="#windows-alpha">Windows α</a>
         </div>
         <a class="nav-github" href="https://github.com/jaewoo4200/ClaudeUsage" target="_blank" rel="noreferrer">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.4 4 5 5 0 0 0 19.3.5S18.2.1 15 1.8a13.4 13.4 0 0 0-7 0C4.8.1 3.7.5 3.7.5A5 5 0 0 0 3.6 4a5.4 5.4 0 0 0-1.4 3.7c0 5.3 3.5 6.5 6.8 6.9A4.8 4.8 0 0 0 8 18v4M8 19c-3 .9-3-1.7-4-2"/></svg>
@@ -238,6 +239,58 @@
               <span>DMG 받기</span>
             </a>
           </div>
+        </div>
+      </section>
+
+      <section class="section windows-section" id="windows-alpha">
+        <div class="section-inner">
+          <div class="windows-alpha-heading">
+            <div class="section-heading compact">
+              <p class="kicker">Windows 11 x64 · 개발자 알파</p>
+              <h2>macOS 정식판은 그대로.<br>Windows 포트도 시험할 수 있습니다.</h2>
+              <p>Windows 빌드는 알림 영역 플라이아웃과 네 가지 떠다니는 위젯 배치, Claude·Codex 독립 갱신, 3개 테마, 한국어/영어, 9종 펫과 선택형 로컬 기록을 제공하는 .NET 10 WPF 알파입니다.</p>
+            </div>
+            <span class="alpha-badge">UNSIGNED ALPHA</span>
+          </div>
+
+          <div class="windows-alpha-grid">
+            <article>
+              <span>배포</span>
+              <h3>self-contained ZIP</h3>
+              <p>.NET 런타임은 포함됩니다. ZIP 전체를 압축 해제해 실행하며, 서명 설치 프로그램/MSIX나 <code>win-arm64</code> 패키지는 아직 없습니다.</p>
+            </article>
+            <article>
+              <span>로그인</span>
+              <h3>각 공급자가 소유</h3>
+              <p>Codex는 설치된 <code>codex app-server</code>를 사용합니다. Claude는 WebView2 Evergreen의 격리 로그인 창을 사용하고 세션 쿠키 헤더를 현재 사용자 DPAPI로 암호화합니다.</p>
+            </article>
+            <article>
+              <span>로컬 데이터</span>
+              <h3>기본값은 기록 꺼짐</h3>
+              <p>켠 경우에만 5분 간격·최대 14일/4,200개 숫자를 저장하고, Claude Code JSONL에서는 오늘의 시각과 숫자형 usage 필드만 합산합니다.</p>
+            </article>
+          </div>
+
+          <div class="windows-paths" aria-label="Windows 로컬 데이터 경로">
+            <div><strong>설정</strong><code>%LOCALAPPDATA%\ClaudeUsage\settings.json</code></div>
+            <div><strong>Claude 세션</strong><code>%LOCALAPPDATA%\ClaudeUsage\claude-session.dat</code></div>
+            <div><strong>선택형 기록</strong><code>%LOCALAPPDATA%\ClaudeUsage\usage-history.json</code></div>
+          </div>
+
+          <p class="windows-warning"><strong>정책·호환성 주의:</strong> Claude 사용량은 Anthropic이 문서화하지 않은 <code>claude.ai/api/organizations/.../usage</code> endpoint에 의존하므로 예고 없이 변경되거나 제한될 수 있습니다. Codex-only 동작은 이 경로와 분리되어 있습니다.</p>
+
+          <div class="windows-alpha-actions">
+            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/blob/main/windows/README.md" target="_blank" rel="noreferrer">Windows 설치·빌드 안내</a>
+            <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases" target="_blank" rel="noreferrer">prerelease 확인</a>
+          </div>
+          <p class="windows-release-note">Windows prerelease에 ZIP과 <code>.zip.sha256</code>가 함께 게시된 경우 체크섬을 비교한 뒤 실행하세요. 현재 macOS DMG가 이 사이트의 기본 다운로드입니다.</p>
+
+          <details class="windows-english">
+            <summary>Windows alpha — English summary</summary>
+            <p>This is an unsigned, self-contained developer alpha for Windows 11 x64, separate from the stable macOS download. The .NET runtime is bundled; Claude sign-in requires Microsoft Edge WebView2 Evergreen. There is no signed installer/MSIX or ARM64 package yet.</p>
+            <p>Codex usage comes from the installed <code>codex app-server</code> without reading <code>%USERPROFILE%\.codex\auth.json</code>. Claude uses an isolated WebView2 sign-in profile and stores its session cookie encrypted for the current Windows user with DPAPI. Local history and scanning numeric usage fields from Claude Code JSONL are off by default.</p>
+            <p>Claude quotas depend on an undocumented Anthropic endpoint that may change or be restricted without notice. See the Windows guide for installation, SHA-256 verification, build commands, paths, and privacy details.</p>
+          </details>
         </div>
       </section>
     </main>

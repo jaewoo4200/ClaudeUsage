@@ -253,9 +253,41 @@ When the dialog appears:
 
 > With code signing (Apple Developer ID, $99/year) this dialog wouldn't appear at all. Since this is a free open-source app, the dialog is part of macOS's standard process.
 
-## Windows port
+## 🪟 Windows 11 x64 alpha
 
-The Windows implementation has not started yet. Before continuing on a Windows 11 machine, read the [Windows port handoff](HANDOFF.md) for the stack decision, phased plan, test gates, and copy-paste kickoff prompt.
+Alongside the stable macOS release, `windows/` contains a **Windows 11 x64 developer alpha**. It is a .NET 10 WPF notification-area app that refreshes Claude and Codex independently and presents them in one flyout or floating widgets. It includes stacked, horizontal, paged, and separate layouts; three themes; Korean and English; nine companions; and optional 14-day local history.
+
+> The Windows build is currently an **unsigned, self-contained ZIP**. The .NET runtime is bundled, but Claude sign-in requires the Microsoft Edge WebView2 Evergreen Runtime. Only Windows 11 x64 is in the tested release scope; there is no signed installer/MSIX or `win-arm64` release yet.
+
+### Install the Windows alpha
+
+1. If a Windows prerelease on [GitHub Releases](https://github.com/jaewoo4200/ClaudeUsage/releases) includes `ClaudeUsage-Windows-<version>-win-x64.zip` and its `.zip.sha256` file, download both. If no asset has been published yet, use the developer build below.
+2. In PowerShell, compare `Get-FileHash .\ClaudeUsage-Windows-*-win-x64.zip -Algorithm SHA256` with the `.sha256` file.
+3. Extract the entire ZIP to a folder and run `ClaudeUsage.Windows.exe`. Do not run it from inside the archive. SmartScreen may warn because this alpha is unsigned.
+4. Codex must be signed in through the official app/CLI; run `codex login` if needed. Sign in to Claude from the app's **Claude sign-in** window.
+
+### Windows data sources and privacy
+
+| Value | Windows source | Local storage/access |
+|---|---|---|
+| Codex limits and today's tokens | Installed Codex `codex app-server` | Does not read `%USERPROFILE%\.codex\auth.json` or copy its token |
+| Claude five-hour, weekly, and model limits | `claude.ai` through an isolated WebView2 sign-in session | Claude session cookie header encrypted for the current user with DPAPI at `%LOCALAPPDATA%\ClaudeUsage\claude-session.dat` |
+| Local trends and companion state | Numeric usage samples, only after opt-in | `%LOCALAPPDATA%\ClaudeUsage\usage-history.json`, every five minutes, up to 14 days/4,200 samples |
+| Today's Claude Code tokens | When history is enabled, timestamp and numeric usage fields from `%USERPROFILE%\.claude\projects\**\*.jsonl` | Does not retain prompts, responses, filenames, or project names |
+
+The Claude sign-in profile is created per session under `%TEMP%\ClaudeUsage\WebView2\login-*` and cleanup is attempted when the window closes. General settings live at `%LOCALAPPDATA%\ClaudeUsage\settings.json`; the cookie is not written there. History and JSONL scanning are **off by default and enabled by the same explicit opt-in**.
+
+Claude cloud usage depends on Anthropic's undocumented `claude.ai/api/organizations/.../usage` endpoint, which may change or be restricted without notice. Codex-only operation is isolated from that path.
+
+### Build Windows from source
+
+```powershell
+dotnet restore windows/ClaudeUsage.Windows.sln --runtime win-x64 --configfile windows/NuGet.Config
+dotnet test windows/ClaudeUsage.Windows.sln -c Release --no-restore
+pwsh -File windows/scripts/package.ps1 -Runtime win-x64 -SkipRestore -SkipTests
+```
+
+The packaging script writes a self-contained ZIP and SHA-256 file under `windows/artifacts/`. See the [Windows README](windows/README.md) for full run, diagnostic, and privacy details, or the [Windows port handoff](HANDOFF.md) for the original design context.
 
 ## 🔧 Build (Developers)
 

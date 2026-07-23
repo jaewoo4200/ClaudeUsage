@@ -1,0 +1,110 @@
+<UserControl x:Class="ClaudeUsage.Windows.Controls.CompanionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:accessibility="clr-namespace:ClaudeUsage.Windows.Accessibility"
+             x:Name="Root"
+             MinHeight="58"
+             Focusable="False"
+             Background="Transparent">
+    <Grid Background="Transparent">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid x:Name="AvatarHost"
+              Width="{Binding AvatarSize, ElementName=Root}"
+              Height="{Binding AvatarSize, ElementName=Root}"
+              HorizontalAlignment="Left"
+              VerticalAlignment="Top"
+              SnapsToDevicePixels="True">
+            <Ellipse x:Name="QuotaTrack"
+                     Margin="2"
+                     Stroke="{DynamicResource TrackBrush}"
+                     StrokeThickness="4" />
+            <Path x:Name="QuotaProgress"
+                  Stroke="{DynamicResource AccentBrush}"
+                  StrokeThickness="4"
+                  StrokeStartLineCap="Round"
+                  StrokeEndLineCap="Round"
+                  Fill="Transparent" />
+            <Viewbox Stretch="Uniform">
+                <Canvas x:Name="CharacterCanvas"
+                        Width="100"
+                        Height="100"
+                        IsHitTestVisible="False"
+                        ClipToBounds="False" />
+            </Viewbox>
+        </Grid>
+
+        <Grid x:Name="DetailsHost"
+              Grid.Column="1"
+              Margin="9,0,0,0"
+              VerticalAlignment="Top"
+              MinHeight="{Binding AvatarSize, ElementName=Root}">
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="NameRow" Height="16" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition x:Name="DetailRow" Height="14" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                <TextBlock x:Name="NameText"
+                           FontFamily="Segoe UI Variable Display, Segoe UI"
+                           FontSize="12"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           TextTrimming="CharacterEllipsis" />
+                <Border x:Name="MoodBadge"
+                        Margin="5,0,0,0"
+                        Padding="5,1"
+                        CornerRadius="7"
+                        Background="{DynamicResource AccentMutedBrush}">
+                    <TextBlock x:Name="MoodText"
+                               Text="{Binding MoodTitle, ElementName=Root}"
+                               FontFamily="Segoe UI Variable Text, Segoe UI"
+                               FontSize="8.5"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentBrush}"
+                               TextTrimming="CharacterEllipsis" />
+                </Border>
+            </StackPanel>
+
+            <TextBlock x:Name="BubbleMessage"
+                       Grid.Row="1"
+                       Text="{Binding BubbleText, ElementName=Root}"
+                       Margin="0,2,0,1"
+                       FontFamily="Segoe UI Variable Text, Segoe UI"
+                       FontSize="9.2"
+                       FontWeight="SemiBold"
+                       LineHeight="12"
+                       MaxHeight="36"
+                       TextWrapping="Wrap"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       AutomationProperties.LiveSetting="Polite"
+                       accessibility:LiveRegionBehavior.AnnounceOnTextChanged="True" />
+
+            <Grid Grid.Row="2" VerticalAlignment="Bottom">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="DetailMessage"
+                           Text="{Binding DetailText, ElementName=Root}"
+                           FontFamily="Segoe UI Variable Text, Segoe UI"
+                           FontSize="8.5"
+                           FontWeight="Medium"
+                           Foreground="{DynamicResource TertiaryTextBrush}"
+                           Typography.NumeralAlignment="Tabular"
+                           TextTrimming="CharacterEllipsis" />
+                <Canvas x:Name="SparklineCanvas"
+                        Grid.Column="1"
+                        Width="34"
+                        Height="13"
+                        Margin="4,0,0,0"
+                        IsHitTestVisible="False" />
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

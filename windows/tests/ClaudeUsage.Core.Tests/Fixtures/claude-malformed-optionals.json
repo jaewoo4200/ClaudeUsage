@@ -1,0 +1,29 @@
+{
+  "five_hour": {
+    "utilization": 22,
+    "resets_at": "2026-07-13T08:30:00Z"
+  },
+  "seven_day": {
+    "utilization": "0.61",
+    "resets_at": "2026-07-20T00:00:00Z"
+  },
+  "seven_day_sonnet": {
+    "utilization": "not-a-number"
+  },
+  "seven_day_opus": "not-an-object",
+  "seven_day_omelette": null,
+  "seven_day_future_broken": {
+    "percentage": "bad-number"
+  },
+  "seven_day_future_valid": {
+    "percentage": "0.09",
+    "reset_at": "2026-07-22T00:00:00Z"
+  },
+  "extra_usage": {
+    "is_enabled": null,
+    "monthly_limit": "bad-number",
+    "used_credits": null,
+    "utilization": "bad-number",
+    "currency": null
+  }
+}
