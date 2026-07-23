@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using ClaudeUsage.Windows.Resources.Themes;
 using ClaudeUsage.Windows.Services;
 using ClaudeUsage.Windows.Views;
+using Forms = System.Windows.Forms;
 
 namespace ClaudeUsage.Windows.Tests;
 
@@ -92,7 +93,7 @@ public sealed class ClaudeLoginWindowParityTests
     }
 
     [Fact]
-    public void LoginWindowCreatesTheMacSizedNativeClientArea()
+    public void LoginWindowCreatesTheExpectedNativeClientAreaForTheCurrentWorkArea()
     {
         RunSta(() =>
         {
@@ -112,15 +113,56 @@ public sealed class ClaudeLoginWindowParityTests
                     DispatcherPriority.ApplicationIdle);
 
                 Assert.True(GetClientRect(handle, out var client));
+                Assert.True(GetWindowRect(handle, out var outer));
                 var dpi = VisualTreeHelper.GetDpi(window);
+                var clientWidthPixels = client.Right - client.Left;
+                var clientHeightPixels = client.Bottom - client.Top;
+                var nonClientWidth = Math.Max(
+                    0,
+                    (outer.Right - outer.Left - clientWidthPixels) / dpi.DpiScaleX);
+                var nonClientHeight = Math.Max(
+                    0,
+                    (outer.Bottom - outer.Top - clientHeightPixels) / dpi.DpiScaleY);
+                var workArea = Forms.Screen.FromHandle(handle).WorkingArea;
+                var expected = WindowWorkAreaSizingPolicy.Calculate(new WindowWorkAreaSizingRequest(
+                    workArea.Width,
+                    workArea.Height,
+                    dpi.DpiScaleX,
+                    dpi.DpiScaleY,
+                    PreferredWidth: 520,
+                    PreferredHeight: 760,
+                    MinimumWidth: 460,
+                    MinimumHeight: 640,
+                    NonClientWidth: nonClientWidth,
+                    NonClientHeight: nonClientHeight,
+                    PreferredSizeIsClient: true,
+                    PhysicalMarginPixels: 12));
+                var expectedClientWidthPixels =
+                    (expected.TargetOuterWidth - nonClientWidth) * dpi.DpiScaleX;
+                var expectedClientHeightPixels =
+                    (expected.TargetOuterHeight - nonClientHeight) * dpi.DpiScaleY;
+
                 Assert.InRange(
-                    client.Right - client.Left,
-                    (int)Math.Floor(520 * dpi.DpiScaleX) - 1,
-                    (int)Math.Ceiling(520 * dpi.DpiScaleX) + 1);
+                    clientWidthPixels,
+                    (int)Math.Floor(expectedClientWidthPixels) - 1,
+                    (int)Math.Ceiling(expectedClientWidthPixels) + 1);
                 Assert.InRange(
-                    client.Bottom - client.Top,
-                    (int)Math.Floor(760 * dpi.DpiScaleY) - 1,
-                    (int)Math.Ceiling(760 * dpi.DpiScaleY) + 1);
+                    clientHeightPixels,
+                    (int)Math.Floor(expectedClientHeightPixels) - 1,
+                    (int)Math.Ceiling(expectedClientHeightPixels) + 1);
+                Assert.InRange(clientWidthPixels, 1, (int)Math.Ceiling(520 * dpi.DpiScaleX));
+                Assert.InRange(clientHeightPixels, 1, (int)Math.Ceiling(760 * dpi.DpiScaleY));
+                Assert.InRange(
+                    outer.Right - outer.Left,
+                    1,
+                    Math.Max(1, workArea.Width - 24) + 1);
+                Assert.InRange(
+                    outer.Bottom - outer.Top,
+                    1,
+                    Math.Max(1, workArea.Height - 24) + 1);
+                Assert.Equal(SizeToContent.Manual, window.SizeToContent);
+                Assert.True(window.MinWidth <= window.MaxWidth);
+                Assert.True(window.MinHeight <= window.MaxHeight);
             }
             finally
             {
@@ -268,6 +310,10 @@ public sealed class ClaudeLoginWindowParityTests
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetClientRect(IntPtr window, out NativeRect rectangle);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetWindowRect(IntPtr window, out NativeRect rectangle);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativeRect

@@ -46,27 +46,51 @@ public sealed class WindowWorkAreaSizingPolicyTests
     }
 
     [Fact]
-    public void ThirteenSixtySixBySevenSixtyEightAtTwoHundredPercentConstrainsLoginOuterSize()
+    public void SufficientWorkAreaKeepsPreferredLoginClientSize()
+    {
+        var result = WindowWorkAreaSizingPolicy.Calculate(new WindowWorkAreaSizingRequest(
+            WorkAreaWidthPixels: 1920,
+            WorkAreaHeightPixels: 1080,
+            DpiScaleX: 1,
+            DpiScaleY: 1,
+            PreferredWidth: 520,
+            PreferredHeight: 760,
+            MinimumWidth: 460,
+            MinimumHeight: 640,
+            NonClientWidth: 16,
+            NonClientHeight: 39,
+            PreferredSizeIsClient: true));
+
+        Assert.Equal(536, result.PreferredOuterWidth);
+        Assert.Equal(799, result.PreferredOuterHeight);
+        Assert.Equal(result.PreferredOuterWidth, result.TargetOuterWidth);
+        Assert.Equal(result.PreferredOuterHeight, result.TargetOuterHeight);
+    }
+
+    [Fact]
+    public void ThirteenSixtySixBySevenSixtyEightAtTwoHundredPercentConstrainsLoginClientSize()
     {
         var result = WindowWorkAreaSizingPolicy.Calculate(new WindowWorkAreaSizingRequest(
             WorkAreaWidthPixels: 1366,
             WorkAreaHeightPixels: 768,
             DpiScaleX: 2,
             DpiScaleY: 2,
-            PreferredWidth: 560,
-            PreferredHeight: 780,
-            MinimumWidth: 360,
-            MinimumHeight: 320,
+            PreferredWidth: 520,
+            PreferredHeight: 760,
+            MinimumWidth: 460,
+            MinimumHeight: 640,
             NonClientWidth: 16,
             NonClientHeight: 39,
-            PreferredSizeIsClient: false));
+            PreferredSizeIsClient: true));
 
         Assert.Equal(671, result.AvailableOuterWidth);
         Assert.Equal(372, result.AvailableOuterHeight);
-        Assert.Equal(560, result.TargetOuterWidth);
+        Assert.Equal(536, result.PreferredOuterWidth);
+        Assert.Equal(799, result.PreferredOuterHeight);
+        Assert.Equal(536, result.TargetOuterWidth);
         Assert.Equal(372, result.TargetOuterHeight);
-        Assert.Equal(360, result.MinimumOuterWidth);
-        Assert.Equal(320, result.MinimumOuterHeight);
+        Assert.Equal(476, result.MinimumOuterWidth);
+        Assert.Equal(372, result.MinimumOuterHeight);
     }
 
     private static WindowWorkAreaSizingResult CalculateClient(
