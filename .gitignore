@@ -34,3 +34,13 @@ output/
 
 # 개인 데이터
 .claude-widget.json
+
+# Windows / .NET
+windows/**/bin/
+windows/**/obj/
+windows/artifacts/
+windows/TestResults/
+windows/.packages/
+*.user
+*.suo
+*.nupkg

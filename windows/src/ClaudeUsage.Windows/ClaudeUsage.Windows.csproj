@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.22000.0</TargetPlatformMinVersion>
+    <WindowsSdkPackageVersion>10.0.26100.81</WindowsSdkPackageVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ClaudeUsage.Windows</RootNamespace>
+    <AssemblyName>ClaudeUsage.Windows</AssemblyName>
+    <Product>ClaudeUsage for Windows</Product>
+    <Description>Claude and Codex usage in the Windows notification area and floating widgets.</Description>
+    <Authors>jaewoo4200</Authors>
+    <ApplicationIcon>Assets\App.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <!--
+      WFO0003 is a WinForms analyzer rule. This is a WPF application that uses
+      WinForms only for monitor enumeration; WPF needs the explicit PMv2
+      manifest and DpiManifestTests verifies the apphost resource itself.
+    -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClaudeUsage.Core\ClaudeUsage.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ClaudeUsage.Windows.Tests" />
+  </ItemGroup>
+</Project>

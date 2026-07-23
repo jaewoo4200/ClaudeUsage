@@ -1,0 +1,72 @@
+{
+  "rateLimits": {
+    "limitId": "codex",
+    "limitName": null,
+    "primary": {
+      "usedPercent": 28,
+      "windowDurationMins": 300,
+      "resetsAt": 1783634265
+    },
+    "secondary": {
+      "usedPercent": 32,
+      "windowDurationMins": 10080,
+      "resetsAt": 1783904355
+    },
+    "planType": "pro"
+  },
+  "rateLimitsByLimitId": {
+    "codex": {
+      "limitId": "codex",
+      "limitName": null,
+      "primary": {
+        "usedPercent": 28,
+        "windowDurationMins": 300,
+        "resetsAt": 1783634265
+      },
+      "secondary": {
+        "usedPercent": 32,
+        "windowDurationMins": 10080,
+        "resetsAt": 1783904355
+      },
+      "planType": "pro"
+    },
+    "gpt_5_6_sol": {
+      "limitId": "gpt_5_6_sol",
+      "limitName": "GPT-5.6-Sol",
+      "primary": {
+        "usedPercent": 12,
+        "windowDurationMins": 300,
+        "resetsAt": 1783634265
+      },
+      "secondary": {
+        "usedPercent": 6,
+        "windowDurationMins": 10080,
+        "resetsAt": 1783904355
+      },
+      "planType": "pro"
+    }
+  },
+  "rateLimitResetCredits": {
+    "availableCount": 1,
+    "credits": [
+      {
+        "id": "credit-available",
+        "resetType": "codexRateLimits",
+        "status": "available",
+        "grantedAt": 1781742787,
+        "expiresAt": 1784334787,
+        "title": "Full reset (Weekly + 5 hr)",
+        "description": "One free reset"
+      },
+      {
+        "id": "credit-used",
+        "resetType": "codexRateLimits",
+        "status": "consumed",
+        "grantedAt": 1781742787,
+        "expiresAt": 1784334787,
+        "title": "Full reset (Weekly + 5 hr)",
+        "description": "Already used"
+      }
+    ]
+  }
+}

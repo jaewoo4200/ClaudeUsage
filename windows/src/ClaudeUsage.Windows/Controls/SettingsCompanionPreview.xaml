@@ -1,0 +1,24 @@
+<UserControl x:Class="ClaudeUsage.Windows.Controls.SettingsCompanionPreview"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:ClaudeUsage.Windows.Controls"
+             x:Name="Root"
+             Focusable="False"
+             IsHitTestVisible="False">
+    <Grid Width="{Binding FrameSize, ElementName=Root}"
+          Height="{Binding FrameSize, ElementName=Root}"
+          ClipToBounds="True">
+        <controls:CompanionControl Width="{Binding AvatarSize, ElementName=Root}"
+                                   Height="{Binding AvatarSize, ElementName=Root}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   AvatarSize="{Binding AvatarSize, ElementName=Root}"
+                                   ShowDetails="False"
+                                   Companion="{Binding Companion, ElementName=Root}"
+                                   Mood="{Binding Mood, ElementName=Root}"
+                                   Pressure="{Binding Pressure, ElementName=Root}"
+                                   AnimationMode="{Binding AnimationMode, ElementName=Root}"
+                                   ReducedMotion="{Binding ReducedMotion, ElementName=Root}"
+                                   BubbleText="" />
+    </Grid>
+</UserControl>

@@ -1,20 +1,24 @@
 # ClaudeUsage Windows Port Handoff
 
-Last updated: 2026-07-10
+Last updated: 2026-07-23
 
 ## 0. Handoff status
 
 - macOS functional baseline: ClaudeUsage `1.5.0` (build `14`)
-- Windows implementation: not started
-- Recommended first target: Windows 11 x64
-- Recommended stack: .NET 10 LTS + WPF
+- Windows implementation: Phase 0–5 feature integration is complete as a Windows 11 x64 developer alpha
+- Windows stack: .NET SDK `10.0.302` + WPF, with an exact-version WebView2 dependency
 - Repository strategy: keep the macOS app unchanged and add a sibling `windows/` solution
-- First usable milestone: Codex usage in a Windows tray flyout
-- Full parity milestone: Claude + Codex + four widget layouts + nine companions + installer
+- Implemented alpha scope: independent Claude/Codex refresh, combined tray flyout, four floating-widget layouts, themes/localization/settings, nine companions, optional bounded history, Claude Code JSONL aggregation, and per-user startup
+- Phase 6 foundation: `windows-latest` CI, deterministic self-contained `win-x64` ZIP, structural MSIX/App Installer, SPDX SBOM, license/checksum validation, and a two-environment signed-candidate workflow are implemented
+- Local Windows runtime/UIA audit, Release tests, DPI/resource validation, and byte-reproducible ZIP/MSIX packaging are complete. Release-readiness work still pending: mixed-DPI/assistive-technology checks on additional hardware, permanent package identity and trusted certificate provisioning, hosted update-channel verification, clean-machine install/update/uninstall/startup smoke, and an explicitly authorized public Windows release
+- Current local gate (2026-07-23): all 220 Release tests pass (66 Core, 2 startup black-box, and 152 Windows), including real-HWND widget movement/clamp/independent-position restore, fixed-size movable settings-window and resizable history-window work-area integration, passive tray/widget activation, WebView2 login-policy hardening, real subprocess app-server/startup coverage, vector-icon parity checks, and real WPF layout/scroll-command checks for the overlay-scrollbar, fixed flyout footer, and responsive history. Release builds complete with zero warnings, and the exact current ZIP passes both the runtime smoke and the checked-in real-pointer movement smoke: Settings moved `+180,+100`, History `+180,+100`, and Widget `-180,+100` through `SendInput` while all sizes/work-area bounds stayed valid and the real settings file, test processes, input state, and bounded temporary directory passed cleanup postconditions. Windows PowerShell 5.1 static guards for both smoke harnesses pass, and CI validates them before packaging/signing. Two fixed-epoch package runs produced byte-identical ZIP, structural MSIX, and SPDX SBOM artifacts. A final Windows runtime capture verifies the 420-pixel fixed settings window, thin scrollbar, unwrapped sensitivity text, and vector chart/delete/external-link icons; the flyout overlay geometry is additionally covered by real WPF runtime layout tests. The standard-user self-signed lifecycle harness now delegates only an exact certificate lease to one UAC broker, uses explicit cross-account event/mutex ACLs, and has Windows PowerShell 5.1 static, immutable-payload, failure-protocol, and abandoned-parent cleanup coverage. Its live install/upgrade/uninstall rerun and the separate clean-machine signed release gate are still required.
+- Reproducible local artifact hashes: ZIP `a34d356ec21b29a3044b26009ede23b78d21041a3c905c49e450bca089d5a5d2`; unsigned structural MSIX `21ec181cc8ef482fcce6830671b43a58e73b13cd0c3f5dcd5a5ec496205abaa2`; SPDX SBOM `0b6e0e782e280759d74e5e4dbf35239c0fa183ee046a870740973f3c0d4544c6`. These development artifacts are not authorized for public publication; their local `build-info.json` records `sourceCommit` as `unknown`, so protected CI must rebuild from the committed SHA before any release decision.
+- Not currently offered publicly: a signed installer/MSIX, `win-arm64` package, hosted automatic-update channel, or stable Windows release
+- `windows/PHASE_0_2_REPORT.md` is a historical Phase 0–2 checkpoint, not the current test count or artifact checksum
 
-This is a native Windows port, not a direct rebuild of the SwiftUI project. WPF is Windows-only, so the final UI, tray behavior, WebView2 login, packaging, and visual QA must be completed on a Windows machine or a Windows CI runner. A Mac can still review the C# core and documentation, but it cannot provide trustworthy WPF runtime verification.
+This is a native Windows port, not a direct rebuild of the SwiftUI project. The feature implementation now lives under `windows/`; the unchecked live, clean-machine, signing, and public-release gates later in this document are acceptance work, not missing Phase 0–5 product code. WPF runtime and visual QA must be performed on Windows or a Windows CI runner.
 
-## 1. Copy-paste kickoff prompt for the Windows agent
+## 1. Copy-paste continuation prompt for final verification/release work
 
 First pull the handoff onto Windows:
 
@@ -29,13 +33,14 @@ Get-Content HANDOFF.md
 ```text
 Read HANDOFF.md and the existing macOS source before editing.
 
-Implement only Phase 0 through Phase 2 first:
-1. verify the Windows development environment and the installed Codex executable,
-2. create the windows/ .NET 10 WPF solution and pure C# core/test projects,
-3. port the Codex app-server JSON-RPC client and parsing tests,
-4. show live Codex 5-hour, weekly, model-specific limits, reset time, reset-credit count, and today's token bucket in a minimal Windows tray flyout.
+Phase 0–5 feature integration is complete. Continue with verification and release-readiness only:
+1. restore and test the full Windows solution from a fresh checkout using the pinned .NET SDK,
+2. run the combined tray, Claude WebView2 login/logout, Codex app-server, four widget layouts, settings, history clear, startup, localization, and companion smoke checks on Windows 11 x64,
+3. build the self-contained win-x64 ZIP plus structural MSIX/App Installer candidate with windows/scripts/package.ps1 and verify the SBOM, notices, and generated SHA-256 files,
+4. validate the signed MSIX install/update/uninstall path under a disposable clean Windows 11 x64 machine without a system-wide .NET runtime,
+5. report exact results and new artifact hashes only after those commands finish.
 
-Keep Sources/ClaudeUsage and the current macOS behavior unchanged. Do not scrape chatgpt.com, do not read OpenAI token files, do not hardcode new model names, and do not consume reset credits. Preserve the last good usage snapshot on transient refresh errors. Run tests and provide a Windows screenshot plus a zipped win-x64 build artifact before moving to Claude login or full widget parity.
+Keep Sources/ClaudeUsage and the current macOS behavior unchanged. Do not scrape chatgpt.com, read OpenAI token files, hardcode new model names, consume reset credits, or publish an unsigned prerelease. Public publication must promote the exact signed candidate through the protected `windows-signing` and `windows-production-release` environments after the permanent MSIX identity, trusted certificate, HTTPS update host, and clean-machine smoke gates pass.
 ```
 
 ## 2. Product goal
@@ -51,7 +56,7 @@ Build a Windows companion with the same user-facing meaning as the macOS app:
 - Korean and English, light/dark/auto appearance, and the three existing themes remain available.
 - Sensitive session material stays local and encrypted for the current Windows user.
 
-### Explicit non-goals for the first milestone
+### Continuing non-goals and safety boundaries
 
 - Do not rewrite or refactor the macOS app while establishing the Windows port.
 - Do not ship every companion animation before live Codex usage works end to end.
@@ -107,11 +112,11 @@ windows/
 
 ### 3.3 First release shape
 
-1. Developer alpha: self-contained `win-x64` publish folder zipped as an artifact.
-2. Beta: signed MSIX or MSIX bundle.
-3. Public release: signed installer, update path, uninstall verification, and Windows download added to the website.
+1. Developer alpha: self-contained `win-x64` portable ZIP plus unsigned structural MSIX/App Installer artifacts. **Local packaging, CI validation, checksums, SPDX SBOM, and license notices are implemented; clean-machine validation and any public upload remain pending.**
+2. Beta: signed x64 MSIX with the permanent package identity and HTTPS App Installer update feed.
+3. Public release: the exact validated signed candidate, clean install/update/uninstall evidence, and Windows download added to the website.
 
-Do not block the first functional build on MSIX signing. An unsigned public MSIX produces a poor installation experience, so use a zip for internal validation until a signing decision is made.
+Do not block local functional validation on MSIX signing, but never publish the unsigned structural MSIX produced by ordinary CI. The release workflow creates a signed candidate behind the `windows-signing` environment and publishes that exact artifact only after a separate `windows-production-release` approval.
 
 ## 4. macOS source-of-truth map
 
@@ -334,7 +339,7 @@ Do not store the Claude cookie in this settings file.
 | macOS Keychain | DPAPI `ProtectedData` with `CurrentUser` scope |
 | `UserDefaults` | Versioned JSON under `%LOCALAPPDATA%` |
 | Application Support | `%LOCALAPPDATA%\ClaudeUsage` |
-| Login item | Optional `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` entry |
+| Login item | ZIP: optional `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`; MSIX: identity-based `windows.startupTask` plus background launcher |
 | `.icns` | Multi-size `.ico` plus PNG assets |
 | Xcode/XCTest | Visual Studio or `dotnet` + xUnit |
 | DMG | Zip for alpha, signed MSIX/MSIX bundle for release |
@@ -351,23 +356,25 @@ Windows notification icons do not provide the same inline text surface as a macO
 
 Do not squeeze two tiny percentages into a 16-pixel tray icon. A later experiment may offer two provider icons, but that is not an MVP requirement.
 
-## 7. Windows implementation plan
+## 7. Windows implementation record and remaining release work
 
-### Phase 0: machine and live-source reconnaissance
+Phase 0–5 product code is integrated. Checked items below describe implemented/reconnaissance work. Unchecked live, visual, clean-machine, signing, and publication items remain acceptance or release gates; they do not indicate that the Phase 0–5 feature code is absent.
+
+### Phase 0: machine and live-source reconnaissance — complete
 
 Goal: prove the target machine can build WPF and launch a signed-in Codex app-server before writing product UI.
 
-- [ ] Clone this repository and confirm `git status` is clean.
-- [ ] Record `git rev-parse HEAD` in the Windows work log.
-- [ ] Install the current Visual Studio 2022 release with `.NET desktop development` and a Windows 11 SDK.
-- [ ] Install the .NET 10 SDK and verify `dotnet --info`.
-- [ ] Verify the WebView2 Runtime is present.
-- [ ] Install Codex from an official OpenAI distribution if it is not already installed.
-- [ ] Sign in with `codex login` or an official managed Codex login flow.
-- [ ] Record `where.exe codex` and `codex --version`.
-- [ ] Manually start `codex app-server` and confirm the initialize/rate-limit sequence returns JSONL.
-- [ ] Save only a redacted rate-limit fixture; remove account identifiers and secrets.
-- [ ] Confirm whether `%USERPROFILE%\.claude\projects` exists.
+- [x] Clone this repository and establish the source baseline.
+- [x] Record the baseline commit in the Windows work log.
+- [x] Verify a Windows 11 x64 WPF-capable toolchain.
+- [x] Install the pinned .NET 10 SDK and verify the CLI/runtime.
+- [x] Verify the WebView2 Runtime is present.
+- [x] Locate Codex from an official OpenAI distribution.
+- [x] Reuse an official signed-in Codex session.
+- [x] Record a redacted Codex version and executable-path category.
+- [x] Start `codex app-server` and confirm the initialize/rate-limit sequence returns JSONL.
+- [x] Save only redacted fixtures without account identifiers or secrets.
+- [x] Confirm the optional `%USERPROFILE%\.claude\projects` input location.
 
 Exit criteria:
 
@@ -375,20 +382,20 @@ Exit criteria:
 - `codex app-server` returns either valid rate limits or a clear authentication error.
 - No dependency on an open Codex GUI is observed.
 
-### Phase 1: solution and pure core
+### Phase 1: solution and pure core — complete
 
 Goal: establish testable data contracts before desktop plumbing.
 
-- [ ] Create `ClaudeUsage.Windows.sln`.
-- [ ] Add `ClaudeUsage.Core`, `ClaudeUsage.Windows`, and `ClaudeUsage.Core.Tests`.
-- [ ] Target .NET 10 and enable nullable reference types and warnings.
-- [ ] Add exact-version WebView2 only to the Windows project.
-- [ ] Add WPF/WinForms integration for `NotifyIcon` only to the Windows project.
-- [ ] Port quota-window, organization, Codex limit, reset-credit, token-activity, history, and trend models.
-- [ ] Port the dynamic Codex counter builder.
-- [ ] Port Claude `UsageData` normalization, especially nested Fable selection.
-- [ ] Port the existing parser/history fixture tests to xUnit.
-- [ ] Add JSON fixtures under `windows/tests/ClaudeUsage.Core.Tests/Fixtures`.
+- [x] Create `ClaudeUsage.Windows.sln`.
+- [x] Add `ClaudeUsage.Core`, `ClaudeUsage.Windows`, and `ClaudeUsage.Core.Tests`.
+- [x] Target .NET 10 and enable nullable reference types and warnings.
+- [x] Add exact-version WebView2 only to the Windows project.
+- [x] Add WPF/WinForms integration for `NotifyIcon` only to the Windows project.
+- [x] Port quota-window, organization, Codex limit, reset-credit, token-activity, history, and trend models.
+- [x] Port the dynamic Codex counter builder.
+- [x] Port Claude `UsageData` normalization, especially nested Fable selection.
+- [x] Port parser/history fixture tests to xUnit.
+- [x] Add redacted JSON fixtures under `windows/tests/ClaudeUsage.Core.Tests/Fixtures`.
 
 Exit criteria:
 
@@ -397,20 +404,20 @@ Exit criteria:
 - Nested Fable is distinct from five-hour usage and uses the weekly reset.
 - Malformed optional model limits do not break standard limits.
 
-### Phase 2: Codex-first vertical slice
+### Phase 2: Codex-first vertical slice — complete
 
 Goal: ship one complete, source-backed Windows path before adding Claude login.
 
-- [ ] Implement `CodexExecutableLocator` with manual-path and PATH support first.
-- [ ] Implement cancellable, line-oriented `CodexAppServerClient`.
-- [ ] Add 20-second timeout and process-tree cleanup.
-- [ ] Fetch rate limits and token activity concurrently after initialization.
-- [ ] Map transient errors without destroying the last good snapshot.
-- [ ] Build a minimal `UsageCoordinator` with 60-second refresh.
-- [ ] Create one tray icon and localized tooltip.
-- [ ] Create a click flyout showing plan, five-hour, weekly, dynamic models, reset times, reset credits, and today's Codex tokens.
-- [ ] Add manual refresh, Settings, and Quit actions.
-- [ ] Display setup guidance when `codex.exe` is unavailable or signed out.
+- [x] Implement `CodexExecutableLocator` with manual-path, PATH, and supported desktop-install discovery.
+- [x] Implement cancellable, line-oriented `CodexAppServerClient`.
+- [x] Add bounded timeout and process-tree cleanup.
+- [x] Fetch rate limits and optional token activity after initialization.
+- [x] Map transient errors without destroying the last good snapshot.
+- [x] Build a `UsageCoordinator` with 60-second refresh and superseding manual refresh.
+- [x] Create one tray icon and localized tooltip.
+- [x] Create a click flyout showing plan, five-hour, weekly, dynamic models, reset times, reset credits, and today's Codex tokens.
+- [x] Add manual refresh, Settings, widget, and Quit actions.
+- [x] Display setup guidance when `codex.exe` is unavailable or signed out.
 
 Exit criteria:
 
@@ -420,24 +427,24 @@ Exit criteria:
 - The tray icon is disposed when the app exits.
 - A zipped self-contained `win-x64` build runs on a second Windows account/machine used for testing.
 
-Stop here for review before Phase 3. Capture screenshots and a short live-response audit.
+The historical Phase 0–2 checkpoint is preserved in `windows/PHASE_0_2_REPORT.md`. Its test count, screenshot, artifact name, and SHA refer only to that checkpoint. Clean-account/machine validation of the current integrated package remains a Phase 6 release gate.
 
-### Phase 3: Claude login and quota source
+### Phase 3: Claude login and quota source — complete in the developer alpha
 
 Goal: add Claude without weakening local security or parser resilience.
 
-- [ ] Add a dedicated WebView2 login window for `https://claude.ai/login`.
-- [ ] Use an isolated temporary WebView2 profile/data folder, not the user's general Edge profile.
-- [ ] Poll or react to navigation and call `GetCookiesAsync("https://claude.ai")`.
-- [ ] Accept session cookie names `sessionKey`, `__Secure-next-auth.session-token`, and `next-auth.session-token`.
-- [ ] Capture only `claude.ai` and subdomain cookies.
-- [ ] Encrypt the final cookie header using DPAPI `CurrentUser` scope.
-- [ ] Clear all browsing data after capture, close WebView2, and remove the temporary profile folder immediately or on the next startup if files are still locked.
-- [ ] Never log cookie names and values together; never log values.
-- [ ] Add clear-login-data and logout actions.
-- [ ] Port organization and usage HTTP requests.
-- [ ] Apply the tested dynamic parser and last-good-state behavior.
-- [ ] Add a prominent internal/public distribution policy gate based on `docs/USAGE_HISTORY_AND_POLICY.md`.
+- [x] Add a dedicated WebView2 login window for `https://claude.ai/login`.
+- [x] Use an isolated temporary WebView2 profile/data folder, not the user's general Edge profile.
+- [x] Poll/react to navigation and call `GetCookiesAsync("https://claude.ai")`.
+- [x] Accept session cookie names `sessionKey`, `__Secure-next-auth.session-token`, and `next-auth.session-token`.
+- [x] Capture only recognized root-path session cookies whose domain is exactly `claude.ai` or `.claude.ai`.
+- [x] Encrypt the final cookie header using DPAPI `CurrentUser` scope.
+- [x] Clear browsing data and remove the temporary profile immediately or on a later cleanup attempt if files remain locked.
+- [x] Avoid logging cookie values or raw provider payloads.
+- [x] Add login, logout, and login-data cleanup paths.
+- [x] Port organization and usage HTTP requests.
+- [x] Apply the tolerant dynamic parser and last-good-state behavior.
+- [x] Add an experimental-provider toggle and visible policy warning based on `docs/USAGE_HISTORY_AND_POLICY.md`.
 
 Exit criteria:
 
@@ -446,23 +453,23 @@ Exit criteria:
 - An expired Claude session does not affect Codex.
 - The plaintext cookie is not present in settings, logs, crash reports, or package output.
 
-### Phase 4: widget and settings parity
+### Phase 4: widget and settings parity — feature implementation complete
 
 Goal: reproduce the established workflows with Windows-native behavior.
 
-- [ ] Build the combined tray flyout with independent Claude/Codex states.
-- [ ] Build a movable floating widget with `ShowInTaskbar=false` and optional `Topmost`.
-- [ ] Add stacked layout at 240 logical pixels wide.
-- [ ] Add horizontal layout at approximately 480 logical pixels wide.
-- [ ] Add paged layout with stable dimensions while switching providers.
-- [ ] Add separate Claude and Codex windows.
-- [ ] Save each window position and clamp it to the current monitor work area.
+- [x] Build the combined tray flyout with independent Claude/Codex states.
+- [x] Build a movable floating widget with `ShowInTaskbar=false` and optional `Topmost`.
+- [x] Add stacked layout at 240 logical pixels wide.
+- [x] Add horizontal layout at approximately 480 logical pixels wide.
+- [x] Add paged layout with stable dimensions while switching providers.
+- [x] Add separate Claude and Codex windows.
+- [x] Save each window position and clamp it to the current monitor work area.
 - [ ] Test taskbars on bottom, top, left, and right.
 - [ ] Test 100%, 125%, 150%, and 200% display scaling.
-- [ ] Add Daangn, Toss, and Hybrid resource dictionaries.
-- [ ] Add light, dark, and system appearance.
-- [ ] Port Korean and English strings into `.resx` resources.
-- [ ] Add Spark visibility and all current settings defaults.
+- [x] Add Daangn, Toss, and Hybrid resource dictionaries.
+- [x] Add light, dark, and system appearance.
+- [x] Port Korean and English strings into WPF resource dictionaries.
+- [x] Add Spark visibility and the Windows settings defaults.
 
 Exit criteria:
 
@@ -472,19 +479,19 @@ Exit criteria:
 - Flyout and widget remain fully inside the active monitor.
 - Keyboard navigation and screen-reader labels cover every actionable control.
 
-### Phase 5: companions and optional history
+### Phase 5: companions and optional history — complete in the developer alpha
 
 Goal: restore companion behavior after data and layout contracts are stable.
 
-- [ ] Port history persistence, trend calculations, and mood tests first.
-- [ ] Implement a fixed-footprint `CompanionControl` using WPF shapes/canvas, with Mimo as the first parity target.
-- [ ] Keep the body and quota ring stationary; animate only character parts, expressions, props, and action marks.
-- [ ] Add persisted selection for Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, and Pico.
-- [ ] Implement reduced-motion pose changes.
-- [ ] Port idle, provider-specific, rapid-use, reset, tired, and reset-credit actions in priority order.
-- [ ] Add a reserved speech-bubble area that cannot resize the widget.
-- [ ] Keep reset-credit advice read-only and require explicit confirmation for any future consume action.
-- [ ] Add clear-history behavior and privacy text.
+- [x] Port history persistence, trend calculations, mood resolution, and tests.
+- [x] Implement a fixed-footprint `CompanionControl` using WPF shapes/canvas.
+- [x] Keep quota UI geometry independent from companion pose changes.
+- [x] Add persisted selection for Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, and Pico.
+- [x] Implement reduced-motion pose behavior.
+- [x] Port deterministic idle, pressure, reset, tired, and reset-credit presentation priorities.
+- [x] Add a reserved speech-bubble area that cannot resize the widget.
+- [x] Keep reset-credit advice read-only; no consume command is exposed.
+- [x] Add opt-in sampling, clear-history behavior, and bilingual privacy text.
 
 Exit criteria:
 
@@ -493,20 +500,22 @@ Exit criteria:
 - Text does not overlap the companion, quota rings, navigation, or settings.
 - Disabling history stops sampling and local Claude-log scanning.
 
-### Phase 6: packaging, CI, and release
+### Phase 6: packaging, CI, and release — foundation complete; release gates pending
 
 Goal: produce a reproducible Windows artifact and installation path.
 
-- [ ] Add a `windows-latest` GitHub Actions job for restore, test, and publish.
-- [ ] Publish `win-x64` first; add `win-arm64` after a real-device test.
-- [ ] Produce a self-contained zip artifact for alpha testing.
-- [ ] Add a Windows Application Packaging Project for MSIX when signing is ready.
-- [ ] Configure app identity, icons, display name, capabilities, and uninstall cleanup.
-- [ ] Decide whether startup-on-login is installer-managed or an in-app `HKCU Run` setting.
+- [x] Add a `windows-latest` GitHub Actions job for restore, test, and package.
+- [x] Restrict the current package to `win-x64`; add `win-arm64` only after a real-device test.
+- [x] Produce a self-contained ZIP and SHA-256 artifact for alpha testing.
+- [x] Add script-driven MSIX/App Installer packaging with pinned Windows SDK tooling.
+- [x] Configure templated app identity, icons, display name, capabilities, and explicit user-data retention policy; production identity values remain an external release gate.
+- [x] Use an in-app, per-user `HKCU Run` setting for the ZIP alpha.
 - [ ] Sign the public installer and verify SmartScreen/install behavior.
 - [ ] Verify upgrade and uninstall paths do not delete unrelated Codex/Claude data.
-- [ ] Add Windows installation and data-source wording to both READMEs and the website.
-- [ ] Publish a GitHub prerelease with checksums and explicit Windows requirements.
+- [x] Add Windows installation, privacy, and data-source wording to both READMEs, the website, Windows README, and release notes.
+- [x] Add a manual signed-candidate workflow with distinct `windows-signing` and `windows-production-release` environment gates; public publication defaults off.
+- [ ] Validate the current integrated ZIP under a clean Windows account or clean machine.
+- [ ] Explicitly authorize and run a public GitHub prerelease with checksums and Windows requirements.
 
 Exit criteria:
 
@@ -515,6 +524,8 @@ Exit criteria:
 - Installer or zip runs without Visual Studio installed.
 - Download checksum matches the release asset.
 - The Windows release notes identify the required Codex install/login state and Claude endpoint risk.
+
+The prerelease workflow intentionally does not trigger from tag pushes. `workflow_dispatch` plus the boolean confirmation and environment gate prevents an ordinary tag from publishing an unsigned build. This safety mechanism prepares a release path; it is not evidence that a public Windows prerelease has been authorized or published.
 
 ## 8. Initial scaffold commands on Windows
 
@@ -572,6 +583,8 @@ dotnet publish windows/src/ClaudeUsage.Windows/ClaudeUsage.Windows.csproj `
 Keep `PublishSingleFile=false` initially because WebView2 includes native runtime components that must be tested before attempting single-file packaging.
 
 ## 9. Test and acceptance matrix
+
+The corresponding automated test code and fixtures are present, but this matrix records the final release audit. Leave an item unchecked until it has been rerun against the current integrated tree or manually observed on the target configuration. Do not copy the historical Phase 0–2 test count or ZIP hash as a current result.
 
 ### Core automated tests
 
@@ -652,13 +665,13 @@ Claude quota retrieval still uses an undocumented authenticated claude.ai endpoi
 | Transparent WPF window has DPI/performance quirks | Test every target scale; animate fixed subparts only; honor Reduce Motion |
 | Tray flyout opens off-screen | Position against current monitor work area and taskbar orientation |
 | Windows hides notification icons | Keep tooltip/context menu robust; document how to pin the icon |
-| Unsigned alpha triggers warnings | Zip for internal testing; signed MSIX before public release |
+| Unsigned alpha triggers warnings | Disclosed ZIP plus manual confirmation/environment-gated prerelease workflow; signed installer before a stable public release |
 | Daily Codex tokens lag active work | Treat token totals as supporting information, never a quota substitute |
 | Claude endpoint policy changes | Keep provider feature-gated and preserve Codex-only operation |
 
-## 12. Definition of done
+## 12. Public-release definition of done
 
-The Windows port is complete only when all of the following are true:
+Phase 0–5 developer-alpha feature integration is complete. A stable/public Windows release is complete only when all of the following are true:
 
 - A clean Windows machine can install or unpack and launch the app.
 - Claude and Codex provider states are independent.
@@ -673,9 +686,9 @@ The Windows port is complete only when all of the following are true:
 - The release artifact has a published checksum and installation disclosure.
 - README, website, and release notes explain Windows requirements and data sources.
 
-## 13. What the Windows agent should report after each phase
+## 13. What the Windows agent should report after verification or release work
 
-Use this exact structure in the handback:
+Use this structure for the next clean-machine, signing, or publication handback. Report test totals and artifact hashes only from commands run against the current integrated tree:
 
 ```text
 Phase completed:
