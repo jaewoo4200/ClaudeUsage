@@ -167,7 +167,7 @@ h1 {
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: clamp(120px, calc(100svh - 470px), 390px);
+  max-height: clamp(100px, calc(100svh - 580px), 390px);
   object-fit: contain;
 }
 
@@ -365,7 +365,7 @@ footer { padding: 34px 0; border-top: 1px solid var(--line); background: var(--p
   .hero-actions .button { width: auto; min-height: 44px; padding: 0 12px; font-size: 13px; }
   .button { width: min(100%, 310px); }
   .hero-stage { margin-top: 20px; }
-  .hero-widget { max-height: clamp(100px, calc(100svh - 420px), 310px); }
+  .hero-widget { max-height: clamp(80px, calc(100svh - 460px), 310px); }
   .signal-grid { grid-template-columns: repeat(2, 1fr); }
   .signal-grid > div { min-height: 98px; padding: 18px; }
   .signal-grid > div:nth-child(3) { border-top: 1px solid #e7e9ea; }
@@ -397,6 +397,11 @@ footer { padding: 34px 0; border-top: 1px solid var(--line); background: var(--p
   .windows-alpha-actions { flex-direction: column; }
   .windows-alpha-actions .button { width: 100%; }
   .footer-links { flex-wrap: wrap; justify-content: center; }
+}
+
+@media (max-width: 360px) {
+  .hero-actions { gap: 8px; }
+  .hero-actions .button { padding: 0 8px; font-size: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
