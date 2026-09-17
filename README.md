@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg">v1.5.0 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg">v1.6.2 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
 </p>
 
 ---
@@ -56,6 +56,18 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 📸 스크린샷
 
+### macOS 1.6.2: 주간 내역과 오늘 토큰
+
+<p align="center">
+  <img src="docs/assets/releases/1.6.2/widget-horizontal-daangn-ko.png" width="720" alt="1.6.2 가로 위젯의 주간 사용 내역과 오늘 토큰 집계 대기">
+</p>
+<p align="center">
+  <img src="docs/assets/releases/1.6.2/breakdown-daangn-ko.png" width="340" alt="Claude 주간 사용 비율">
+  <img src="docs/assets/releases/1.6.2/tokens-daangn-ko.png" width="310" alt="서비스별 오늘 토큰과 최근 Codex 서버 집계">
+</p>
+
+> 실제 앱을 데모 데이터로 렌더링한 화면입니다. 개인 계정, 대화 내용, 인증정보는 포함하지 않았습니다. 새로운 macOS 기능은 Windows 알파와 별도로 배포됩니다.
+
 ### 메뉴바 라벨
 
 <p align="center">
@@ -73,9 +85,9 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
     <td align="center"><b>✨ 하이브리드</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/dropdown-daangn.png" width="300"></td>
-    <td><img src="docs/screenshots/dropdown-toss.png" width="300"></td>
-    <td><img src="docs/screenshots/dropdown-hybrid.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-toss-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-hybrid-ko.png" width="300"></td>
   </tr>
 </table>
 
@@ -88,9 +100,9 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
     <td align="center"><b>✨ 하이브리드</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/widget-daangn.png" width="220"></td>
-    <td><img src="docs/screenshots/widget-toss.png" width="220"></td>
-    <td><img src="docs/screenshots/widget-hybrid.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-toss-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-hybrid-ko.png" width="220"></td>
   </tr>
 </table>
 
@@ -102,12 +114,12 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
     <td align="center"><b>🇺🇸 English</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/dropdown-daangn.png" width="300"></td>
-    <td><img src="docs/screenshots/dropdown-daangn-en.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-en.png" width="300"></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/widget-daangn.png" width="220"></td>
-    <td><img src="docs/screenshots/widget-daangn-en.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-en.png" width="220"></td>
   </tr>
 </table>
 
@@ -148,7 +160,7 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 🚀 설치 (사용자)
 
-1. [ClaudeUsage-1.5.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. [ClaudeUsage-1.6.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. dmg 열기 → `Applications` 폴더로 드래그
 3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
 

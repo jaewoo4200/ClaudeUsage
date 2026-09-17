@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f7f5">
-    <meta name="description" content="Claude와 Codex 사용량, 리셋 시간, 로컬 14일 그래프를 macOS 메뉴바와 위젯에서 확인하세요.">
+    <meta name="description" content="ClaudeUsage 1.6.2: Claude 주간 사용 내역, Codex 한도와 오늘 토큰 집계 상태를 macOS 메뉴바와 위젯에서 확인하세요.">
     <meta property="og:title" content="ClaudeUsage for macOS">
-    <meta property="og:description" content="Claude와 Codex 사용량을 메뉴바 한 곳에서.">
+    <meta property="og:description" content="주간 사용 내역과 정확한 토큰 집계 상태. ClaudeUsage 1.6.2 for macOS.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jaewoo4200.github.io/ClaudeUsage/">
-    <meta property="og:image" content="https://jaewoo4200.github.io/ClaudeUsage/assets/widget-horizontal.png">
+    <meta property="og:image" content="https://jaewoo4200.github.io/ClaudeUsage/assets/releases/1.6.2/widget-horizontal-daangn-ko.png">
     <meta name="twitter:card" content="summary_large_image">
     <title>ClaudeUsage - Claude와 Codex 사용량을 메뉴바에서</title>
     <link rel="canonical" href="https://jaewoo4200.github.io/ClaudeUsage/">
@@ -28,7 +28,7 @@
         <div class="nav-links">
           <a href="#usage">사용량</a>
           <a href="#layouts">위젯</a>
-          <a href="#history">그래프</a>
+          <a href="#whats-new">새 기능</a>
           <a href="#privacy">데이터</a>
           <a href="#install">설치</a>
           <a href="#windows-alpha">Windows α</a>
@@ -44,13 +44,13 @@
       <div class="hero-copy">
         <p class="eyebrow"><span class="live-dot"></span> macOS 13+ · Universal</p>
         <h1>ClaudeUsage</h1>
-        <p class="hero-lead">Claude와 Codex의 한도, 리셋 시간, 오늘 토큰을<br class="desktop-break"> 메뉴바 한 곳에서 확인하세요.</p>
+        <p class="hero-lead">Claude·Codex 사용량과 주간 내역,<br>오늘 토큰까지 한곳에서.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg">
+          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            <span>v1.5.0 다운로드</span>
+            <span>macOS v1.6.2 다운로드</span>
           </a>
-          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.5.0" target="_blank" rel="noreferrer">
+          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.6.2" target="_blank" rel="noreferrer">
             릴리스 노트
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
@@ -64,8 +64,7 @@
           <img src="assets/menu-label.png" alt="Claude 68%, Codex 20% 메뉴바 표시">
         </div>
         <picture>
-          <source media="(max-width: 620px)" srcset="assets/widget-paged.png">
-          <img class="hero-widget" src="assets/widget-horizontal.png" alt="Claude, Codex와 선택한 펫이 함께 보이는 ClaudeUsage 가로 위젯">
+          <img class="hero-widget" src="assets/releases/1.6.2/widget-horizontal-daangn-ko.png" alt="Claude, Codex와 선택한 펫이 함께 보이는 ClaudeUsage 가로 위젯">
         </picture>
       </div>
     </header>
@@ -77,6 +76,27 @@
           <div><strong>주간</strong><span>Claude·Codex 장기 한도</span></div>
           <div><strong>모델별</strong><span>Fable과 서버 제공 모델</span></div>
           <div><strong>14일 그래프</strong><span>서비스·모델별 로컬 추이</span></div>
+        </div>
+      </section>
+
+      <section class="section release-section" id="whats-new">
+        <div class="section-inner">
+          <div class="section-heading compact">
+            <p class="kicker">macOS 1.6.2 · 새로워진 사용 내역</p>
+            <h2>어디서 썼는지.<br>언제 집계됐는지.</h2>
+            <p>Claude의 서비스별 사용 비율과 Codex의 토큰 집계 상태를 구분해 보여줍니다. 아래 화면은 실제 앱을 데모 데이터로 렌더링한 예시입니다.</p>
+          </div>
+          <div class="release-shots">
+            <figure>
+              <img src="assets/releases/1.6.2/breakdown-daangn-ko.png" alt="Claude Code 72%, 채팅 20%, Cowork 6%, 기타 2%의 주간 사용 구성 예시" loading="lazy">
+              <figcaption><strong>주간 사용량의 서비스별 비율</strong><span>이미 사용한 주간량의 구성입니다. 별도 한도나 펫의 최고 사용률에 포함하지 않습니다.</span></figcaption>
+            </figure>
+            <figure>
+              <img src="assets/releases/1.6.2/tokens-daangn-ko.png" alt="오늘 토큰 집계 대기와 Codex의 최근 서버 집계를 날짜별로 구분한 상세 화면 예시" loading="lazy">
+              <figcaption><strong>0과 집계 대기는 다릅니다</strong><span>서비스별 정확한 토큰 수를 확인하고, 오늘 값이 없으면 최근 서버 집계를 별도로 봅니다.</span></figcaption>
+            </figure>
+          </div>
+          <p class="release-note">한쪽 값만 확인되면 일부 집계로 표시합니다. 자정 전날 캐시와 뒤늦게 도착한 누적값이 최근 증가량에 잘못 섞이는 문제도 수정했습니다. Codex는 현재 연동 응답에 서비스별 구성 비율을 제공하지 않습니다.</p>
         </div>
       </section>
 
@@ -107,7 +127,7 @@
               </dl>
             </div>
             <figure class="product-shot dropdown-shot">
-              <img src="assets/menu-dropdown.png" alt="선택한 펫과 Claude, Codex 사용량이 표시된 메뉴바 드롭다운">
+              <img src="assets/releases/1.6.2/dropdown-daangn-ko.png" alt="선택한 펫과 Claude, Codex 사용량이 표시된 메뉴바 드롭다운">
               <figcaption>메뉴바를 누르면 세부 한도와 연결 상태를 바로 확인할 수 있습니다.</figcaption>
             </figure>
           </div>
@@ -124,12 +144,12 @@
 
           <div class="layout-showcase">
             <figure class="layout-main">
-              <img src="assets/widget-horizontal.png" alt="Claude와 Codex를 좌우로 배치한 가로 위젯">
+              <img src="assets/releases/1.6.2/widget-horizontal-daangn-ko.png" alt="Claude와 Codex를 좌우로 배치한 가로 위젯">
               <figcaption><strong>가로</strong><span>두 서비스의 한도와 Claude 주간 사용 내역</span></figcaption>
             </figure>
             <div class="layout-side">
               <figure>
-                <img src="assets/widget-paged.png" alt="화살표로 Claude와 Codex를 전환하는 위젯">
+                <img src="assets/releases/1.6.2/widget-paged-daangn-ko.png" alt="화살표로 Claude와 Codex를 전환하는 위젯">
                 <figcaption><strong>전환</strong><span>원래 크기에서 좌우로 넘겨 보기</span></figcaption>
               </figure>
               <figure class="settings-figure">
@@ -227,15 +247,15 @@
           </div>
 
           <ol class="install-steps">
-            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.5.0입니다.</p></li>
+            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.6.2입니다.</p></li>
             <li><span>2</span><strong>Applications로 이동</strong><p>아이콘을 폴더로 드래그합니다.</p></li>
             <li><span>3</span><strong>처음 한 번 열기 허용</strong><p>서명되지 않은 오픈소스 앱 안내를 확인합니다.</p></li>
           </ol>
 
           <div class="final-download">
             <img src="assets/app-icon.png" alt="" width="72" height="72">
-            <div><strong>ClaudeUsage 1.5.0</strong><span>무료 · MIT License · Universal</span></div>
-            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg">
+            <div><strong>ClaudeUsage 1.6.2</strong><span>무료 · MIT License · Universal</span></div>
+            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               <span>DMG 받기</span>
             </a>

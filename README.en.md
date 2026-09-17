@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg">Download v1.5.0</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg">Download v1.6.2</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
@@ -56,6 +56,18 @@ The Codex responses used by this integration provide quota utilization and accou
 
 ## 📸 Screenshots
 
+### macOS 1.6.2: Weekly breakdown and daily token status
+
+<p align="center">
+  <img src="docs/assets/releases/1.6.2/widget-horizontal-daangn-en.png" width="720" alt="1.6.2 horizontal widget with weekly breakdown and pending token status">
+</p>
+<p align="center">
+  <img src="docs/assets/releases/1.6.2/breakdown-daangn-en.png" width="340" alt="Claude weekly usage by service">
+  <img src="docs/assets/releases/1.6.2/tokens-daangn-en.png" width="310" alt="Daily token details and the latest Codex server total">
+</p>
+
+> These are real app views rendered with demo data, without personal accounts, conversation content, or credentials. These macOS updates are separate from the Windows alpha.
+
 ### Menu bar label
 
 <p align="center">
@@ -73,9 +85,9 @@ The Codex responses used by this integration provide quota utilization and accou
     <td align="center"><b>✨ Hybrid</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/dropdown-daangn.png" width="300"></td>
-    <td><img src="docs/screenshots/dropdown-toss.png" width="300"></td>
-    <td><img src="docs/screenshots/dropdown-hybrid.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-toss-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-hybrid-ko.png" width="300"></td>
   </tr>
 </table>
 
@@ -88,9 +100,9 @@ The Codex responses used by this integration provide quota utilization and accou
     <td align="center"><b>✨ Hybrid</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/widget-daangn.png" width="220"></td>
-    <td><img src="docs/screenshots/widget-toss.png" width="220"></td>
-    <td><img src="docs/screenshots/widget-hybrid.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-toss-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-hybrid-ko.png" width="220"></td>
   </tr>
 </table>
 
@@ -102,12 +114,12 @@ The Codex responses used by this integration provide quota utilization and accou
     <td align="center"><b>🇺🇸 English</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/dropdown-daangn.png" width="300"></td>
-    <td><img src="docs/screenshots/dropdown-daangn-en.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-en.png" width="300"></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/widget-daangn.png" width="220"></td>
-    <td><img src="docs/screenshots/widget-daangn-en.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-en.png" width="220"></td>
   </tr>
 </table>
 
@@ -148,7 +160,7 @@ The Codex responses used by this integration provide quota utilization and accou
 
 ## 🚀 Installation (Users)
 
-1. Download [ClaudeUsage-1.5.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.5.0/ClaudeUsage-1.5.0.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. Download [ClaudeUsage-1.6.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
