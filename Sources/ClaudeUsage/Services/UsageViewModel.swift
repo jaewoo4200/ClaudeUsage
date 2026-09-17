@@ -79,6 +79,11 @@ final class UsageViewModel: ObservableObject {
     var claudeFableResetsAt: Date? { snapshot?.usage.sevenDayFable?.resetsAt ?? snapshot?.usage.sevenDay?.resetsAt }
     var hasClaudeFable: Bool { snapshot?.usage.sevenDayFable != nil }
 
+    var claudeWeeklyBreakdown: UsageBreakdown? {
+        guard let breakdown = snapshot?.usage.sevenDayBreakdown, !breakdown.rows.isEmpty else { return nil }
+        return breakdown
+    }
+
     var claudeDisplayMetrics: [UsageDisplayMetric] {
         guard let usage = snapshot?.usage else { return [] }
         var metrics: [UsageDisplayMetric] = [
@@ -180,7 +185,37 @@ final class UsageViewModel: ObservableObject {
         historySnapshot(includingSpark: AppSettings.shared.showOpenAISparkLimits)
     }
 
-    func historySnapshot(includingSpark: Bool) -> UsageHistorySnapshot {
+    func todayTokenSummary(
+        localCollectionEnabled: Bool,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> TodayTokenSummary {
+        let claude: TodayTokenState
+        if !localCollectionEnabled {
+            claude = .disabled
+        } else if let count = claudeLocalTokenUsage?.tokens(on: now, calendar: calendar) {
+            claude = .available(count)
+        } else {
+            claude = .pending
+        }
+
+        let codex: TodayTokenState
+        if let count = openAIUsage?.tokenActivity?.tokens(on: now, calendar: calendar) {
+            codex = .available(count)
+        } else {
+            switch openAIState {
+            case .loading, .loaded: codex = .pending
+            case .unavailable, .error: codex = .unavailable
+            }
+        }
+        return TodayTokenSummary(
+            claude: claude,
+            codex: codex,
+            latestCodexBucket: openAIUsage?.tokenActivity?.latestBucket(before: now, calendar: calendar)
+        )
+    }
+
+    func historySnapshot(includingSpark: Bool, now: Date = Date()) -> UsageHistorySnapshot {
         var claudeModelCounters: [UsageHistoryCounter] = []
         if let design = snapshot?.usage.sevenDayOmelette {
             claudeModelCounters.append(
@@ -232,8 +267,8 @@ final class UsageViewModel: ObservableObject {
             openAIFiveHour: openAIState.isLoaded ? openAIUsage?.rateLimit?.primaryWindow?.usedPercent : nil,
             openAIWeekly: openAIState.isLoaded ? openAIUsage?.rateLimit?.secondaryWindow?.usedPercent : nil,
             openAIModelMaximum: openAIModelCounters.map(\.utilization).max(),
-            claudeTodayTokens: claudeLocalTokenUsage?.todayTokens,
-            openAITodayTokens: openAIUsage?.tokenActivity?.tokens(on: Date()),
+            claudeTodayTokens: claudeLocalTokenUsage?.tokens(on: now),
+            openAITodayTokens: openAIUsage?.tokenActivity?.tokens(on: now),
             claudeModelCounters: claudeModelCounters,
             openAIModelCounters: openAIModelCounters
         )
@@ -304,8 +339,8 @@ final class UsageViewModel: ObservableObject {
         async let localTokenFetch: ClaudeLocalTokenUsage? = fetchLocalClaudeTokens(enabled: shouldRecordHistory)
         let (_, _, localTokens) = await (claudeFetch, openAIFetch, localTokenFetch)
 
+        claudeLocalTokenUsage = localTokens
         if shouldRecordHistory {
-            claudeLocalTokenUsage = localTokens
             UsageHistoryStore.shared.record(currentHistorySnapshot)
         }
     }
@@ -314,6 +349,7 @@ final class UsageViewModel: ObservableObject {
         guard enabled else { return nil }
         let now = Date()
         if let lastLocalTokenFetchAt,
+           Calendar.current.isDate(lastLocalTokenFetchAt, inSameDayAs: now),
            now.timeIntervalSince(lastLocalTokenFetchAt) < 5 * 60 {
             return claudeLocalTokenUsage
         }

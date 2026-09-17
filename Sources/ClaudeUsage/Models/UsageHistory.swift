@@ -50,7 +50,7 @@ struct UsageHistorySnapshot: Equatable {
         self.openAIModelMaximum = openAIModelMaximum
         self.claudeTodayTokens = claudeTodayTokens
         self.openAITodayTokens = openAITodayTokens
-        self.claudeModelCounters = claudeModelCounters
+        self.claudeModelCounters = claudeModelCounters.filter { $0.id != "seven_day_breakdown" }
         self.openAIModelCounters = openAIModelCounters
     }
 
@@ -132,8 +132,8 @@ struct UsageHistorySnapshot: Equatable {
     }
 
     var todayTokens: Int64? {
-        let values = [claudeTodayTokens, openAITodayTokens].compactMap { $0 }
-        return values.isEmpty ? nil : values.reduce(0, +)
+        guard let claudeTodayTokens, let openAITodayTokens else { return nil }
+        return claudeTodayTokens + openAITodayTokens
     }
 
     var hasUsage: Bool { pressure != nil }

@@ -84,15 +84,7 @@ final class UsageHistoryStore: ObservableObject {
             }
         }
 
-        let tokenValues = segment.compactMap { sample -> (Date, Int64)? in
-            guard let tokens = sample.snapshot.todayTokens else { return nil }
-            return (sample.timestamp, tokens)
-        }
-        var tokenDelta: Int64?
-        if let first = tokenValues.first, let last = tokenValues.last,
-           Calendar.current.isDate(first.0, inSameDayAs: last.0), last.1 >= first.1 {
-            tokenDelta = last.1 - first.1
-        }
+        let tokenDelta = Self.tokenDelta(in: segment)
 
         return UsageTrend(
             points: points,
@@ -101,6 +93,24 @@ final class UsageHistoryStore: ObservableObject {
             recentTokenDelta: tokenDelta,
             resetDetected: latestResetDate.map { now.timeIntervalSince($0) <= 30 * 60 } ?? false
         )
+    }
+
+    private static func tokenDelta(in samples: [UsageHistorySample]) -> Int64? {
+        guard let first = samples.first, let last = samples.last,
+              Calendar.current.isDate(first.timestamp, inSameDayAs: last.timestamp) else { return nil }
+        let providers: [KeyPath<UsageHistorySample, Int64?>] = [\.claudeTodayTokens, \.openAITodayTokens]
+        var delta: Int64 = 0
+        var hasProvider = false
+        for provider in providers {
+            let values = samples.compactMap { $0[keyPath: provider] }
+            if values.isEmpty { continue }
+            // A newly reported daily total is not an hour's worth of new usage.
+            guard values.count == samples.count, values.allSatisfy({ $0 >= 0 }),
+                  zip(values, values.dropFirst()).allSatisfy({ $0.0 <= $0.1 }) else { return nil }
+            delta += values.last! - values.first!
+            hasProvider = true
+        }
+        return hasProvider ? delta : nil
     }
 
     private func prune(now: Date) {
@@ -133,7 +143,9 @@ final class UsageHistoryStore: ObservableObject {
               let decoded = try? JSONDecoder().decode([UsageHistorySample].self, from: data) else {
             return []
         }
-        return decoded.sorted { $0.timestamp < $1.timestamp }
+        // Older versions recorded the composition payload as a zero-percent model limit.
+        return decoded.map { UsageHistorySample(timestamp: $0.timestamp, snapshot: $0.snapshot) }
+            .sorted { $0.timestamp < $1.timestamp }
     }
 
     private static var defaultFileURL: URL {

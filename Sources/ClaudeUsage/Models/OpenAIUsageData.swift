@@ -151,13 +151,40 @@ struct OpenAITokenActivity: Codable, Equatable {
     let summary: OpenAITokenUsageSummary?
     let dailyBuckets: [OpenAITokenDailyBucket]
 
+    init(summary: OpenAITokenUsageSummary?, dailyBuckets: [OpenAITokenDailyBucket]) {
+        self.summary = summary
+        self.dailyBuckets = dailyBuckets
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        summary = try container.decodeIfPresent(OpenAITokenUsageSummary.self, forKey: .summary)
+        dailyBuckets = try container.decodeIfPresent([OpenAITokenDailyBucket].self, forKey: .dailyBuckets) ?? []
+    }
+
     func tokens(on date: Date, calendar: Calendar = .current) -> Int64? {
+        let key = Self.dayFormatter(calendar: calendar).string(from: date)
+        return dailyBuckets.first { $0.startDate == key && $0.tokens >= 0 }?.tokens
+    }
+
+    func latestBucket(before date: Date, calendar: Calendar = .current) -> OpenAITokenDailyBucket? {
+        let formatter = Self.dayFormatter(calendar: calendar)
+        let key = formatter.string(from: date)
+        return dailyBuckets.filter { bucket in
+            guard bucket.tokens >= 0, bucket.startDate < key,
+                  let day = formatter.date(from: bucket.startDate) else { return false }
+            return formatter.string(from: day) == bucket.startDate
+        }.max { $0.startDate < $1.startDate }
+    }
+
+    private static func dayFormatter(calendar: Calendar) -> DateFormatter {
         let formatter = DateFormatter()
         formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
-        let key = formatter.string(from: date)
-        return dailyBuckets.first { $0.startDate == key }?.tokens
+        formatter.isLenient = false
+        return formatter
     }
 }
 

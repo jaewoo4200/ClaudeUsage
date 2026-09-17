@@ -115,29 +115,42 @@ private struct StackedWidget: View {
 }
 
 private struct HorizontalWidget: View {
+    @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var settings: AppSettings
 
     var body: some View {
         let tokens = theme.current.tokens
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 10) {
-                ProviderWidgetSection(provider: .claude)
-                if settings.usagePetEnabled {
-                    Divider().background(tokens.divider)
-                    WidgetMimoCompanion(wide: true)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                ProviderWidgetSection(provider: .claude, showsBreakdown: false)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+
+                Divider().background(tokens.divider)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    ProviderWidgetSection(provider: .openAI)
+                    if let breakdown = vm.claudeWeeklyBreakdown {
+                        Divider().background(tokens.divider)
+                        UsageBreakdownView(breakdown: breakdown, includesProvider: true)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .fixedSize(horizontal: false, vertical: true)
 
             Divider().background(tokens.divider)
 
-            VStack(alignment: .leading, spacing: 10) {
-                ProviderWidgetSection(provider: .openAI)
-                Divider().background(tokens.divider)
-                HorizontalUsageBrief()
+            HStack(alignment: .center, spacing: 12) {
+                if settings.usagePetEnabled {
+                    WidgetMimoCompanion(wide: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Divider().background(tokens.divider)
+                }
+                HorizontalUsageBrief(twoColumns: !settings.usagePetEnabled)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
         .frame(width: 480)
@@ -146,6 +159,7 @@ private struct HorizontalWidget: View {
 }
 
 private struct HorizontalUsageBrief: View {
+    var twoColumns = false
     private struct ResetCandidate {
         let provider: WidgetProvider
         let metric: UsageDisplayMetric
@@ -161,7 +175,8 @@ private struct HorizontalUsageBrief: View {
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
         let trend = settings.usageHistoryEnabled ? history.trend() : .empty
 
-        VStack(alignment: .leading, spacing: 7) {
+        let columns = Array(repeating: GridItem(.flexible(), alignment: .leading), count: twoColumns ? 2 : 1)
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
             insightRow(
                 systemName: "gauge",
                 title: "widget_headroom".l,
@@ -196,16 +211,18 @@ private struct HorizontalUsageBrief: View {
                 Text(recentActivityText(trend: trend))
             }
 
-            insightRow(
-                systemName: "sum",
-                title: "widget_today_tokens".l,
-                color: tokens.accentSecondary
-            ) {
-                Text(todayTokensText(snapshot: snapshot))
+            TodayTokensButton {
+                insightRow(
+                    systemName: "sum",
+                    title: "widget_today_tokens".l,
+                    color: tokens.accentSecondary
+                ) {
+                    Text(vm.todayTokenSummary(localCollectionEnabled: settings.usageHistoryEnabled).displayTotal)
+                }
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 90, alignment: .top)
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, alignment: .top)
+        .accessibilityElement(children: .contain)
     }
 
     private func insightRow<Value: View>(
@@ -232,7 +249,7 @@ private struct HorizontalUsageBrief: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
         }
-        .frame(height: 18)
+        .frame(height: 17)
     }
 
     @ViewBuilder
@@ -273,11 +290,6 @@ private struct HorizontalUsageBrief: View {
         }
         if trend.points.count > 1 { return "widget_no_recent_change".l }
         return "widget_collecting_history".l
-    }
-
-    private func todayTokensText(snapshot: UsageHistorySnapshot) -> String {
-        guard let tokens = snapshot.todayTokens else { return "–" }
-        return TokenCountFormatter.compact(tokens)
     }
 
     private func resetCreditText(_ resetCredits: OpenAIRateLimitResetCredits, now: Date = Date()) -> String {
@@ -379,6 +391,7 @@ private struct SingleProviderWidget: View {
 
 private struct ProviderWidgetSection: View {
     let provider: WidgetProvider
+    var showsBreakdown = true
 
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
@@ -390,6 +403,10 @@ private struct ProviderWidgetSection: View {
             if provider == .claude {
                 if vm.snapshot != nil {
                     metricRows(vm.claudeDisplayMetrics)
+                    if showsBreakdown, let breakdown = vm.claudeWeeklyBreakdown {
+                        Divider().background(theme.current.tokens.divider)
+                        UsageBreakdownView(breakdown: breakdown)
+                    }
                 } else {
                     EmptyStateInline()
                 }

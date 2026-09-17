@@ -381,6 +381,16 @@ struct CodexRateLimitWindow: Decodable {
 struct CodexTokenUsageResult: Decodable {
     let summary: CodexTokenUsageSummary?
     let dailyUsageBuckets: [CodexTokenDailyBucket]
+
+    enum CodingKeys: String, CodingKey {
+        case summary, dailyUsageBuckets
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        summary = try container.decodeIfPresent(CodexTokenUsageSummary.self, forKey: .summary)
+        dailyUsageBuckets = try container.decodeIfPresent([CodexTokenDailyBucket].self, forKey: .dailyUsageBuckets) ?? []
+    }
 }
 
 struct CodexTokenUsageSummary: Decodable {

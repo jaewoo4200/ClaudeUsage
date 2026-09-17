@@ -1215,6 +1215,85 @@ final class WidgetLayoutTests: XCTestCase {
     }
 
     @MainActor
+    func testWeeklyBreakdownAcrossLayoutsThemesAndLanguages() throws {
+        let vm = UsageViewModel(autoStart: false)
+        vm.state = .loaded(AccountSnapshot(
+            organization: Organization(uuid: "fixture", name: nil, capabilities: ["claude_max"], rateLimitTier: "max_20x"),
+            usage: try UsageData.decode(from: UsageBreakdownTests.fixture)
+        ))
+        vm.openAIState = .loaded(try JSONDecoder().decode(OpenAIUsageData.self, from: Data("""
+        {"plan_type":"pro","rate_limit":{"secondary_window":{
+          "used_percent":48,"reset_after_seconds":350000,"limit_window_seconds":604800
+        }}}
+        """.utf8)))
+        let theme = ThemeStore()
+        let language = LanguageStore.shared
+        let settings = AppSettings()
+        let history = UsageHistoryStore(fileURL: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
+        let oldTheme = theme.current
+        let oldLanguage = language.current
+        let oldLayout = settings.widgetLayoutMode
+        let oldPet = settings.usagePetEnabled
+        let oldMotion = settings.mimoAnimationMode
+        defer {
+            theme.current = oldTheme
+            language.current = oldLanguage
+            settings.widgetLayoutMode = oldLayout
+            settings.usagePetEnabled = oldPet
+            settings.mimoAnimationMode = oldMotion
+        }
+        settings.usagePetEnabled = true
+        settings.mimoAnimationMode = .still
+        let layouts: [(WidgetLayoutMode, WidgetProvider?)] = [
+            (.horizontal, nil), (.stacked, nil), (.paged, nil),
+            (.separate, .claude), (.separate, .openAI)
+        ]
+        for themeKind in ThemeKind.allCases {
+            theme.current = themeKind
+            for lang in AppLanguage.allCases {
+                language.current = lang
+                for (layout, provider) in layouts {
+                    settings.widgetLayoutMode = layout
+                    let name = "ClaudeUsage-breakdown-\(themeKind.rawValue)-\(layout.rawValue)-\(provider?.rawValue ?? "both")-\(lang.rawValue).png"
+                    let size = try renderWidget(
+                        provider: provider, viewModel: vm, themeStore: theme, languageStore: language,
+                        appSettings: settings, historyStore: history, fileName: name
+                    )
+                    XCTAssertEqual(size.width, layout == .horizontal ? 480 : 240, accuracy: 1)
+                    XCTAssertLessThan(size.height, layout == .horizontal ? 420 : 640, name)
+                }
+            }
+        }
+
+        theme.current = .daangn
+        settings.widgetLayoutMode = .horizontal
+        settings.usagePetEnabled = false
+        let withoutPet = try renderWidget(
+            viewModel: vm, themeStore: theme, languageStore: language, appSettings: settings,
+            historyStore: history, fileName: "ClaudeUsage-breakdown-no-pet.png"
+        )
+        XCTAssertLessThan(withoutPet.height, 330)
+
+        let root = MenuBarContentView()
+            .environmentObject(vm).environmentObject(AppDelegate()).environmentObject(theme)
+            .environmentObject(language).environmentObject(settings).environmentObject(history)
+        let host = NSHostingView(rootView: root)
+        host.appearance = NSAppearance(named: .darkAqua)
+        host.layoutSubtreeIfNeeded()
+        host.frame = NSRect(origin: .zero, size: host.fittingSize)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        host.frame = NSRect(origin: .zero, size: host.fittingSize)
+        host.layoutSubtreeIfNeeded()
+        XCTAssertGreaterThan(host.fittingSize.height, 300)
+        XCTAssertLessThan(host.fittingSize.height, 670)
+        let bitmap = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+        host.cacheDisplay(in: host.bounds, to: bitmap)
+        try XCTUnwrap(bitmap.representation(using: .png, properties: [:])).write(
+            to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-breakdown-dropdown-dark.png")
+        )
+    }
+
+    @MainActor
     private func renderWidget(
         provider: WidgetProvider? = nil,
         viewModel: UsageViewModel,

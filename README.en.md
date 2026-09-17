@@ -31,6 +31,7 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 
 - 🤖 **Claude + Codex**: Fetches both providers independently and presents them together
 - 🪟 **4 widget layouts**: Choose stacked, wide, arrow-switched pages, or independent Claude/Codex widgets
+- **Claude weekly breakdown**: A composition bar showing the share used in Claude Code, chats, Cowork, and other services
 - 🧭 **Future model support**: Displays server-provided model limits without hardcoded names; GPT-5.3-Codex-Spark is hidden by default and optional
 - 🧡 **Nine selectable companions**: Pick Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, or Pico and adjust sensitivity and animation
 - 📈 **Local usage charts**: Optionally keep five-minute samples on this Mac for 14 days and inspect them by time range and provider
@@ -40,6 +41,18 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 - 🔄 **Auto-refresh every 60s** plus manual refresh
 - 🌑 **Dark mode** — follows system appearance
 - 💻 **Universal Binary** (Intel + Apple Silicon)
+
+### Weekly Breakdown (v1.6.0)
+
+The server's `seven_day_breakdown` appears as usage composition. If weekly utilization is 35% and Code accounts for 90%, Code represents 90% of the weekly usage consumed. It does not mean a separate Code quota is 90% used.
+
+- Horizontal: Claude limits on the upper left; Codex limits and a clearly labeled **Claude weekly breakdown** on the upper right. Mimo and the combined summary share the bottom row. With the pet disabled, the summary uses two columns.
+- Stacked, separate Claude, and paged widgets: A compact composition bar and legend follow Claude's limits. The Codex-only widget does not show Claude's breakdown.
+- Menu bar dropdown: Individual bars and the server's aggregation time appear in the Claude section. All layouts support Daangn, Toss, and Hybrid themes in Korean and English.
+
+This is the account's current weekly composition, separate from this Mac's local token total. It updates with server snapshots and is excluded from quota gauges and Mimo's peak usage. Incorrect `Breakdown 0%` counters from older versions are filtered when reading history. Composition snapshots are not additionally stored in the local history file.
+
+The Codex responses used by this integration provide quota utilization and account-level daily token totals, but no Claude-style service composition (checked September 17, 2026). Separate quota percentages, such as Spark's, are not shares of total usage and are never combined into a composition chart. [Official OpenAI App Server documentation](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt)
 
 ## 📸 Screenshots
 
@@ -213,6 +226,13 @@ When you first sign in, ClaudeUsage saves your **claude.ai session cookies in th
 
 ClaudeUsage does not scan regular ChatGPT conversations, ChatGPT Classic history, or Codex session content. It uses the current ChatGPT app with Codex integration, a standalone Codex app, or a compatible signed-in Codex executable.
 
+### Today's token status (v1.6.2)
+
+- A combined total requires today's values from both providers. Two reported zeros remain `0`; missing daily data shows `Pending`, and a positive total from only one provider shows `Partial 2.9M`. `M` means one million tokens, not lifetime usage substituted for today.
+- Click **Tokens today** in the horizontal widget or the **sum** icon in the menu-bar dropdown for exact provider counts and pending, disabled, or unavailable states. Claude counts local Claude Code logs, including cached input; Codex uses account-level server totals.
+- Only the server bucket matching the Mac's current calendar date counts as today. Older buckets are shown separately with their original dates. Reporting delays or server timezone differences can make token totals update at a different time from quota gauges.
+- Previous-day Claude cache values expire at local midnight. Hourly token changes require the same providers to remain available throughout the interval, so a newly delivered daily total is not mistaken for a burst of activity. These are changes in reported counts, not exact event-time token usage.
+
 ### What does companion history store?
 
 - History is **off by default** and starts only after the user enables it in Settings.
@@ -288,7 +308,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.5.0.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.6.2.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon

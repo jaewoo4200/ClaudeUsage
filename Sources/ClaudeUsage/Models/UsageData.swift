@@ -16,7 +16,11 @@ struct UsageWindow: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.utilization = (try? c.decode(Double.self, forKey: .utilization)) ?? 0
+        let utilization = try c.decode(Double.self, forKey: .utilization)
+        guard utilization.isFinite, utilization >= 0 else {
+            throw DecodingError.dataCorruptedError(forKey: .utilization, in: c, debugDescription: "Invalid usage percentage")
+        }
+        self.utilization = utilization
         if let str = try? c.decode(String.self, forKey: .resetsAt) {
             self.resetsAt = ISO8601DateFormatter.shared.date(from: str)
         } else {
@@ -64,6 +68,7 @@ struct UsageData: Codable, Equatable {
     let sevenDayOpus: UsageWindow?
     let sevenDayOmelette: UsageWindow?
     let sevenDayFable: UsageWindow?
+    let sevenDayBreakdown: UsageBreakdown?
     let extraUsage: ExtraUsage?
     let additionalSevenDayWindows: [String: UsageWindow]
 
@@ -74,6 +79,7 @@ struct UsageData: Codable, Equatable {
         case sevenDayOpus = "seven_day_opus"
         case sevenDayOmelette = "seven_day_omelette"
         case sevenDayFable = "seven_day_fable"
+        case sevenDayBreakdown = "seven_day_breakdown"
         case extraUsage = "extra_usage"
     }
 
@@ -84,6 +90,7 @@ struct UsageData: Codable, Equatable {
         sevenDayOpus: UsageWindow? = nil,
         sevenDayOmelette: UsageWindow? = nil,
         sevenDayFable: UsageWindow? = nil,
+        sevenDayBreakdown: UsageBreakdown? = nil,
         extraUsage: ExtraUsage? = nil,
         additionalSevenDayWindows: [String: UsageWindow] = [:]
     ) {
@@ -93,6 +100,7 @@ struct UsageData: Codable, Equatable {
         self.sevenDayOpus = sevenDayOpus
         self.sevenDayOmelette = sevenDayOmelette
         self.sevenDayFable = sevenDayFable
+        self.sevenDayBreakdown = sevenDayBreakdown
         self.extraUsage = extraUsage
         self.additionalSevenDayWindows = additionalSevenDayWindows
     }
@@ -105,6 +113,7 @@ struct UsageData: Codable, Equatable {
         self.sevenDayOpus = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDayOpus)
         self.sevenDayOmelette = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDayOmelette)
         self.sevenDayFable = try? c.decodeIfPresent(UsageWindow.self, forKey: .sevenDayFable)
+        self.sevenDayBreakdown = try? c.decodeIfPresent(UsageBreakdown.self, forKey: .sevenDayBreakdown)
         self.extraUsage = try? c.decodeIfPresent(ExtraUsage.self, forKey: .extraUsage)
         self.additionalSevenDayWindows = Self.decodeAdditionalSevenDayWindows(from: decoder)
     }
@@ -135,6 +144,7 @@ struct UsageData: Codable, Equatable {
             sevenDayOpus: sevenDayOpus,
             sevenDayOmelette: sevenDayOmelette,
             sevenDayFable: normalizedFable,
+            sevenDayBreakdown: sevenDayBreakdown,
             extraUsage: extraUsage,
             additionalSevenDayWindows: merged
         )
@@ -148,6 +158,7 @@ struct UsageData: Codable, Equatable {
         try c.encodeIfPresent(sevenDayOpus, forKey: .sevenDayOpus)
         try c.encodeIfPresent(sevenDayOmelette, forKey: .sevenDayOmelette)
         try c.encodeIfPresent(sevenDayFable, forKey: .sevenDayFable)
+        try c.encodeIfPresent(sevenDayBreakdown, forKey: .sevenDayBreakdown)
         try c.encodeIfPresent(extraUsage, forKey: .extraUsage)
 
         var dynamic = encoder.container(keyedBy: DynamicCodingKey.self)
@@ -204,7 +215,7 @@ struct UsageData: Codable, Equatable {
         visit(path, value)
 
         if let object = value as? [String: Any] {
-            for (key, child) in object {
+            for (key, child) in object where key != CodingKeys.sevenDayBreakdown.rawValue {
                 walkJSONObject(child, path: path + [key], visit: visit)
             }
         } else if let array = value as? [Any] {

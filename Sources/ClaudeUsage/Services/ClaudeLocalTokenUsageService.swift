@@ -3,6 +3,11 @@ import Foundation
 struct ClaudeLocalTokenUsage: Equatable {
     let todayTokens: Int64
     let updatedAt: Date
+
+    func tokens(on date: Date, calendar: Calendar = .current) -> Int64? {
+        guard calendar.isDate(updatedAt, inSameDayAs: date), todayTokens >= 0 else { return nil }
+        return todayTokens
+    }
 }
 
 enum ClaudeLocalTokenUsageService {

@@ -83,6 +83,9 @@ private struct ClaudeProviderSection: View {
                 ForEach(vm.claudeDisplayMetrics) { metric in
                     usageCard(metric)
                 }
+                if let breakdown = vm.claudeWeeklyBreakdown {
+                    UsageBreakdownView(breakdown: breakdown, compact: false)
+                }
             case .loading:
                 ProviderLoadingView()
             case .needsLogin:
@@ -328,6 +331,12 @@ private struct FooterRow: View {
             .buttonStyle(.plain)
 
             Spacer()
+
+            TodayTokensButton {
+                Image(systemName: "sum")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(tokens.textTertiary)
+            }
 
             Button {
                 appDelegate.openUsageHistory(viewModel: vm)
