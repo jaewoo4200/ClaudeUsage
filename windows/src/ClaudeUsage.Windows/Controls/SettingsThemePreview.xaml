@@ -1,0 +1,121 @@
+<UserControl x:Class="ClaudeUsage.Windows.Controls.SettingsThemePreview"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:services="clr-namespace:ClaudeUsage.Windows.Services"
+             x:Name="Root"
+             Width="56"
+             Height="40"
+             Focusable="False"
+             IsHitTestVisible="False">
+    <Border Width="56"
+            Height="40"
+            Background="{DynamicResource WidgetSecondarySurfaceBrush}"
+            CornerRadius="10">
+        <Grid>
+            <StackPanel x:Name="DaangnPreview"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <Canvas Width="14" Height="14">
+                    <Path Data="M 7,0.8 A 6.2,6.2 0 0 1 10.65,12"
+                          Stroke="#FFFF6F0F"
+                          StrokeThickness="2"
+                          StrokeStartLineCap="Round"
+                          StrokeEndLineCap="Round" />
+                </Canvas>
+                <TextBlock Margin="4,0,0,0"
+                           Text="38%"
+                           FontSize="8"
+                           FontWeight="ExtraBold"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
+                           VerticalAlignment="Center" />
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Visible" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Theme, ElementName=Root}"
+                                         Value="{x:Static services:ThemeKind.Toss}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Theme, ElementName=Root}"
+                                         Value="{x:Static services:ThemeKind.Hybrid}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+            </StackPanel>
+
+            <StackPanel x:Name="TossPreview"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <TextBlock Text="38"
+                           FontSize="11"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource PrimaryTextBrush}" />
+                <Border Width="26"
+                        Height="3"
+                        Margin="0,2,0,0"
+                        HorizontalAlignment="Left"
+                        Background="#FF3182F6"
+                        CornerRadius="1.5" />
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Theme, ElementName=Root}"
+                                         Value="{x:Static services:ThemeKind.Toss}">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+            </StackPanel>
+
+            <StackPanel x:Name="HybridPreview"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="38"
+                               FontSize="10"
+                               FontWeight="ExtraBold"
+                               Foreground="{DynamicResource PrimaryTextBrush}" />
+                    <Border Height="10"
+                            Margin="2,1,0,0"
+                            Padding="2,0"
+                            Background="{DynamicResource PrimaryTextBrush}"
+                            CornerRadius="2">
+                        <TextBlock Text="MAX"
+                                   FontSize="6"
+                                   FontWeight="ExtraBold"
+                                   Foreground="{DynamicResource InverseTextBrush}"
+                                   VerticalAlignment="Center" />
+                    </Border>
+                </StackPanel>
+                <Border Width="30"
+                        Height="3"
+                        Margin="0,3,0,0"
+                        HorizontalAlignment="Left"
+                        CornerRadius="1.5">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#FF0EA5E9" Offset="0" />
+                            <GradientStop Color="#FF06B6D4" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Theme, ElementName=Root}"
+                                         Value="{x:Static services:ThemeKind.Hybrid}">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

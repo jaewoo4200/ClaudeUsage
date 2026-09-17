@@ -1,0 +1,56 @@
+<Window x:Class="ClaudeUsage.Windows.Views.FloatingWidgetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ClaudeUsage.Windows.Views"
+        Title="ClaudeUsage Widget"
+        SizeToContent="WidthAndHeight"
+        MinHeight="180"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        Loaded="OnLoaded"
+        Closed="OnClosed"
+        Closing="OnClosing"
+        SizeChanged="OnSizeChanged"
+        MouseLeftButtonDown="OnMouseLeftButtonDown"
+        MouseDoubleClick="OnMouseDoubleClick"
+        PreviewKeyDown="OnPreviewKeyDown">
+    <Window.ContextMenu>
+        <ContextMenu>
+            <MenuItem Header="{DynamicResource UI.Settings}"
+                      AutomationProperties.Name="{DynamicResource UI.Settings}"
+                      Click="OnSettingsMenuClick" />
+            <MenuItem Header="{DynamicResource UI.HideWidget}"
+                      AutomationProperties.Name="{DynamicResource UI.HideWidget}"
+                      Click="OnHideMenuClick" />
+        </ContextMenu>
+    </Window.ContextMenu>
+
+    <!--
+      NSPanel draws its shadow outside the 240/480-point widget surface. A
+      transparent inset gives the layered WPF window the same breathing room
+      without changing WidgetView's design widths.
+    -->
+    <Border x:Name="WidgetWindowInset"
+            Margin="12"
+            Background="Transparent"
+            AutomationProperties.Name="ClaudeUsage widget">
+        <Border x:Name="WidgetShadowHost"
+                Background="Transparent">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="18"
+                                  ShadowDepth="4"
+                                  Direction="270"
+                                  Color="Black"
+                                  Opacity="0.24"
+                                  RenderingBias="Quality" />
+            </Border.Effect>
+            <local:WidgetView x:Name="WidgetHost" />
+        </Border>
+    </Border>
+</Window>

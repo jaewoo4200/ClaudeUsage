@@ -1,0 +1,1179 @@
+<Window x:Class="ClaudeUsage.Windows.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:accessibility="clr-namespace:ClaudeUsage.Windows.Accessibility"
+        xmlns:controls="clr-namespace:ClaudeUsage.Windows.Controls"
+        xmlns:local="clr-namespace:ClaudeUsage.Windows.Views"
+        xmlns:services="clr-namespace:ClaudeUsage.Windows.Services"
+        Title="{DynamicResource UI.SettingsTitle}"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="CanMinimize"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        services:WindowWorkAreaSizingBehavior.PreferredClientWidth="420"
+        services:WindowWorkAreaSizingBehavior.PreferredClientHeight="600"
+        services:WindowWorkAreaSizingBehavior.MinimumClientWidth="320"
+        services:WindowWorkAreaSizingBehavior.MinimumClientHeight="280"
+        services:WindowWorkAreaSizingBehavior.PhysicalMarginPixels="12"
+        services:WindowWorkAreaSizingBehavior.IsEnabled="True"
+        PreviewKeyDown="OnPreviewKeyDown">
+    <Window.Resources>
+        <local:WidgetBooleanToVisibilityConverter x:Key="BoolVisibility" />
+
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        </Style>
+
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="Margin" Value="20,16,20,8" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="ExtraBold" />
+            <!-- TextBlock has no character-tracking property. SemiExpanded keeps
+                 each localized header in one automation node while providing the
+                 closest font-native match to SwiftUI's tracking(0.5). -->
+            <Setter Property="FontStretch" Value="SemiExpanded" />
+            <Setter Property="Foreground" Value="{DynamicResource TertiaryTextBrush}" />
+        </Style>
+
+        <Style x:Key="SettingsCard" TargetType="Border">
+            <Setter Property="Margin" Value="20,8,20,8" />
+            <Setter Property="Background" Value="{DynamicResource WidgetSecondarySurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+
+        <Style x:Key="RowTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="RowDescription" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource TertiaryTextBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="LineHeight" Value="14" />
+        </Style>
+
+        <Style x:Key="CompanionSelectorDescription"
+               TargetType="TextBlock"
+               BasedOn="{StaticResource RowDescription}">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="LineHeight" Value="13" />
+        </Style>
+
+        <Style x:Key="SelectedCompanionDescription"
+               TargetType="TextBlock"
+               BasedOn="{StaticResource CompanionSelectorDescription}">
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+
+        <!-- The 5-pixel indicator occupies the same grid cell as the viewport,
+             so an overflowing page never narrows the 420-pixel settings surface. -->
+        <Style x:Key="SettingsOverlayScrollBar"
+               TargetType="{x:Type ScrollBar}">
+            <Setter Property="Width" Value="5" />
+            <Setter Property="MinWidth" Value="5" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Width="5" Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}"
+                                                  CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                                  Focusable="False"
+                                                  IsTabStop="False"
+                                                  Opacity="0" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb MinHeight="28"
+                                           Background="{DynamicResource SecondaryTextBrush}">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="{x:Type Thumb}">
+                                                <Border x:Name="ThumbChrome"
+                                                        Width="3"
+                                                        Margin="1,2"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="1.5"
+                                                        Opacity="0.48" />
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ThumbChrome" Property="Opacity" Value="0.72" />
+                                                    </Trigger>
+                                                    <Trigger Property="IsDragging" Value="True">
+                                                        <Setter TargetName="ThumbChrome" Property="Opacity" Value="0.9" />
+                                                    </Trigger>
+                                                    <DataTrigger Binding="{Binding Source={x:Static SystemParameters.HighContrast}}" Value="True">
+                                                        <Setter TargetName="ThumbChrome" Property="Width" Value="5" />
+                                                        <Setter TargetName="ThumbChrome" Property="Margin" Value="0,2" />
+                                                        <Setter TargetName="ThumbChrome" Property="Opacity" Value="1" />
+                                                    </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}"
+                                                  CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                                  Focusable="False"
+                                                  IsTabStop="False"
+                                                  Opacity="0" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsOverlayScrollViewer" TargetType="{x:Type ScrollViewer}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
+                        <Grid Background="{TemplateBinding Background}">
+                            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                    Content="{TemplateBinding Content}"
+                                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                    ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                    Margin="{TemplateBinding Padding}"
+                                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                            <ScrollBar x:Name="PART_VerticalScrollBar"
+                                       Width="5"
+                                       Margin="0,2,2,2"
+                                       HorizontalAlignment="Right"
+                                       Panel.ZIndex="1"
+                                       Maximum="{TemplateBinding ScrollableHeight}"
+                                       Orientation="Vertical"
+                                       Style="{StaticResource SettingsOverlayScrollBar}"
+                                       Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                       ViewportSize="{TemplateBinding ViewportHeight}"
+                                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RoundSettingIcon" TargetType="Border">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Background" Value="{DynamicResource AccentMutedBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="Divider" TargetType="Border">
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Background" Value="{DynamicResource DividerBrush}" />
+        </Style>
+
+        <Style x:Key="SwitchToggle" TargetType="CheckBox">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Width="44" Height="20">
+                            <Border x:Name="Track"
+                                    CornerRadius="10"
+                                    Background="{DynamicResource TrackBrush}" />
+                            <Ellipse x:Name="Thumb"
+                                     Width="16" Height="16" Margin="2"
+                                     HorizontalAlignment="Left"
+                                     Fill="{DynamicResource SwitchThumbBrush}">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect BlurRadius="3" ShadowDepth="1" Opacity="0.24" />
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Track" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MiniSwitchToggle" TargetType="CheckBox">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Focusable" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Width="36" Height="20">
+                            <Border x:Name="Track"
+                                    CornerRadius="10"
+                                    Background="{DynamicResource TrackBrush}" />
+                            <Ellipse x:Name="Thumb"
+                                     Width="16" Height="16" Margin="2"
+                                     HorizontalAlignment="Left"
+                                     Fill="{DynamicResource SwitchThumbBrush}">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect BlurRadius="2" ShadowDepth="1" Opacity="0.2" />
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Track" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SegmentedList" TargetType="ListBox">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="Background" Value="{DynamicResource TrackBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <Border Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}"
+                                CornerRadius="7">
+                            <ItemsPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SegmentItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Padding" Value="5,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Segment"
+                                Padding="{TemplateBinding Padding}"
+                                Background="Transparent"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Segment" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsSelected" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ChoiceTileList" TargetType="ListBox">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AppearanceTileItem" TargetType="ListBoxItem">
+            <Setter Property="Height" Value="55" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Tile"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{DynamicResource WidgetSecondarySurfaceBrush}"
+                                CornerRadius="12">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Tile" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsSelected" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Tile" Property="Background" Value="{DynamicResource AccentMutedBrush}" />
+                            </MultiTrigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Tile" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="LanguageTileItem" TargetType="ListBoxItem">
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Tile"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{DynamicResource WidgetSecondarySurfaceBrush}"
+                                CornerRadius="10">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Tile" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsSelected" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Tile" Property="Background" Value="{DynamicResource AccentMutedBrush}" />
+                            </MultiTrigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Tile" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CompactButton" TargetType="Button">
+            <Setter Property="Padding" Value="10,6" />
+            <Setter Property="Background" Value="{DynamicResource TrackBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource AccentMutedBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsPlainIconButton" TargetType="Button">
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TertiaryTextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontFamily" Value="Segoe UI Symbol, Segoe UI" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.62" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.28" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ThemeItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Grid>
+                            <Border Padding="{TemplateBinding Padding}"
+                                    Background="{DynamicResource WidgetSecondarySurfaceBrush}"
+                                    CornerRadius="12">
+                                <ContentPresenter />
+                            </Border>
+                            <Border x:Name="ThemeOutline"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="2"
+                                    CornerRadius="12"
+                                    IsHitTestVisible="False" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ThemeOutline" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="ThemeOutline" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CompanionItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="Padding" Value="7,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Grid>
+                            <Border Background="{DynamicResource SurfaceBrush}"
+                                    CornerRadius="6" />
+                            <Border x:Name="CompanionSelectionFill"
+                                    Background="{DynamicResource AccentBrush}"
+                                    CornerRadius="6"
+                                    IsHitTestVisible="False"
+                                    Opacity="0" />
+                            <Border x:Name="CompanionBorder"
+                                    Padding="{TemplateBinding Padding}"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <ContentPresenter VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="CompanionSelectionFill" Property="Opacity" Value="0.12" />
+                                <Setter TargetName="CompanionBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="CompanionBorder" Property="BorderThickness" Value="1.5" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="CompanionBorder" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="SettingsSurface" Width="420" Height="600">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80" />
+            <RowDefinition Height="1" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Width="40"
+                    Height="40"
+                    CornerRadius="12"
+                    Background="{DynamicResource AppIconGradientBrush}">
+                <TextBlock Text="C"
+                           FontFamily="Segoe UI Variable Display, Segoe UI"
+                           FontSize="22"
+                           FontWeight="ExtraBold"
+                           Foreground="{DynamicResource AccentForegroundBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="Claude + Codex Usage" FontSize="16" FontWeight="Bold" />
+                <TextBlock Text="{Binding AppVersionText}" Margin="0,2,0,0"
+                           FontSize="11" Foreground="{DynamicResource TertiaryTextBrush}" />
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1" Background="{DynamicResource DividerBrush}" />
+
+        <ScrollViewer x:Name="SettingsScroll"
+                      Grid.Row="2"
+                      Style="{StaticResource SettingsOverlayScrollViewer}"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      PanningMode="VerticalOnly">
+            <StackPanel Margin="0,4,0,0">
+                <Border Margin="20,12,20,0"
+                        Padding="11,9"
+                        CornerRadius="9"
+                        Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1"
+                        Visibility="{Binding HasPersistenceError, Converter={StaticResource BoolVisibility}}">
+                    <TextBlock Text="{Binding PersistenceErrorText}"
+                               Foreground="{DynamicResource DangerBrush}"
+                               FontSize="10.5" TextWrapping="Wrap"
+                               AutomationProperties.LiveSetting="Assertive"
+                               accessibility:LiveRegionBehavior.AnnounceOnTextChanged="True" />
+                </Border>
+
+                <TextBlock Text="{DynamicResource Settings.ThemeSection}" Style="{StaticResource SectionHeader}" />
+                <ListBox Margin="20,8,20,0"
+                         Padding="0" BorderThickness="0" Background="Transparent"
+                         ItemsSource="{Binding ThemeOptions}"
+                         SelectedValuePath="Value"
+                         SelectedValue="{Binding Theme, Mode=TwoWay}"
+                         ItemContainerStyle="{StaticResource ThemeItem}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         AutomationProperties.Name="{DynamicResource Settings.ThemeSection}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="56" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                </Grid.ColumnDefinitions>
+                                <controls:SettingsThemePreview Theme="{Binding Value}" />
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Label}" FontSize="13" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Description}" Margin="0,2,0,0"
+                                               FontSize="11" Foreground="{DynamicResource TertiaryTextBrush}"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <Grid Grid.Column="3" Width="20" Height="20" VerticalAlignment="Center">
+                                    <Ellipse x:Name="SelectionRing" Stroke="{DynamicResource DividerBrush}" StrokeThickness="1.5" />
+                                    <Ellipse x:Name="SelectionFill" Fill="{DynamicResource AccentBrush}" Visibility="Collapsed" />
+                                    <TextBlock x:Name="SelectionCheck" Text="✓" FontSize="11" FontWeight="Bold"
+                                               Foreground="{DynamicResource AccentForegroundBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="Collapsed" />
+                                </Grid>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter TargetName="SelectionRing" Property="Visibility" Value="Collapsed" />
+                                    <Setter TargetName="SelectionFill" Property="Visibility" Value="Visible" />
+                                    <Setter TargetName="SelectionCheck" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Text="{DynamicResource Settings.AppearanceSection}" Style="{StaticResource SectionHeader}" />
+                <ListBox Margin="16,4"
+                         Style="{StaticResource ChoiceTileList}"
+                         ItemContainerStyle="{StaticResource AppearanceTileItem}"
+                         ItemsSource="{Binding AppearanceOptions}"
+                         SelectedValuePath="Value"
+                         SelectedValue="{Binding Appearance, Mode=TwoWay}"
+                         AutomationProperties.Name="{DynamicResource Settings.AppearanceSection}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Icon}"
+                                           FontFamily="Segoe UI Symbol, Segoe UI"
+                                           FontSize="14"
+                                           FontWeight="Bold"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Margin="0,4,0,0"
+                                           Text="{Binding Label}"
+                                           FontSize="11"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Text="{DynamicResource Settings.WidgetSection}" Style="{StaticResource SectionHeader}" />
+                <Border x:Name="WidgetLayoutCard" Style="{StaticResource SettingsCard}">
+                    <StackPanel>
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <controls:SettingsGlyphIcon Glyph="Layout"
+                                                        CircleBrush="{DynamicResource AccentMutedBrush}"
+                                                        GlyphBrush="{DynamicResource AccentBrush}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings.Layout}" Style="{StaticResource RowTitle}" />
+                                <TextBlock Text="{Binding SelectedLayoutDescription}" Style="{StaticResource RowDescription}" />
+                            </StackPanel>
+                        </Grid>
+                        <ListBox x:Name="WidgetLayoutPicker"
+                                 Margin="10,0,10,10"
+                                 HorizontalAlignment="Stretch"
+                                 Style="{StaticResource SegmentedList}"
+                                 ItemContainerStyle="{StaticResource SegmentItem}"
+                                 ItemsSource="{Binding LayoutOptions}"
+                                 SelectedValuePath="Value"
+                                 SelectedValue="{Binding WidgetLayout, Mode=TwoWay}"
+                                 AutomationProperties.Name="{DynamicResource Settings.Layout}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                ToolTip="{Binding Description}"
+                                                ToolTipService.ShowDuration="12000"
+                                                AutomationProperties.Name="{Binding Label}"
+                                                AutomationProperties.HelpText="{Binding Description}">
+                                        <TextBlock Text="{Binding Icon}"
+                                                   FontFamily="Segoe UI Symbol, Segoe UI"
+                                                   FontSize="11"
+                                                   FontWeight="Bold"
+                                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Margin="4,0,0,0"
+                                                   Text="{Binding Label}"
+                                                   FontSize="10.5"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <StackPanel Visibility="{Binding IsSeparateLayout, Converter={StaticResource BoolVisibility}}">
+                            <Border Style="{StaticResource Divider}" />
+                            <TextBlock Text="{DynamicResource Settings.SeparateProviders}"
+                                       Margin="10,10,10,8" FontSize="10" FontWeight="Bold"
+                                       Foreground="{DynamicResource TertiaryTextBrush}" />
+                            <Grid Margin="10,0,10,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Padding="8" Background="{DynamicResource SurfaceBrush}" CornerRadius="8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="18" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <controls:ProviderIcon Width="18" Height="18" Provider="Claude" />
+                                        <TextBlock Grid.Column="2" Text="{DynamicResource Settings.ShowClaude}"
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                        <CheckBox Grid.Column="3" Style="{StaticResource MiniSwitchToggle}"
+                                                  IsChecked="{Binding SeparateClaudeWidgetEnabled, Mode=TwoWay}"
+                                                  IsEnabled="{Binding CanDisableSeparateClaudeWidget}"
+                                                  AutomationProperties.Name="{DynamicResource Settings.ShowClaude}" />
+                                    </Grid>
+                                </Border>
+                                <Border Grid.Column="2" Padding="8" Background="{DynamicResource SurfaceBrush}" CornerRadius="8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="18" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <controls:ProviderIcon Width="18" Height="18" Provider="Codex" />
+                                        <TextBlock Grid.Column="2" Text="{DynamicResource Settings.ShowCodex}"
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                        <CheckBox Grid.Column="3" Style="{StaticResource MiniSwitchToggle}"
+                                                  IsChecked="{Binding SeparateCodexWidgetEnabled, Mode=TwoWay}"
+                                                  IsEnabled="{Binding CanDisableSeparateCodexWidget}"
+                                                  AutomationProperties.Name="{DynamicResource Settings.ShowCodex}" />
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+
+                        <Border Style="{StaticResource Divider}" />
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <controls:SettingsGlyphIcon Glyph="AlwaysOnTop"
+                                                        CircleBrush="{DynamicResource AccentMutedBrush}"
+                                                        GlyphBrush="{DynamicResource AccentBrush}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings.AlwaysOnTop}" Style="{StaticResource RowTitle}" />
+                                <TextBlock Text="{Binding WidgetAlwaysOnTopDescription}" Style="{StaticResource RowDescription}" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="3" Style="{StaticResource SwitchToggle}"
+                                      IsChecked="{Binding WidgetAlwaysOnTop, Mode=TwoWay}"
+                                      AutomationProperties.Name="{DynamicResource Settings.AlwaysOnTop}" />
+                        </Grid>
+                        <Border Style="{StaticResource Divider}" />
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <controls:SettingsGlyphIcon Glyph="Spark"
+                                                        CircleBrush="{DynamicResource AccentMutedBrush}"
+                                                        GlyphBrush="{DynamicResource AccentBrush}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings.ShowSpark}" Style="{StaticResource RowTitle}" />
+                                <TextBlock Text="{DynamicResource Settings.ShowSparkDescription}" Style="{StaticResource RowDescription}" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="3" Style="{StaticResource SwitchToggle}"
+                                      IsChecked="{Binding ShowCodexSpark, Mode=TwoWay}"
+                                      AutomationProperties.Name="{DynamicResource Settings.ShowSpark}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{DynamicResource Settings.CompanionSection}" Style="{StaticResource SectionHeader}" />
+                <Border Style="{StaticResource SettingsCard}">
+                    <StackPanel>
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <controls:SettingsCompanionPreview Width="40"
+                                                               Height="40"
+                                                               AvatarSize="40"
+                                                               FrameSize="40"
+                                                               Companion="{Binding SelectedCompanion}"
+                                                               Mood="{Binding Companion.Mood}"
+                                                               Pressure="{Binding Companion.Pressure}"
+                                                               AnimationMode="{Binding Companion.AnimationMode}"
+                                                               ReducedMotion="{Binding Companion.ReducedMotion}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding SelectedCompanionLabel}" Style="{StaticResource RowTitle}" />
+                                <TextBlock Text="{DynamicResource Settings.CompanionEnabledDescription}" Style="{StaticResource RowDescription}" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="3" Style="{StaticResource SwitchToggle}"
+                                      IsChecked="{Binding CompanionEnabled, Mode=TwoWay}"
+                                      AutomationProperties.Name="{DynamicResource Settings.CompanionEnabled}" />
+                        </Grid>
+                        <Border Style="{StaticResource Divider}" />
+                        <Grid x:Name="CompanionSelectorHeader" Margin="12,12,12,5">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <controls:SettingsGlyphIcon Glyph="Character"
+                                                        CircleBrush="{DynamicResource AccentMutedBrush}"
+                                                        GlyphBrush="{DynamicResource AccentBrush}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings.CompanionCharacter}" Style="{StaticResource RowTitle}" />
+                                <TextBlock x:Name="CompanionSelectorHeaderDescription"
+                                           Text="{DynamicResource Settings.CompanionCharacterDescription}"
+                                           Style="{StaticResource CompanionSelectorDescription}" />
+                            </StackPanel>
+                        </Grid>
+                        <ListBox x:Name="CompanionSelectorGrid"
+                                 Margin="9,0,9,5"
+                                 Padding="0" Background="Transparent" BorderThickness="0"
+                                 ItemsSource="{Binding CompanionOptions}"
+                                 SelectedValuePath="Value"
+                                 SelectedValue="{Binding SelectedCompanion, Mode=TwoWay}"
+                                 ItemContainerStyle="{StaticResource CompanionItem}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 AutomationProperties.Name="{DynamicResource Settings.CompanionCharacter}">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate><UniformGrid Columns="3" /></ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Height="30">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="30" /><ColumnDefinition Width="6" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <controls:SettingsCompanionPreview Width="30"
+                                                                           Height="30"
+                                                                           AvatarSize="30"
+                                                                           FrameSize="30"
+                                                                           VerticalAlignment="Center"
+                                                                           Companion="{Binding Value}"
+                                                                           Mood="{Binding DataContext.Companion.Mood, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                                           Pressure="{Binding DataContext.Companion.Pressure, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                                           AnimationMode="Still"
+                                                                           ReducedMotion="True" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Label}" FontSize="10" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock x:Name="SelectedCompanionDescriptionText"
+                                   Text="{Binding SelectedCompanionDescription}"
+                                   Margin="12,0,12,12"
+                                   Style="{StaticResource SelectedCompanionDescription}" />
+                        <Border Style="{StaticResource Divider}" />
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="6" />
+                                <ColumnDefinition Width="176" />
+                            </Grid.ColumnDefinitions>
+                            <controls:SettingsGlyphIcon Glyph="Sensitivity"
+                                                        CircleBrush="{DynamicResource AccentMutedBrush}"
+                                                        GlyphBrush="{DynamicResource AccentBrush}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings.CompanionSensitivity}" Style="{StaticResource RowTitle}" />
+                                <TextBlock x:Name="CompanionSensitivityDescriptionText"
+                                           Text="{Binding CompanionSensitivityDescription}"
+                                           Style="{StaticResource CompanionSelectorDescription}" />
+                            </StackPanel>
+                            <ListBox Grid.Column="4" Style="{StaticResource SegmentedList}"
+                                     ItemContainerStyle="{StaticResource SegmentItem}"
+                                     ItemsSource="{Binding CompanionSensitivityOptions}"
+                                     DisplayMemberPath="Label" SelectedValuePath="Value"
+                                     SelectedValue="{Binding CompanionSensitivity, Mode=TwoWay}"
+                                     AutomationProperties.Name="{DynamicResource Settings.CompanionSensitivity}" />
+                        </Grid>
+                        <Border Style="{StaticResource Divider}" />
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="6" />
+                                <ColumnDefinition Width="176" />
+                            </Grid.ColumnDefinitions>
+                            <controls:SettingsGlyphIcon Glyph="Animation"
+                                                        CircleBrush="{DynamicResource AccentMutedBrush}"
+                                                        GlyphBrush="{DynamicResource AccentBrush}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings.CompanionAnimation}" Style="{StaticResource RowTitle}" />
+                                <TextBlock x:Name="CompanionAnimationDescriptionText"
+                                           Text="{DynamicResource Settings.CompanionAnimationDescription}"
+                                           Style="{StaticResource CompanionSelectorDescription}" />
+                            </StackPanel>
+                            <ListBox Grid.Column="4" Style="{StaticResource SegmentedList}"
+                                     ItemContainerStyle="{StaticResource SegmentItem}"
+                                     ItemsSource="{Binding CompanionAnimationOptions}"
+                                     DisplayMemberPath="Label" SelectedValuePath="Value"
+                                     SelectedValue="{Binding CompanionAnimationMode, Mode=TwoWay}"
+                                     AutomationProperties.Name="{DynamicResource Settings.CompanionAnimation}" />
+                        </Grid>
+                        <Border Style="{StaticResource Divider}" />
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <controls:SettingsGlyphIcon Glyph="History"
+                                                        CircleBrush="{DynamicResource AccentMutedBrush}"
+                                                        GlyphBrush="{DynamicResource AccentBrush}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings.UsageHistory}" Style="{StaticResource RowTitle}" />
+                                <TextBlock Text="{DynamicResource Settings.UsageHistoryDescription}" Style="{StaticResource RowDescription}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="OpenHistoryButton"
+                                        Margin="0,0,3,0"
+                                        Style="{StaticResource SettingsPlainIconButton}"
+                                        ToolTip="{DynamicResource Settings.OpenHistory}"
+                                        AutomationProperties.Name="{DynamicResource Settings.OpenHistory}"
+                                        Click="OnOpenHistoryClick">
+                                    <Path x:Name="OpenHistoryChartIcon"
+                                          Width="12"
+                                          Height="12"
+                                          Data="M 2,2 V 12 H 12 M 3.5,9 L 6,6.5 L 8,8 L 11.5,4"
+                                          Stretch="Uniform"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          StrokeThickness="1.5"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Focusable="False"
+                                          IsHitTestVisible="False" />
+                                </Button>
+                                <Button x:Name="ClearHistoryButton"
+                                        Margin="0,0,12,0"
+                                        Style="{StaticResource SettingsPlainIconButton}"
+                                        IsEnabled="{Binding HasHistorySamples}"
+                                        ToolTip="{DynamicResource Settings.ClearHistory}"
+                                        AutomationProperties.Name="{DynamicResource Settings.ClearHistory}"
+                                        Click="OnClearHistoryClick">
+                                    <Path x:Name="ClearHistoryTrashIcon"
+                                          Width="12"
+                                          Height="12"
+                                          Data="M 3,4.5 H 11 M 5,4.5 V 3 H 9 V 4.5 M 4.5,4.5 L 5,11.5 H 9 L 9.5,4.5 M 6.5,6 V 10 M 7.5,6 V 10"
+                                          Stretch="Uniform"
+                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                          StrokeThickness="1.5"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Focusable="False"
+                                          IsHitTestVisible="False" />
+                                </Button>
+                                <CheckBox Style="{StaticResource SwitchToggle}"
+                                          IsChecked="{Binding UsageHistoryEnabled, Mode=TwoWay}"
+                                          AutomationProperties.Name="{DynamicResource Settings.UsageHistory}" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{DynamicResource Settings.LanguageSection}" Style="{StaticResource SectionHeader}" />
+                <ListBox Margin="16,4"
+                         Style="{StaticResource ChoiceTileList}"
+                         ItemContainerStyle="{StaticResource LanguageTileItem}"
+                         ItemsSource="{Binding LanguageOptions}"
+                         SelectedValuePath="Value"
+                         SelectedValue="{Binding Language, Mode=TwoWay}"
+                         AutomationProperties.Name="{DynamicResource Settings.LanguageSection}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Grid x:Name="LanguageCheck" Width="12" Height="12"
+                                      Margin="0,0,6,0" Visibility="Collapsed">
+                                    <Ellipse Fill="{DynamicResource AccentForegroundBrush}" />
+                                    <TextBlock Text="✓" FontSize="8" FontWeight="ExtraBold"
+                                               Foreground="{DynamicResource AccentBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                                <TextBlock Text="{Binding Label}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"
+                                             Value="True">
+                                    <Setter TargetName="LanguageCheck" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Text="{DynamicResource Settings.AccountSection}" Style="{StaticResource SectionHeader}" />
+                <StackPanel Margin="20,8,20,20">
+                    <Border Padding="12"
+                            Background="{DynamicResource WidgetSecondarySurfaceBrush}"
+                            BorderThickness="0"
+                            CornerRadius="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <controls:ProviderIcon Width="36" Height="36" Provider="Claude" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Usage.ClaudeOrganizationName}"
+                                           Style="{StaticResource RowTitle}"
+                                           MaxWidth="220" />
+                                <Border x:Name="ClaudeAccountPlanBadge"
+                                        Margin="0,2,0,0"
+                                        HorizontalAlignment="Left"
+                                        Style="{DynamicResource FlyoutPlanBadgeStyle}"
+                                        RenderTransformOrigin="0.5,0.5"
+                                        Visibility="{Binding Usage.ClaudeHasSnapshot, Converter={StaticResource BoolVisibility}}">
+                                    <Border.RenderTransform>
+                                        <ScaleTransform ScaleX="0.85" ScaleY="0.85" />
+                                    </Border.RenderTransform>
+                                    <Grid>
+                                        <TextBlock Text="{Binding Usage.ClaudePlanDisplayName}"
+                                                   Style="{DynamicResource FlyoutPlanBadgeTextStyle}" />
+                                        <TextBlock Text="{Binding Usage.ClaudePlanCompactName}"
+                                                   Style="{DynamicResource FlyoutPlanBadgeCompactTextStyle}" />
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="{DynamicResource Settings.LoginRequired}"
+                                           Style="{StaticResource RowDescription}"
+                                           Visibility="{Binding Usage.ClaudeHasSnapshot, Converter={StaticResource BoolVisibility}, ConverterParameter=Invert}" />
+                            </StackPanel>
+                            <Button Grid.Column="3"
+                                    Content="{DynamicResource Settings.Disconnect}"
+                                    Style="{StaticResource CompactButton}"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding Usage.ClaudeHasSnapshot, Converter={StaticResource BoolVisibility}}"
+                                    Click="OnClaudeLogoutClick" />
+                        </Grid>
+                    </Border>
+
+                    <Border Margin="0,8,0,0" Padding="12"
+                            Background="{DynamicResource WidgetSecondarySurfaceBrush}"
+                            BorderThickness="0" CornerRadius="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="36" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <controls:ProviderIcon Width="36" Height="36" Provider="Codex" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="Codex" Style="{StaticResource RowTitle}" />
+                                <Border x:Name="CodexAccountPlanBadge"
+                                        Margin="0,2,0,0"
+                                        HorizontalAlignment="Left"
+                                        Style="{DynamicResource FlyoutPlanBadgeStyle}"
+                                        RenderTransformOrigin="0.5,0.5"
+                                        Visibility="{Binding Usage.HasSnapshot, Converter={StaticResource BoolVisibility}}">
+                                    <Border.RenderTransform>
+                                        <ScaleTransform ScaleX="0.85" ScaleY="0.85" />
+                                    </Border.RenderTransform>
+                                    <Grid>
+                                        <TextBlock Text="{Binding Usage.PlanDisplayName}"
+                                                   Style="{DynamicResource FlyoutPlanBadgeTextStyle}" />
+                                        <TextBlock Text="{Binding Usage.PlanCompactName}"
+                                                   Style="{DynamicResource FlyoutPlanBadgeCompactTextStyle}" />
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="{Binding Usage.StatusText}"
+                                           Style="{StaticResource RowDescription}"
+                                           TextTrimming="CharacterEllipsis"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           accessibility:LiveRegionBehavior.AnnounceOnTextChanged="True"
+                                           Visibility="{Binding Usage.HasSnapshot, Converter={StaticResource BoolVisibility}, ConverterParameter=Invert}" />
+                            </StackPanel>
+                            <Button x:Name="OpenCodexUsageButton"
+                                    Grid.Column="3"
+                                    Style="{StaticResource CompactButton}"
+                                    Padding="7"
+                                    VerticalAlignment="Center"
+                                    ToolTip="{DynamicResource Settings.OpenUsagePage}"
+                                    AutomationProperties.Name="{DynamicResource Settings.OpenUsagePage}"
+                                    Click="OnOpenCodexUsageClick">
+                                <Path x:Name="OpenCodexExternalLinkIcon"
+                                      Width="12"
+                                      Height="12"
+                                      Data="M 8,2 H 12 V 6 M 12,2 L 6.5,7.5 M 10.5,8 V 11.5 H 2.5 V 3.5 H 6"
+                                      Stretch="Uniform"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                      StrokeThickness="1.5"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      StrokeLineJoin="Round"
+                                      Focusable="False"
+                                      IsHitTestVisible="False" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

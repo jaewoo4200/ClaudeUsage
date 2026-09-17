@@ -1,0 +1,77 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Last-in-stack semantic overlay for Windows High Contrast. Geometry,
+        typography, templates, and normal theme colors stay in their existing
+        dictionaries. System color roles are intentionally used instead of a
+        custom black/white palette so every installed HC scheme remains valid.
+    -->
+
+    <!-- Window and surface roles pair with WindowText. -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="WidgetPanelBackgroundBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="SecondarySurfaceBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="WidgetSecondarySurfaceBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="MetricCardBackgroundBrush" Color="{x:Static SystemColors.WindowColor}" />
+
+    <!-- Do not mute required information in HC; all text keeps full contrast. -->
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="TertiaryTextBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="InverseTextBrush" Color="{x:Static SystemColors.WindowColor}" />
+
+    <!-- Structural and progress roles. -->
+    <SolidColorBrush x:Key="TrackBrush" Color="{x:Static SystemColors.ControlDarkColor}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="DividerBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="MetricTrackBrush" Color="{x:Static SystemColors.ControlDarkColor}" />
+    <SolidColorBrush x:Key="WarningTrackBrush" Color="{x:Static SystemColors.ControlDarkColor}" />
+    <SolidColorBrush x:Key="DangerTrackBrush" Color="{x:Static SystemColors.ControlDarkColor}" />
+
+    <!-- Selection/accent always uses the system Highlight pair. -->
+    <SolidColorBrush x:Key="AccentBrush" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="AccentSecondaryBrush" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="AccentMutedBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="AccentForegroundBrush" Color="{x:Static SystemColors.HighlightTextColor}" />
+    <SolidColorBrush x:Key="SwitchThumbBrush" Color="{x:Static SystemColors.HighlightTextColor}" />
+
+    <!-- Semantic state remains available to automation/text; visually it uses
+         the guaranteed Window/WindowText contrast pair instead of fixed hues. -->
+    <SolidColorBrush x:Key="WarningBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="DangerBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="ClaudeProviderBrush" Color="{x:Static SystemColors.HighlightColor}" />
+    <SolidColorBrush x:Key="CodexProviderBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+
+    <!-- Flat system-color gradients avoid low-contrast intermediate stops. -->
+    <LinearGradientBrush x:Key="AppIconGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{x:Static SystemColors.HighlightColor}" Offset="0" />
+        <GradientStop Color="{x:Static SystemColors.HighlightColor}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{x:Static SystemColors.HighlightColor}" Offset="0" />
+        <GradientStop Color="{x:Static SystemColors.HighlightColor}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="WarningGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{x:Static SystemColors.WindowTextColor}" Offset="0" />
+        <GradientStop Color="{x:Static SystemColors.WindowTextColor}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DangerGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{x:Static SystemColors.WindowTextColor}" Offset="0" />
+        <GradientStop Color="{x:Static SystemColors.WindowTextColor}" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- The sign-in window had a deliberately warm local palette; these roles
+         preserve it normally and make that primary window HC-aware here. -->
+    <SolidColorBrush x:Key="LoginWindowBackgroundBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="LoginChromeBackgroundBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="LoginBorderBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="LoginPrimaryTextBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="LoginSecondaryTextBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="LoginNoticeBackgroundBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="LoginNoticeBorderBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="LoginNoticeTextBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+    <SolidColorBrush x:Key="LoginWebSurfaceBrush" Color="{x:Static SystemColors.WindowColor}" />
+    <SolidColorBrush x:Key="LoginWebBorderBrush" Color="{x:Static SystemColors.WindowTextColor}" />
+</ResourceDictionary>

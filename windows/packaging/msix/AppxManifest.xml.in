@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:virtualization="http://schemas.microsoft.com/appx/manifest/virtualization/windows10"
+  IgnorableNamespaces="uap uap10 desktop rescap virtualization">
+
+  <Identity
+    Name="@@PACKAGE_NAME@@"
+    Publisher="@@PUBLISHER@@"
+    Version="@@PACKAGE_VERSION@@"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>@@DISPLAY_NAME@@</DisplayName>
+    <PublisherDisplayName>@@PUBLISHER_DISPLAY_NAME@@</PublisherDisplayName>
+    <Description>@@DESCRIPTION@@</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+
+    <!--
+      ClaudeUsage deliberately keeps its own settings/history and any legacy
+      portable startup value outside the package container. Provider-owned
+      ~/.claude and ~/.codex data is never package-owned. These exclusions let
+      an upgrade preserve state and let uninstall leave user data untouched.
+    -->
+    <virtualization:FileSystemWriteVirtualization>
+      <virtualization:ExcludedDirectories>
+        <virtualization:ExcludedDirectory>$(KnownFolder:LocalAppData)\ClaudeUsage</virtualization:ExcludedDirectory>
+      </virtualization:ExcludedDirectories>
+    </virtualization:FileSystemWriteVirtualization>
+    <virtualization:RegistryWriteVirtualization>
+      <virtualization:ExcludedKeys>
+        <virtualization:ExcludedKey>HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run</virtualization:ExcludedKey>
+      </virtualization:ExcludedKeys>
+    </virtualization:RegistryWriteVirtualization>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily
+      Name="Windows.Desktop"
+      MinVersion="10.0.22000.0"
+      MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+    <Resource Language="ko-kr" />
+  </Resources>
+
+  <Applications>
+    <Application
+      Id="App"
+      Executable="ClaudeUsage.Windows.exe"
+      EntryPoint="Windows.FullTrustApplication"
+      uap10:RuntimeBehavior="packagedClassicApp"
+      uap10:TrustLevel="mediumIL">
+      <uap:VisualElements
+        AppListEntry="default"
+        DisplayName="@@DISPLAY_NAME@@"
+        Description="@@DESCRIPTION@@"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <!--
+          The identity-based task survives versioned WindowsApps path changes.
+          Its tiny helper adds the background command-line switch before
+          starting the main process.
+        -->
+        <desktop:Extension
+          Category="windows.startupTask"
+          Executable="ClaudeUsage.Startup.exe"
+          EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask
+            TaskId="ClaudeUsageStartup"
+            Enabled="false"
+            DisplayName="ClaudeUsage" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+</Package>

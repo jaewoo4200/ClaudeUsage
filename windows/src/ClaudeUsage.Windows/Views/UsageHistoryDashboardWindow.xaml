@@ -1,0 +1,399 @@
+<Window x:Class="ClaudeUsage.Windows.Views.UsageHistoryDashboardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:ClaudeUsage.Windows.Controls"
+        xmlns:services="clr-namespace:ClaudeUsage.Windows.Services"
+        Title="{DynamicResource History.Title}"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        services:WindowWorkAreaSizingBehavior.PreferredClientWidth="760"
+        services:WindowWorkAreaSizingBehavior.PreferredClientHeight="560"
+        services:WindowWorkAreaSizingBehavior.MinimumClientWidth="640"
+        services:WindowWorkAreaSizingBehavior.MinimumClientHeight="480"
+        services:WindowWorkAreaSizingBehavior.PhysicalMarginPixels="12"
+        services:WindowWorkAreaSizingBehavior.IsEnabled="True"
+        PreviewKeyDown="OnPreviewKeyDown">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibility" />
+
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        </Style>
+
+        <Style x:Key="HistorySegmentedList" TargetType="ListBox">
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="Background" Value="{DynamicResource TrackBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ItemsPanel">
+                <Setter.Value><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="7">
+                            <ItemsPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HistorySegmentItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinWidth" Value="60" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Segment" Padding="{TemplateBinding Padding}" CornerRadius="5" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentForegroundBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource PrimaryTextBrush}" />
+                                <Setter TargetName="Segment" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True" />
+                                    <Condition Property="IsSelected" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HistoryScopeSegmentItem"
+               TargetType="ListBoxItem"
+               BasedOn="{StaticResource HistorySegmentItem}">
+            <Setter Property="MinWidth" Value="64" />
+        </Style>
+
+        <Style x:Key="HeaderIconButton" TargetType="Button">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TertiaryTextBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource TrackBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="ButtonBorder" Property="BorderThickness" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SummaryTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TertiaryTextBrush}" />
+            <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+            <Setter Property="LineHeight" Value="12" />
+        </Style>
+
+        <Style x:Key="SummaryValue" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+            <Setter Property="LineHeight" Value="22" />
+        </Style>
+    </Window.Resources>
+
+    <Grid x:Name="HistorySurface"
+          Width="760"
+          Height="560">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="70" />
+            <RowDefinition Height="1" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="22,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="38" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Width="38" Height="38" CornerRadius="8" Background="{DynamicResource WidgetSecondarySurfaceBrush}">
+                <Grid x:Name="HistoryChartIcon" Margin="9">
+                    <Polyline Points="0,18 6,12 11,15 19,5"
+                              Stroke="{DynamicResource AccentBrush}" StrokeThickness="2.5"
+                              StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                    <Line x:Name="HistoryYAxis"
+                          X1="1" Y1="2" X2="1" Y2="19"
+                          Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                    <Line x:Name="HistoryXAxis"
+                          X1="1" Y1="19" X2="19" Y2="19"
+                          Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                </Grid>
+            </Border>
+            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                <TextBlock Text="{DynamicResource History.Title}" FontSize="17" FontWeight="Bold" />
+                <TextBlock Text="{DynamicResource History.Subtitle}" Margin="0,2,0,0"
+                           FontSize="11" Foreground="{DynamicResource TertiaryTextBrush}" />
+            </StackPanel>
+            <Button Grid.Column="3"
+                    Style="{StaticResource HeaderIconButton}"
+                    IsEnabled="{Binding HasSamples}"
+                    ToolTip="{DynamicResource Settings.ClearHistory}"
+                    AutomationProperties.Name="{DynamicResource Settings.ClearHistory}"
+                    Click="OnClearHistoryClick">
+                <TextBlock Text="&#xE74D;"
+                           FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                           FontSize="12"
+                           FontWeight="SemiBold" />
+            </Button>
+        </Grid>
+
+        <Border Grid.Row="1" Background="{DynamicResource DividerBrush}" />
+
+        <ScrollViewer x:Name="HistoryBodyScroll"
+                      Grid.Row="2"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      PanningMode="Both">
+            <Grid MinWidth="640"
+                  MinHeight="{Binding ViewportHeight, ElementName=HistoryBodyScroll}">
+                <Grid Margin="22">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="24" />
+                <RowDefinition Height="18" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="18" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" MinHeight="245" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid x:Name="HistoryControlsGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*" MinWidth="326" MaxWidth="360" />
+                    <ColumnDefinition Width="*" MinWidth="40" />
+                    <ColumnDefinition Width="230" />
+                </Grid.ColumnDefinitions>
+                <ListBox x:Name="HistoryRangePicker"
+                         Style="{StaticResource HistorySegmentedList}"
+                         ItemContainerStyle="{StaticResource HistorySegmentItem}"
+                         MinWidth="326"
+                         MaxWidth="360"
+                         HorizontalAlignment="Stretch"
+                         ItemsSource="{Binding RangeOptions}"
+                         DisplayMemberPath="Label" SelectedValuePath="Value"
+                         SelectedValue="{Binding Range, Mode=TwoWay}"
+                         AutomationProperties.Name="{DynamicResource History.RangeLabel}" />
+                <ListBox x:Name="HistoryScopePicker"
+                         Grid.Column="2"
+                         Style="{StaticResource HistorySegmentedList}"
+                         ItemContainerStyle="{StaticResource HistoryScopeSegmentItem}"
+                         MinWidth="230"
+                         MaxWidth="230"
+                         HorizontalAlignment="Stretch"
+                         ItemsSource="{Binding ScopeOptions}"
+                         DisplayMemberPath="Label" SelectedValuePath="Value"
+                         SelectedValue="{Binding Scope, Mode=TwoWay}"
+                         AutomationProperties.Name="{DynamicResource History.ScopeLabel}" />
+            </Grid>
+
+            <Border Grid.Row="2"
+                    Height="62"
+                    Padding="0,12"
+                    Background="{DynamicResource WidgetSecondarySurfaceBrush}"
+                    CornerRadius="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" /><ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="14,0" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource History.Peak}" Style="{StaticResource SummaryTitle}" />
+                        <TextBlock Text="{Binding PeakText}" Style="{StaticResource SummaryValue}" Foreground="{DynamicResource AccentBrush}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Height="36" Background="{DynamicResource DividerBrush}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="2" Margin="14,0" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource History.Change}" Style="{StaticResource SummaryTitle}" />
+                        <TextBlock Text="{Binding ChangeText}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource SummaryValue}">
+                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsChangeNonNegative}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                    <Border Grid.Column="3" Height="36" Background="{DynamicResource DividerBrush}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="4" Margin="14,0" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource History.Samples}" Style="{StaticResource SummaryTitle}" />
+                        <TextBlock Text="{Binding SampleCountText}" Style="{StaticResource SummaryValue}" />
+                    </StackPanel>
+                    <Border Grid.Column="5" Height="36" Background="{DynamicResource DividerBrush}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="6" Margin="14,0" VerticalAlignment="Center">
+                        <TextBlock Text="{DynamicResource History.Resets}" Style="{StaticResource SummaryTitle}" />
+                        <TextBlock Text="{Binding ResetCountText}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource SummaryValue}">
+                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasDetectedResets}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TextBlock Grid.Row="4"
+                       Text="{DynamicResource History.ChartTitle}"
+                       FontSize="12"
+                       FontWeight="Bold"
+                       Visibility="{Binding HasChartData, Converter={StaticResource BooleanToVisibility}}" />
+
+            <Border Grid.Row="5"
+                    Height="10"
+                    Visibility="{Binding HasChartData, Converter={StaticResource BooleanToVisibility}}" />
+
+            <Grid Grid.Row="6">
+                <controls:UsageHistoryChart Series="{Binding Series}">
+                    <controls:UsageHistoryChart.Style>
+                        <Style TargetType="controls:UsageHistoryChart">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasChartData}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </controls:UsageHistoryChart.Style>
+                </controls:UsageHistoryChart>
+                <Border Background="{DynamicResource WidgetSecondarySurfaceBrush}" CornerRadius="8">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasChartData}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360">
+                        <TextBlock Text="&#xE9D2;"
+                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                   FontSize="28"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TertiaryTextBrush}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource History.EmptyTitle}" Margin="0,10,0,0"
+                                   FontSize="14" FontWeight="Bold" HorizontalAlignment="Center" />
+                        <TextBlock Text="{DynamicResource History.EmptyDescription}" Margin="0,10,0,0"
+                                   FontSize="11" Foreground="{DynamicResource TertiaryTextBrush}"
+                                   TextAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <ItemsControl Grid.Row="7"
+                          ItemsSource="{Binding Series}"
+                          Margin="0,8,0,0"
+                          Visibility="{Binding HasChartData, Converter={StaticResource BooleanToVisibility}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,12,5">
+                            <Ellipse Width="8" Height="8" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Label}" Margin="6,0,0,0"
+                                       FontSize="10.5" Foreground="{DynamicResource TertiaryTextBrush}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Grid.Row="8" Margin="0,18,0,0">
+                <StackPanel Margin="0,0,0,6" Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsTrackingDisabled}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="&#xE769;"
+                               Margin="0,0,5,0"
+                               FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                               FontSize="11"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource WarningBrush}" />
+                    <TextBlock Text="{DynamicResource History.TrackingOff}"
+                               FontSize="11"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource WarningBrush}" />
+                </StackPanel>
+                <TextBlock Text="{DynamicResource History.Explanation}"
+                           FontSize="11"
+                           FontWeight="Medium"
+                           Foreground="{DynamicResource TertiaryTextBrush}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Window>

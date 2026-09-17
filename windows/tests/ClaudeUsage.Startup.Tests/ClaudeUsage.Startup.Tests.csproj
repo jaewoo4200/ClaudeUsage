@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <FixtureTargetFramework>net10.0-windows</FixtureTargetFramework>
+    <FixtureRuntimeSubdirectory Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)\</FixtureRuntimeSubdirectory>
+    <StartupFixtureSourceDirectory>$(MSBuildThisFileDirectory)..\..\src\ClaudeUsage.Startup\bin\$(Configuration)\$(FixtureTargetFramework)\$(FixtureRuntimeSubdirectory)</StartupFixtureSourceDirectory>
+    <TestAppFixtureSourceDirectory>$(MSBuildThisFileDirectory)..\ClaudeUsage.Startup.TestApp\bin\$(Configuration)\$(FixtureTargetFramework)\$(FixtureRuntimeSubdirectory)</TestAppFixtureSourceDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ClaudeUsage.Startup\ClaudeUsage.Startup.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\ClaudeUsage.Startup.TestApp\ClaudeUsage.Startup.TestApp.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyStartupBlackBoxFixtures" AfterTargets="Build">
+    <ItemGroup>
+      <StartupFixtureFile Include="$(StartupFixtureSourceDirectory)ClaudeUsage.Startup.exe" />
+      <StartupFixtureFile Include="$(StartupFixtureSourceDirectory)ClaudeUsage.Startup.dll" />
+      <StartupFixtureFile Include="$(StartupFixtureSourceDirectory)ClaudeUsage.Startup.deps.json" />
+      <StartupFixtureFile Include="$(StartupFixtureSourceDirectory)ClaudeUsage.Startup.runtimeconfig.json" />
+      <TestAppFixtureFile Include="$(TestAppFixtureSourceDirectory)ClaudeUsage.Windows.exe" />
+      <TestAppFixtureFile Include="$(TestAppFixtureSourceDirectory)ClaudeUsage.Windows.dll" />
+      <TestAppFixtureFile Include="$(TestAppFixtureSourceDirectory)ClaudeUsage.Windows.deps.json" />
+      <TestAppFixtureFile Include="$(TestAppFixtureSourceDirectory)ClaudeUsage.Windows.runtimeconfig.json" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(StartupFixtureFile)"
+      DestinationFolder="$(TargetDir)BlackBoxFixtures\Startup"
+      SkipUnchangedFiles="true" />
+    <Copy
+      SourceFiles="@(TestAppFixtureFile)"
+      DestinationFolder="$(TargetDir)BlackBoxFixtures\TestApp"
+      SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

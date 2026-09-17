@@ -1,0 +1,433 @@
+name: Windows signed release candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing windows-v* tag to build"
+        required: true
+        type: string
+      package_version:
+        description: "Four-part MSIX version (for example 1.4.0.0)"
+        required: true
+        type: string
+      previous_public_package_version:
+        description: "Previous public four-part MSIX version; required when publishing"
+        required: false
+        default: ""
+        type: string
+      appinstaller_uri:
+        description: "Stable HTTPS URL for ClaudeUsage.appinstaller"
+        required: true
+        type: string
+      package_uri:
+        description: "Immutable HTTPS URL for this version's signed MSIX"
+        required: true
+        type: string
+      publish_release:
+        description: "Create a public GitHub release after signing and validation"
+        required: true
+        default: false
+        type: boolean
+      confirm_clean_machine_smoke:
+        description: "A dry-run candidate from this tag passed the clean-machine checklist"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: windows-production-release
+  cancel-in-progress: false
+
+jobs:
+  release-candidate:
+    name: Sign and validate Windows release candidate
+    runs-on: windows-latest
+    timeout-minutes: 35
+    environment: windows-signing
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      NUGET_XMLDOC_MODE: skip
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      PACKAGE_VERSION: ${{ inputs.package_version }}
+      PREVIOUS_PUBLIC_PACKAGE_VERSION: ${{ inputs.previous_public_package_version }}
+      APPINSTALLER_URI: ${{ inputs.appinstaller_uri }}
+      PACKAGE_URI: ${{ inputs.package_uri }}
+      WINDOWS_PACKAGE_NAME: ${{ vars.WINDOWS_PACKAGE_NAME }}
+      WINDOWS_PACKAGE_PUBLISHER: ${{ vars.WINDOWS_PACKAGE_PUBLISHER }}
+      WINDOWS_PUBLISHER_DISPLAY_NAME: ${{ vars.WINDOWS_PUBLISHER_DISPLAY_NAME }}
+      WINDOWS_TIMESTAMP_URL: ${{ vars.WINDOWS_TIMESTAMP_URL }}
+      PUBLISH_RELEASE: ${{ inputs.publish_release }}
+      CONFIRM_CLEAN_MACHINE_SMOKE: ${{ inputs.confirm_clean_machine_smoke }}
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+
+      - name: Validate release tag and protected configuration
+        shell: pwsh
+        run: |
+          $releaseTagPattern = '^windows-v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$'
+          if ($env:RELEASE_TAG -notmatch $releaseTagPattern) {
+            throw "Release tag must use the windows-v<semver> form."
+          }
+          $tagCommit = & git rev-list -n 1 "refs/tags/$env:RELEASE_TAG"
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($tagCommit)) {
+            throw "Release tag '$env:RELEASE_TAG' does not exist."
+          }
+          $tagCommit = $tagCommit.Trim()
+          $headCommit = & git rev-parse HEAD
+          if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($headCommit) -or
+              $headCommit.Trim() -cne $tagCommit) {
+            throw "Checked-out source does not exactly match release tag '$env:RELEASE_TAG'."
+          }
+          if ($env:PACKAGE_VERSION -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+            throw "package_version must contain four numeric parts."
+          }
+          if (-not [string]::IsNullOrWhiteSpace($env:PREVIOUS_PUBLIC_PACKAGE_VERSION) -and
+              $env:PREVIOUS_PUBLIC_PACKAGE_VERSION -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+            throw "previous_public_package_version must contain four numeric parts."
+          }
+          if ($env:PUBLISH_RELEASE -eq "true" -and $env:CONFIRM_CLEAN_MACHINE_SMOKE -ne "true") {
+            throw "Public release requires confirmation that a dry-run candidate from this tag passed the clean-machine checklist."
+          }
+          if ($env:PUBLISH_RELEASE -eq "true" -and
+              [string]::IsNullOrWhiteSpace($env:PREVIOUS_PUBLIC_PACKAGE_VERSION)) {
+            throw "Public release requires previous_public_package_version (use 0.0.0.0 for the first public MSIX)."
+          }
+          foreach ($name in @(
+            "WINDOWS_PACKAGE_NAME",
+            "WINDOWS_PACKAGE_PUBLISHER",
+            "WINDOWS_PUBLISHER_DISPLAY_NAME",
+            "WINDOWS_TIMESTAMP_URL")) {
+            if ([string]::IsNullOrWhiteSpace((Get-Item "env:$name").Value)) {
+              throw "Protected release configuration '$name' is missing."
+            }
+          }
+          foreach ($uriText in @($env:APPINSTALLER_URI, $env:PACKAGE_URI, $env:WINDOWS_TIMESTAMP_URL)) {
+            $uri = [Uri]$uriText
+            if (-not $uri.IsAbsoluteUri -or $uri.Scheme -ne "https") {
+              throw "Release/update/timestamp URIs must use HTTPS."
+            }
+          }
+
+      - name: Validate checked-in public MSIX version ledger
+        if: ${{ inputs.publish_release }}
+        shell: pwsh
+        run: |
+          ./windows/scripts/validate-public-msix-ledger.ps1 `
+            -LedgerPath windows/packaging/public-msix-version-ledger.json `
+            -PreviousPublicPackageVersion $env:PREVIOUS_PUBLIC_PACKAGE_VERSION `
+            -CandidatePackageVersion $env:PACKAGE_VERSION `
+            -CandidateReleaseTag $env:RELEASE_TAG
+
+      - name: Install pinned .NET SDK
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          global-json-file: global.json
+
+      - name: Acquire pinned Windows SDK packaging tools
+        shell: pwsh
+        run: |
+          $tools = ./windows/scripts/get-windows-sdk-tools.ps1 `
+            -DestinationRoot (Join-Path $env:RUNNER_TEMP "windows-sdk-tools")
+          "WINDOWS_MAKEAPPX_PATH=$($tools.MakeAppxPath)" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "WINDOWS_SIGNTOOL_PATH=$($tools.SignToolPath)" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Match source and package versions
+        shell: pwsh
+        run: |
+          $versionOutput = dotnet msbuild windows/src/ClaudeUsage.Windows/ClaudeUsage.Windows.csproj `
+            -nologo `
+            -getProperty:Version
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to read the Windows project version."
+          }
+          $projectVersion = ($versionOutput |
+            Where-Object { $_ -match '^[0-9]' } |
+            Select-Object -Last 1).Trim()
+          $tagVersion = $env:RELEASE_TAG.Substring('windows-v'.Length)
+          if ($projectVersion -cne $tagVersion) {
+            throw "Release tag '$tagVersion' does not match project version '$projectVersion'."
+          }
+          if ($projectVersion -notmatch '^(?<core>\d+\.\d+\.\d+)') {
+            throw "Project version has no numeric SemVer core."
+          }
+          if (-not $env:PACKAGE_VERSION.StartsWith("$($Matches.core).", [StringComparison]::Ordinal)) {
+            throw "MSIX version '$env:PACKAGE_VERSION' must share project core '$($Matches.core)'."
+          }
+          $epoch = (& git show -s --format=%ct HEAD).Trim()
+          "SOURCE_DATE_EPOCH=$epoch" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "WINDOWS_PROJECT_VERSION=$projectVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Validate non-mutating Windows smoke harnesses
+        shell: pwsh
+        run: |
+          $windowsPowerShell = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+          foreach ($script in @(
+              "windows\scripts\test-msix-smoke-static.ps1",
+              "windows\scripts\test-portable-movement-smoke-static.ps1")) {
+            & $windowsPowerShell `
+              -NoLogo `
+              -NoProfile `
+              -NonInteractive `
+              -ExecutionPolicy Bypass `
+              -File $script
+            if ($LASTEXITCODE -ne 0) {
+              throw "Windows PowerShell 5.1 safety validation failed for '$script'."
+            }
+          }
+
+      - name: Decode, verify, and import signing certificate
+        shell: pwsh
+        env:
+          WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+          WINDOWS_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+          WINDOWS_SIGNING_PFX_SHA256: ${{ secrets.WINDOWS_SIGNING_PFX_SHA256 }}
+        run: |
+          foreach ($name in @(
+            "WINDOWS_SIGNING_PFX_BASE64",
+            "WINDOWS_SIGNING_PFX_PASSWORD",
+            "WINDOWS_SIGNING_PFX_SHA256")) {
+            if ([string]::IsNullOrWhiteSpace((Get-Item "env:$name").Value)) {
+              throw "Protected signing secret '$name' is missing."
+            }
+          }
+          $pfxBytes = [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64)
+          $actualHash = [Convert]::ToHexString(
+            [System.Security.Cryptography.SHA256]::HashData($pfxBytes)).ToLowerInvariant()
+          $expectedHash = ($env:WINDOWS_SIGNING_PFX_SHA256 -replace '\s', '').ToLowerInvariant()
+          if ($actualHash -cne $expectedHash) {
+            throw "Decoded signing PFX does not match WINDOWS_SIGNING_PFX_SHA256."
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP "claudeusage-signing.pfx"
+          [System.IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+          $password = ConvertTo-SecureString $env:WINDOWS_SIGNING_PFX_PASSWORD -AsPlainText -Force
+          $imported = @(Import-PfxCertificate `
+            -FilePath $pfxPath `
+            -CertStoreLocation Cert:\CurrentUser\My `
+            -Password $password)
+          try {
+            $certificate = $imported | Where-Object HasPrivateKey | Select-Object -First 1
+            if ($null -eq $certificate) {
+              throw "PFX contains no certificate with a private key."
+            }
+            if ($certificate.Subject -cne $env:WINDOWS_PACKAGE_PUBLISHER) {
+              throw "Certificate subject does not exactly match WINDOWS_PACKAGE_PUBLISHER."
+            }
+            $ekuExtensions = @($certificate.Extensions |
+              Where-Object { $_ -is [System.Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension] })
+            if ($ekuExtensions.Count -gt 0) {
+              $codeSigningOid = "1.3.6.1.5.5.7.3.3"
+              $hasCodeSigningEku = @($ekuExtensions |
+                ForEach-Object { $_.EnhancedKeyUsages } |
+                ForEach-Object { $_.Value }) -contains $codeSigningOid
+              if (-not $hasCodeSigningEku) {
+                throw "Certificate EKU does not permit code signing."
+              }
+            }
+            $keyUsageExtensions = @($certificate.Extensions |
+              Where-Object { $_ -is [System.Security.Cryptography.X509Certificates.X509KeyUsageExtension] })
+            foreach ($keyUsage in $keyUsageExtensions) {
+              if (($keyUsage.KeyUsages -band [System.Security.Cryptography.X509Certificates.X509KeyUsageFlags]::DigitalSignature) -eq 0) {
+                throw "Certificate key usage does not permit digital signatures."
+              }
+            }
+            if ($certificate.NotBefore.ToUniversalTime() -gt [DateTime]::UtcNow) {
+              throw "Signing certificate is not valid yet."
+            }
+            if ($certificate.NotAfter.ToUniversalTime() -lt [DateTime]::UtcNow.AddDays(30)) {
+              throw "Signing certificate expires in fewer than 30 days."
+            }
+            "WINDOWS_CERT_THUMBPRINT=$($certificate.Thumbprint)" |
+              Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            "WINDOWS_IMPORTED_CERT_THUMBPRINTS=$(($imported.Thumbprint | Sort-Object -Unique) -join ',')" |
+              Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          }
+          catch {
+            foreach ($thumbprint in ($imported.Thumbprint | Sort-Object -Unique)) {
+              Remove-Item -LiteralPath "Cert:\CurrentUser\My\$thumbprint" `
+                -Force `
+                -ErrorAction SilentlyContinue
+            }
+            Remove-Item -LiteralPath $pfxPath -Force -ErrorAction SilentlyContinue
+            throw
+          }
+
+      - name: Restore win-x64 dependencies
+        run: dotnet restore windows/ClaudeUsage.Windows.sln --runtime win-x64 --configfile windows/NuGet.Config --locked-mode
+
+      - name: Run tests
+        run: dotnet test windows/ClaudeUsage.Windows.sln --configuration Release --no-restore --logger "console;verbosity=normal"
+
+      - name: Build, sign, and checksum release candidate
+        shell: pwsh
+        run: |
+          ./windows/scripts/package.ps1 `
+            -Runtime win-x64 `
+            -SkipRestore `
+            -SkipTests `
+            -IncludeMsix `
+            -RequireMsix `
+            -RequireSignature `
+            -MakeAppxPath $env:WINDOWS_MAKEAPPX_PATH `
+            -SignToolPath $env:WINDOWS_SIGNTOOL_PATH `
+            -PackageName $env:WINDOWS_PACKAGE_NAME `
+            -Publisher $env:WINDOWS_PACKAGE_PUBLISHER `
+            -PublisherDisplayName $env:WINDOWS_PUBLISHER_DISPLAY_NAME `
+            -PackageVersion $env:PACKAGE_VERSION `
+            -PreviousPublicPackageVersion $env:PREVIOUS_PUBLIC_PACKAGE_VERSION `
+            -AppInstallerUri $env:APPINSTALLER_URI `
+            -PackageUri $env:PACKAGE_URI `
+            -CertificateThumbprint $env:WINDOWS_CERT_THUMBPRINT `
+            -TimestampUrl $env:WINDOWS_TIMESTAMP_URL
+
+      - name: Validate signed release candidate
+        shell: pwsh
+        run: |
+          ./windows/scripts/validate-package.ps1 `
+            -ArtifactRoot windows/artifacts `
+            -Runtime win-x64 `
+            -ExpectedVersion $env:WINDOWS_PROJECT_VERSION `
+            -RequireMsix `
+            -RequireAppInstaller `
+            -RequireSignature `
+            -PreviousPublicPackageVersion $env:PREVIOUS_PUBLIC_PACKAGE_VERSION `
+            -SignToolPath $env:WINDOWS_SIGNTOOL_PATH
+
+      - name: Smoke exact signed portable ZIP
+        shell: pwsh
+        run: |
+          ./windows/scripts/test-portable-smoke.ps1 `
+            -ZipPath "windows/artifacts/ClaudeUsage-Windows-$env:WINDOWS_PROJECT_VERSION-win-x64.zip"
+
+      - name: Remove signing material
+        if: ${{ always() }}
+        shell: pwsh
+        run: |
+          foreach ($thumbprint in ($env:WINDOWS_IMPORTED_CERT_THUMBPRINTS -split ',')) {
+            if (-not [string]::IsNullOrWhiteSpace($thumbprint)) {
+              Remove-Item -LiteralPath "Cert:\CurrentUser\My\$thumbprint" `
+                -Force `
+                -ErrorAction SilentlyContinue
+            }
+          }
+          $pfxPath = Join-Path $env:RUNNER_TEMP "claudeusage-signing.pfx"
+          if (Test-Path -LiteralPath $pfxPath) {
+            Remove-Item -LiteralPath $pfxPath -Force
+          }
+
+      - name: Upload signed release candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ClaudeUsage-Windows-${{ inputs.release_tag }}-signed
+          path: |
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.zip
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.zip.sha256
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.msix
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.msix.sha256
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.spdx.json
+            windows/artifacts/ClaudeUsage-Windows-*-win-x64.spdx.json.sha256
+            windows/artifacts/ClaudeUsage.appinstaller
+            windows/artifacts/ClaudeUsage.appinstaller.sha256
+            windows/artifacts/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Approve and publish the exact signed candidate
+    if: ${{ inputs.publish_release }}
+    needs: release-candidate
+    runs-on: windows-latest
+    timeout-minutes: 20
+    environment: windows-production-release
+    permissions:
+      contents: write
+      actions: read
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
+      PACKAGE_VERSION: ${{ inputs.package_version }}
+      PREVIOUS_PUBLIC_PACKAGE_VERSION: ${{ inputs.previous_public_package_version }}
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+
+      - name: Revalidate checked-in public MSIX version ledger
+        shell: pwsh
+        run: |
+          ./windows/scripts/validate-public-msix-ledger.ps1 `
+            -LedgerPath windows/packaging/public-msix-version-ledger.json `
+            -PreviousPublicPackageVersion $env:PREVIOUS_PUBLIC_PACKAGE_VERSION `
+            -CandidatePackageVersion $env:PACKAGE_VERSION `
+            -CandidateReleaseTag $env:RELEASE_TAG
+
+      - name: Download exact candidate from this workflow run
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          name: ClaudeUsage-Windows-${{ inputs.release_tag }}-signed
+          path: windows/artifacts
+
+      - name: Acquire pinned Windows SDK signature verifier
+        shell: pwsh
+        run: |
+          $tools = ./windows/scripts/get-windows-sdk-tools.ps1 `
+            -DestinationRoot (Join-Path $env:RUNNER_TEMP "windows-sdk-tools")
+          "WINDOWS_SIGNTOOL_PATH=$($tools.SignToolPath)" |
+            Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Revalidate downloaded candidate
+        shell: pwsh
+        run: |
+          ./windows/scripts/validate-package.ps1 `
+            -ArtifactRoot windows/artifacts `
+            -Runtime win-x64 `
+            -ExpectedVersion ($env:RELEASE_TAG.Substring('windows-v'.Length)) `
+            -RequireMsix `
+            -RequireAppInstaller `
+            -RequireSignature `
+            -PreviousPublicPackageVersion $env:PREVIOUS_PUBLIC_PACKAGE_VERSION `
+            -SignToolPath $env:WINDOWS_SIGNTOOL_PATH
+
+      - name: Create public GitHub release
+        shell: pwsh
+        run: |
+          $assets = Get-ChildItem windows/artifacts -File |
+            Where-Object {
+              $_.Name -match '^ClaudeUsage-Windows-.*-win-x64\.(zip|msix|spdx\.json)(\.sha256)?$' -or
+              $_.Name -in @("ClaudeUsage.appinstaller", "ClaudeUsage.appinstaller.sha256", "SHA256SUMS.txt")
+            } |
+            Sort-Object Name |
+            Select-Object -ExpandProperty FullName
+          $releaseArguments = @(
+            "--verify-tag",
+            "--latest=false",
+            "--title",
+            "ClaudeUsage for Windows $env:RELEASE_TAG",
+            "--notes-file",
+            "windows/SIGNED_RELEASE_NOTES.md"
+          )
+          $tagVersion = $env:RELEASE_TAG.Substring('windows-v'.Length)
+          if ($tagVersion -match '^\d+\.\d+\.\d+-') {
+            $releaseArguments += "--prerelease"
+          }
+          & gh release create $env:RELEASE_TAG @releaseArguments @assets
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitHub release creation failed with exit code $LASTEXITCODE."
+          }

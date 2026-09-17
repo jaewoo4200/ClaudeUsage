@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ClaudeUsage.Startup</AssemblyName>
+    <RootNamespace>ClaudeUsage.Startup</RootNamespace>
+    <ApplicationIcon>..\ClaudeUsage.Windows\Assets\App.ico</ApplicationIcon>
+  </PropertyGroup>
+</Project>

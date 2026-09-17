@@ -1,27 +1,30 @@
 # Usage history, privacy, and provider policy
 
-Last reviewed: 2026-07-10
+Last reviewed: 2026-07-14
 
 This document describes what ClaudeUsage reads and stores, and records the current provider-policy assessment. It is a technical assessment, not legal advice.
 
 ## What the history feature stores
 
-Usage history is **off by default**. When the user enables it, the app writes one local JSON file at:
+Usage history is **off by default**. When the user enables it, the app writes one platform-local JSON file:
 
 ```text
-~/Library/Application Support/ClaudeUsage/usage-history.json
+macOS:   ~/Library/Application Support/ClaudeUsage/usage-history.json
+Windows: %LOCALAPPDATA%\ClaudeUsage\usage-history.json
 ```
 
 The file contains only timestamps, quota percentages, model-limit identifiers and display names, and daily token totals. It does not store prompts, responses, filenames, project names, account identifiers, cookies, or access tokens.
 
 - Sampling interval: five minutes, plus immediate samples when a quota reset is detected
-- Retention: 14 days
-- Deletion: Settings > Companion > Clear usage history
-- Reinstallation: deleting the `.app` bundle does not remove `usage-history.json`; the Settings action is required to delete ClaudeUsage's retained samples
+- Retention: 14 days; the Windows developer alpha additionally caps the file at 4,200 samples
+- Deletion on macOS: Settings > Companion > Clear usage history
+- Deletion on Windows: Settings > Companion > Clear local history; the confirmation explicitly identifies `usage-history.json`
+- Reinstallation: deleting the macOS `.app` bundle or the extracted Windows ZIP folder does not remove the platform-local history file; use the Settings action to delete ClaudeUsage's retained samples
 - Network: history data is never uploaded by ClaudeUsage
-- Viewer: the local chart window can filter 1 hour, 24 hours, 7 days, or 14 days and All, Claude, or Codex
+- Viewer on macOS: the local chart window can filter 1 hour, 24 hours, 7 days, or 14 days and All, Claude, or Codex
+- Viewer on Windows: the standalone local chart window can filter 1 hour, 24 hours, 7 days, or 14 days and All, Claude, or Codex; bounded samples also drive the recent companion trend
 
-Clearing ClaudeUsage history does not delete Claude Code's `~/.claude/projects` files or any Codex/ChatGPT account data. Daily token totals are source-backed and may therefore reappear on the next refresh even after the local 14-day trend file is cleared.
+Clearing ClaudeUsage history deletes only the platform-local `usage-history.json`. It does not delete Claude Code's `~/.claude/projects` files on macOS, `%USERPROFILE%\.claude\projects` on Windows, or any Codex/ChatGPT account data. Daily token totals are source-backed and may therefore reappear on the next refresh after the local 14-day trend file is cleared.
 
 ## Peak pressure and companion thresholds
 
@@ -50,7 +53,7 @@ When history is enabled, the selected companion also uses the last hour of press
 
 The highest matching state wins. A quota drop of at least 15 percentage points followed by pressure below 60% can produce the Refreshed state for up to 30 minutes.
 
-Animation modes affect presentation only, not the state calculation. Auto updates target poses at an adaptive cadence and transitions for only 0.16 to 0.25 seconds depending on state. Lively updates every 0.25 seconds with a 0.16-second transition, while Still performs no continuous animation. Floating-widget animation is paused when that widget is hidden, and macOS Reduce Motion is always respected.
+Animation modes affect presentation only, not the state calculation. Auto updates target poses at an adaptive cadence and transitions for only 0.16 to 0.25 seconds depending on state. Lively updates every 0.25 seconds with a 0.16-second transition, while Still performs no continuous animation. Floating-widget animation is paused when that widget is hidden. macOS Reduce Motion and the Windows reduced-motion/animation preference are respected by their respective implementations.
 
 OpenAI daily token buckets may not contain the current calendar day while a Codex task is still active. In that case the companion continues to react to the live quota-percentage trend and adds token deltas later when the official bucket becomes available.
 
@@ -59,9 +62,10 @@ OpenAI daily token buckets may not contain the current calendar day while a Code
 | Provider | Source | Scope | Important limitation |
 |---|---|---|---|
 | OpenAI | Documented Codex app-server `account/usage/read` | ChatGPT account token-activity daily buckets | Buckets can lag behind the current session; token totals and quota percentages are different metrics |
-| Claude | Local `~/.claude/projects/**/*.jsonl` files | Claude Code activity present on this Mac | Does not include claude.ai web or other devices; cache tokens are included |
+| Claude on macOS | Local `~/.claude/projects/**/*.jsonl` files | Claude Code activity present on this Mac | Does not include claude.ai web or other devices; cache tokens are included |
+| Claude on Windows | Local `%USERPROFILE%\.claude\projects\**\*.jsonl` files | Claude Code activity present on this PC | Same scope limitation; scanning is gated by the same opt-in as Windows history |
 
-ClaudeUsage reads only the structured timestamp and usage-number fields needed for aggregation. It does not retain message content from Claude Code logs. Local token totals are refreshed at most once every five minutes.
+ClaudeUsage reads only the structured timestamp and numeric usage fields needed for aggregation. It does not retain message content from Claude Code logs or copy the source JSONL into its history. Local token totals are refreshed at most once every five minutes. The Claude Code JSONL files are input sources; ClaudeUsage's own retained history is the separate regular JSON file listed above.
 
 ## Quota and reset-credit sources
 
@@ -92,7 +96,7 @@ Claude's current quota source is an undocumented claude.ai usage endpoint authen
 
 Anthropic documents interactive Claude Code commands such as `/usage` and `/cost` in its [Claude Code cheatsheet](https://support.claude.com/en/articles/14553413-claude-code-cheatsheet), but no supported consumer quota API for third-party background widgets was found during this review. Therefore:
 
-- Local analysis of files already stored on the user's Mac is lower risk because it does not access Anthropic's service.
+- Local analysis of files already stored on the user's Mac or Windows PC is lower risk because it does not access Anthropic's service.
 - The current automatic claude.ai quota request has a material terms-of-service risk.
 - Public or commercial distribution should wait for written Anthropic permission or a documented supported usage API.
 

@@ -1,0 +1,14 @@
+[
+  {
+    "uuid": "redacted-org-001",
+    "name": "Redacted Team",
+    "capabilities": ["chat", "claude_max"],
+    "rate_limit_tier": "default_claude_max_20x"
+  },
+  {
+    "uuid": "redacted-org-002",
+    "name": "Unused Organization",
+    "capabilities": ["claude_pro"],
+    "rate_limit_tier": "pro"
+  }
+]
