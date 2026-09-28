@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg">Download v1.6.2</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg">Download v1.6.3</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
@@ -160,11 +160,13 @@ The Codex responses used by this integration provide quota utilization and accou
 
 ## 🚀 Installation (Users)
 
-1. Download [ClaudeUsage-1.6.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. Download [ClaudeUsage-1.6.3.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
 > **Requirement for Codex usage:** ChatGPT/Codex or a compatible Codex executable must be installed, with a valid signed-in Codex session. **The GUI app does not need to stay open.** ClaudeUsage starts a local `codex app-server` process whenever it refreshes.
+
+> **v1.6.3 compatibility patch:** Supports both the new `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex` bundle layout and the legacy `Contents/Resources/codex` executable. Apps in `/Applications` and `~/Applications`, plus existing CLI install locations, are checked on each refresh. Update ClaudeUsage if Codex stopped connecting after a desktop app update; there is no need to reset login credentials or usage history. Null reset-credit details no longer fail the entire quota response.
 
 ## 🔑 Read before first launch
 
@@ -352,7 +354,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.6.2.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.6.3.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon

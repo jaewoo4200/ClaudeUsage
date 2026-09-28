@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg">v1.6.2 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg">v1.6.3 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
 </p>
 
 ---
@@ -160,11 +160,13 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 🚀 설치 (사용자)
 
-1. [ClaudeUsage-1.6.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.2/ClaudeUsage-1.6.2.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. [ClaudeUsage-1.6.3.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. dmg 열기 → `Applications` 폴더로 드래그
 3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
 
 > **Codex 사용량 표시 조건:** ChatGPT/Codex 앱 또는 호환되는 Codex 실행 파일이 설치되어 있고, 해당 Codex 세션에 로그인되어 있어야 합니다. **GUI 앱을 계속 켜 둘 필요는 없습니다.** ClaudeUsage가 조회할 때 로컬 `codex app-server` 프로세스를 직접 시작합니다.
+
+> **v1.6.3 연결 호환성 패치:** 최신 ChatGPT/Codex 앱의 `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex`와 기존 `Contents/Resources/codex`를 모두 지원합니다. `/Applications`, `~/Applications`의 앱과 기존 CLI 설치 경로를 조회할 때마다 확인합니다. 앱 업데이트 후 Codex가 연결되지 않는다면 ClaudeUsage를 업데이트하세요. 로그인 정보나 사용 기록을 초기화할 필요는 없습니다. 초기화권 상세가 서버에서 `null`로 오는 경우에도 한도 조회를 유지합니다.
 
 ## 🔑 처음 실행할 때 읽어주세요
 
@@ -352,7 +354,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.6.2.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.6.3.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성

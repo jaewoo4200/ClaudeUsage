@@ -101,16 +101,26 @@ enum CodexAppServerUsageService {
         )
     }
 
-    private static func executableURL() -> URL? {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let candidates = [
-            "/Applications/ChatGPT.app/Contents/Resources/codex",
-            "/Applications/Codex.app/Contents/Resources/codex",
+    static func executableURL(
+        homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
+        isExecutableFile: (String) -> Bool = FileManager.default.isExecutableFile(atPath:)
+    ) -> URL? {
+        let home = homeDirectory.path
+        // Recent desktop builds embed the CLI in a nested signed app bundle.
+        let bundledCandidates = ["/Applications", "\(home)/Applications"].flatMap { directory in
+            ["ChatGPT.app", "Codex.app"].flatMap { app in
+                [
+                    "\(directory)/\(app)/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+                    "\(directory)/\(app)/Contents/Resources/codex"
+                ]
+            }
+        }
+        let candidates = bundledCandidates + [
             "\(home)/.local/bin/codex",
             "/opt/homebrew/bin/codex",
             "/usr/local/bin/codex"
         ]
-        return candidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) })
+        return candidates.first(where: isExecutableFile)
             .map(URL.init(fileURLWithPath:))
     }
 }
@@ -322,6 +332,16 @@ struct CodexRateLimitsResult: Decodable {
 struct CodexRateLimitResetCredits: Decodable {
     let availableCount: Int
     let credits: [CodexRateLimitResetCredit]
+
+    enum CodingKeys: String, CodingKey {
+        case availableCount, credits
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        availableCount = try container.decode(Int.self, forKey: .availableCount)
+        credits = try container.decodeIfPresent([CodexRateLimitResetCredit].self, forKey: .credits) ?? []
+    }
 }
 
 struct CodexRateLimitResetCredit: Decodable {
