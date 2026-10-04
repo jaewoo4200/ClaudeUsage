@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 enum WidgetProvider: String, CaseIterable, Identifiable {
     case claude
@@ -60,12 +61,16 @@ struct WidgetView: View {
                     userInfo: ["size": size, "panelID": panelID]
                 )
             }
+            .modifier(WidgetWindowDrag(panelID: panelID))
     }
 
     @ViewBuilder
     private var layout: some View {
         if let provider {
             SingleProviderWidget(provider: provider)
+        } else if let only = settings.onlyVisibleProvider {
+            // 서비스를 하나만 켜면 배치와 상관없이 그 서비스 한 장
+            SingleProviderWidget(provider: only)
         } else {
             switch settings.widgetLayoutMode {
             case .stacked, .separate:
@@ -76,6 +81,41 @@ struct WidgetView: View {
                 PagedWidget()
             }
         }
+    }
+}
+
+/// 위젯 창을 끌어서 옮긴다.
+/// 창의 isMovableByWindowBackground만으로는 안 움직인다: SwiftUI 호스팅 뷰가 마우스 누름을 직접 받아 창까지 넘기지 않기 때문.
+/// 그래서 위젯 아무 곳(버튼 제외)이나 3pt 이상 끌면 커서가 움직인 만큼 창을 옮기고, 놓으면 위치를 저장한다.
+private struct WidgetWindowDrag: ViewModifier {
+    let panelID: String
+    @State private var start: (mouse: NSPoint, origin: NSPoint, window: NSWindow)?
+
+    func body(content: Content) -> some View {
+        content.gesture(
+            DragGesture(minimumDistance: 3)
+                .onChanged { value in
+                    let mouse = NSEvent.mouseLocation          // 화면 좌표(아래가 0)
+                    if start == nil, let window = Self.window(at: mouse) {
+                        // 끌기가 인식되기 전 움직인 거리만큼 되돌려 처음 누른 곳을 기준으로 삼는다
+                        let pressed = NSPoint(x: mouse.x - value.translation.width,
+                                              y: mouse.y + value.translation.height)
+                        start = (pressed, window.frame.origin, window)
+                    }
+                    guard let start else { return }
+                    start.window.setFrameOrigin(NSPoint(x: start.origin.x + mouse.x - start.mouse.x,
+                                                        y: start.origin.y + mouse.y - start.mouse.y))
+                }
+                .onEnded { _ in
+                    if let start { WidgetPositionStore.save(start.window.frame.origin, id: panelID) }
+                    start = nil
+                }
+        )
+    }
+
+    private static func window(at mouse: NSPoint) -> NSWindow? {
+        if let window = NSApp.currentEvent?.window, window is FloatingPanel { return window }
+        return NSApp.windows.first { $0 is FloatingPanel && $0.isVisible && $0.frame.contains(mouse) }
     }
 }
 
@@ -110,7 +150,7 @@ private struct StackedWidget: View {
         }
         .padding(18)
         .frame(width: 240)
-        .background(WidgetPanelSurface(theme: theme.current))
+        .widgetPanelSurface(theme.current)
     }
 }
 
@@ -123,19 +163,13 @@ private struct HorizontalWidget: View {
         let tokens = theme.current.tokens
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
-                ProviderWidgetSection(provider: .claude, showsBreakdown: false)
+                ProviderWidgetSection(provider: .claude, contentWidth: WidgetGaugeWidth.horizontalColumn)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
                 Divider().background(tokens.divider)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    ProviderWidgetSection(provider: .openAI)
-                    if let breakdown = vm.claudeWeeklyBreakdown {
-                        Divider().background(tokens.divider)
-                        UsageBreakdownView(breakdown: breakdown, includesProvider: true)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                ProviderWidgetSection(provider: .openAI, contentWidth: WidgetGaugeWidth.horizontalColumn)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .fixedSize(horizontal: false, vertical: true)
 
@@ -154,7 +188,7 @@ private struct HorizontalWidget: View {
         }
         .padding(16)
         .frame(width: 480)
-        .background(WidgetPanelSurface(theme: theme.current))
+        .widgetPanelSurface(theme.current)
     }
 }
 
@@ -345,7 +379,7 @@ private struct PagedWidget: View {
         }
         .padding(18)
         .frame(width: 240)
-        .background(WidgetPanelSurface(theme: theme.current))
+        .widgetPanelSurface(theme.current)
     }
 
     private func pageButton(systemName: String, helpKey: String) -> some View {
@@ -383,7 +417,7 @@ private struct SingleProviderWidget: View {
         }
         .padding(18)
         .frame(width: 240)
-        .background(WidgetPanelSurface(theme: theme.current))
+        .widgetPanelSurface(theme.current)
     }
 }
 
@@ -391,7 +425,8 @@ private struct SingleProviderWidget: View {
 
 private struct ProviderWidgetSection: View {
     let provider: WidgetProvider
-    var showsBreakdown = true
+    /// 줄이 차지하는 폭. 세로·전환·분리 위젯은 240 − 여백 18×2
+    var contentWidth: CGFloat = WidgetGaugeWidth.narrow
 
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
@@ -402,11 +437,8 @@ private struct ProviderWidgetSection: View {
             providerHeader
             if provider == .claude {
                 if vm.snapshot != nil {
-                    metricRows(vm.claudeDisplayMetrics)
-                    if showsBreakdown, let breakdown = vm.claudeWeeklyBreakdown {
-                        Divider().background(theme.current.tokens.divider)
-                        UsageBreakdownView(breakdown: breakdown)
-                    }
+                    // 주간 구성은 7일 줄 안에 접혀 있다가 호버·"구성" 버튼으로 펼친다
+                    metricRows(vm.claudeDisplayMetrics, breakdown: vm.claudeWeeklyBreakdown)
                 } else {
                     EmptyStateInline()
                 }
@@ -423,27 +455,41 @@ private struct ProviderWidgetSection: View {
         vm.openAIDisplayMetrics(includingSpark: settings.showOpenAISparkLimits)
     }
 
-    @ViewBuilder
-    private func metricRows(_ metrics: [UsageDisplayMetric]) -> some View {
-        ForEach(metrics) { metric in
-            WidgetMetricRow(metric: metric)
-        }
+    private func metricRows(_ metrics: [UsageDisplayMetric], breakdown: UsageBreakdown? = nil) -> some View {
+        GaugeMetricList(
+            metrics: metrics,
+            breakdown: breakdown,
+            theme: theme.current,
+            style: .widget(width: contentWidth)
+        )
     }
 
     private var providerHeader: some View {
-        let tokens = theme.current.tokens
-        return HStack(spacing: 6) {
-            HStack(spacing: 7) {
-                if theme.current != .toss {
-                    providerIcon(size: theme.current == .hybrid ? 22 : 20)
-                }
-                Text(theme.current == .toss ? provider.displayName.uppercased() : provider.displayName)
-                    .font(.system(size: theme.current == .hybrid ? 12 : 11, weight: .heavy))
-                    .foregroundStyle(provider == .claude ? tokens.accent : tokens.textPrimary)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 8)
-            providerStatus
+        // 드롭다운과 같은 헤더를 작게: 앱 아이콘 + 이름(오른쪽 위 연결 점) + 요금제 작은 대문자
+        GaugeProviderHeader(
+            name: provider.displayName,
+            nameColor: provider == .claude ? ProviderNameColor.claude : ProviderNameColor.codex,
+            plan: providerPlan,
+            isLoaded: providerIsLoaded,
+            tokens: theme.current.tokens,
+            compact: true
+        ) {
+            providerIcon(size: 18)
+        }
+    }
+
+    private var providerIsLoaded: Bool {
+        switch provider {
+        case .claude: return vm.snapshot != nil
+        case .openAI: return vm.openAIState.isLoaded
+        }
+    }
+
+    private var providerPlan: String? {
+        guard providerIsLoaded else { return nil }
+        switch provider {
+        case .claude: return vm.plan.displayName
+        case .openAI: return vm.openAIPlanDisplayName
         }
     }
 
@@ -456,172 +502,25 @@ private struct ProviderWidgetSection: View {
             CodexProviderIcon(size: size)
         }
     }
-
-    @ViewBuilder
-    private var providerStatus: some View {
-        let tokens = theme.current.tokens
-        switch provider {
-        case .claude:
-            if vm.snapshot != nil {
-                PlanBadge(plan: vm.plan, theme: theme.current)
-                    .scaleEffect(theme.current == .hybrid ? 0.9 : 0.85)
-            } else {
-                Circle().fill(tokens.ok).frame(width: 6, height: 6)
-            }
-        case .openAI:
-            if vm.openAIState.isLoaded {
-                TextPlanBadge(
-                    displayName: vm.openAIPlanDisplayName,
-                    compactName: vm.openAIPlanCompactName,
-                    theme: theme.current
-                )
-                .scaleEffect(theme.current == .hybrid ? 0.9 : 0.85)
-            } else {
-                Circle().fill(tokens.textTertiary).frame(width: 6, height: 6)
-            }
-        }
-    }
 }
 
-private struct WidgetMetricRow: View {
-    let metric: UsageDisplayMetric
-    @EnvironmentObject var theme: ThemeStore
-
-    var body: some View {
-        let tokens = theme.current.tokens
-        Group {
-            switch theme.current {
-            case .daangn:
-                MetricRowRing(
-                    title: metric.title,
-                    utilization: metric.utilization,
-                    resetsAt: metric.resetsAt,
-                    isWeekly: metric.isWeekly,
-                    tokens: tokens
-                )
-            case .toss:
-                MetricRowBar(
-                    title: metric.title,
-                    utilization: metric.utilization,
-                    resetsAt: metric.resetsAt,
-                    isWeekly: metric.isWeekly,
-                    tokens: tokens
-                )
-            case .hybrid:
-                MetricRowHybrid(
-                    title: metric.title,
-                    utilization: metric.utilization,
-                    resetsAt: metric.resetsAt,
-                    isWeekly: metric.isWeekly,
-                    tokens: tokens
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Theme metric rows
-
-private struct MetricRowRing: View {
-    let title: String
-    let utilization: Double
-    let resetsAt: Date?
-    let isWeekly: Bool
-    let tokens: DesignTokens
-
-    var body: some View {
-        HStack(spacing: 12) {
-            RingView(
-                progress: utilization,
-                size: 48,
-                lineWidth: 5,
-                label: "\(Int(round(utilization)))%",
-                tokens: tokens
-            )
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(tokens.textTertiary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                CountdownText(resetsAt: resetsAt, isWeekly: isWeekly)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(tokens.textPrimary)
-            }
-            Spacer(minLength: 0)
-        }
-    }
-}
-
-private struct MetricRowBar: View {
-    let title: String
-    let utilization: Double
-    let resetsAt: Date?
-    let isWeekly: Bool
-    let tokens: DesignTokens
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline) {
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text("\(Int(round(utilization)))")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(tokens.textPrimary)
-                        .monospacedDigit()
-                    Text("%")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(tokens.textTertiary)
-                }
-                Spacer()
-                CountdownText(resetsAt: resetsAt, isWeekly: isWeekly)
-                    .font(.system(size: 10))
-                    .foregroundStyle(tokens.textTertiary)
-            }
-            Text(title)
-                .font(.system(size: 10))
-                .foregroundStyle(tokens.textSecondary)
-                .lineLimit(2)
-                .minimumScaleFactor(0.75)
-            LinearBar(progress: utilization, height: 5, tokens: tokens)
-        }
-    }
-}
-
-private struct MetricRowHybrid: View {
-    let title: String
-    let utilization: Double
-    let resetsAt: Date?
-    let isWeekly: Bool
-    let tokens: DesignTokens
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(title)
-                    .font(.system(size: 10, weight: .heavy))
-                    .foregroundStyle(tokens.textTertiary)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.75)
-                Spacer()
-                CountdownText(resetsAt: resetsAt, isWeekly: isWeekly)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(tokens.textPrimary)
-            }
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text("\(Int(round(utilization)))")
-                    .font(.system(size: 20, weight: .heavy))
-                    .foregroundStyle(tokens.textPrimary)
-                    .monospacedDigit()
-                Text("%")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(tokens.textTertiary)
-            }
-            LinearBar(progress: utilization, height: 7, tokens: tokens, gradient: true)
-        }
-    }
+/// 위젯 줄 폭 (WidgetView 레이아웃 치수에서 계산)
+enum WidgetGaugeWidth {
+    /// 세로·전환·분리: 240 − 여백 18×2
+    static let narrow: CGFloat = 204
+    /// 가로: (480 − 여백 16×2 − 간격 12×2 − 구분선 1) ÷ 2
+    static let horizontalColumn: CGFloat = 211
 }
 
 // MARK: - Common
+
+extension View {
+    /// 위젯 판을 깐다. 빛 번짐(헤일로·오라)이 둥근 모서리 밖 투명한 창 영역으로 새지 않도록 내용을 판 모양으로 자른다.
+    func widgetPanelSurface(_ theme: ThemeKind) -> some View {
+        let shape = RoundedRectangle(cornerRadius: theme.tokens.cornerOuter, style: .continuous)
+        return clipShape(shape).background(WidgetPanelSurface(theme: theme))
+    }
+}
 
 private struct WidgetPanelSurface: View {
     let theme: ThemeKind

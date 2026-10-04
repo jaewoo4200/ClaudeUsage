@@ -46,6 +46,11 @@ final class UsageViewModel: ObservableObject {
     private var refreshTask: Task<Void, Never>?
     private var timerTask: Task<Void, Never>?
     private var lastLocalTokenFetchAt: Date?
+    private var visibilityObserver: NSObjectProtocol?
+
+    /// 설정 > 표시할 서비스. 꺼진 서비스는 가져오지 않고, 합계·Mimo·기록에서도 뺀다.
+    private var showsClaude: Bool { AppSettings.shared.showClaude }
+    private var showsCodex: Bool { AppSettings.shared.showCodex }
 
     init(autoStart: Bool = true) {
         let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -191,7 +196,9 @@ final class UsageViewModel: ObservableObject {
         calendar: Calendar = .current
     ) -> TodayTokenSummary {
         let claude: TodayTokenState
-        if !localCollectionEnabled {
+        if !showsClaude {
+            claude = .hidden
+        } else if !localCollectionEnabled {
             claude = .disabled
         } else if let count = claudeLocalTokenUsage?.tokens(on: now, calendar: calendar) {
             claude = .available(count)
@@ -200,7 +207,9 @@ final class UsageViewModel: ObservableObject {
         }
 
         let codex: TodayTokenState
-        if let count = openAIUsage?.tokenActivity?.tokens(on: now, calendar: calendar) {
+        if !showsCodex {
+            codex = .hidden
+        } else if let count = openAIUsage?.tokenActivity?.tokens(on: now, calendar: calendar) {
             codex = .available(count)
         } else {
             switch openAIState {
@@ -211,7 +220,7 @@ final class UsageViewModel: ObservableObject {
         return TodayTokenSummary(
             claude: claude,
             codex: codex,
-            latestCodexBucket: openAIUsage?.tokenActivity?.latestBucket(before: now, calendar: calendar)
+            latestCodexBucket: showsCodex ? openAIUsage?.tokenActivity?.latestBucket(before: now, calendar: calendar) : nil
         )
     }
 
@@ -260,27 +269,30 @@ final class UsageViewModel: ObservableObject {
                 )
             }
 
+        // 숨긴 서비스는 기록·Mimo 기분·위젯 요약에 넣지 않는다
+        let claudeOn = showsClaude && state.isLoaded
+        let codexOn = showsCodex && openAIState.isLoaded
         return UsageHistorySnapshot(
-            claudeFiveHour: state.isLoaded ? snapshot?.usage.fiveHour?.utilization : nil,
-            claudeWeekly: state.isLoaded ? snapshot?.usage.sevenDay?.utilization : nil,
-            claudeModelMaximum: claudeModelCounters.map(\.utilization).max(),
-            openAIFiveHour: openAIState.isLoaded ? openAIUsage?.rateLimit?.primaryWindow?.usedPercent : nil,
-            openAIWeekly: openAIState.isLoaded ? openAIUsage?.rateLimit?.secondaryWindow?.usedPercent : nil,
-            openAIModelMaximum: openAIModelCounters.map(\.utilization).max(),
-            claudeTodayTokens: claudeLocalTokenUsage?.tokens(on: now),
-            openAITodayTokens: openAIUsage?.tokenActivity?.tokens(on: now),
-            claudeModelCounters: claudeModelCounters,
-            openAIModelCounters: openAIModelCounters
+            claudeFiveHour: claudeOn ? snapshot?.usage.fiveHour?.utilization : nil,
+            claudeWeekly: claudeOn ? snapshot?.usage.sevenDay?.utilization : nil,
+            claudeModelMaximum: showsClaude ? claudeModelCounters.map(\.utilization).max() : nil,
+            openAIFiveHour: codexOn ? openAIUsage?.rateLimit?.primaryWindow?.usedPercent : nil,
+            openAIWeekly: codexOn ? openAIUsage?.rateLimit?.secondaryWindow?.usedPercent : nil,
+            openAIModelMaximum: showsCodex ? openAIModelCounters.map(\.utilization).max() : nil,
+            claudeTodayTokens: showsClaude ? claudeLocalTokenUsage?.tokens(on: now) : nil,
+            openAITodayTokens: showsCodex ? openAIUsage?.tokenActivity?.tokens(on: now) : nil,
+            claudeModelCounters: showsClaude ? claudeModelCounters : [],
+            openAIModelCounters: showsCodex ? openAIModelCounters : []
         )
     }
 
     var hasAnyLoadedProvider: Bool {
-        state.isLoaded || openAIState.isLoaded
+        (showsClaude && state.isLoaded) || (showsCodex && openAIState.isLoaded)
     }
 
     var highestPrimaryUtilization: Double {
-        [state.isLoaded ? fiveHourUtilization : nil,
-         openAIState.isLoaded ? openAIPrimaryUtilization : nil]
+        [showsClaude && state.isLoaded ? fiveHourUtilization : nil,
+         showsCodex && openAIState.isLoaded ? openAIPrimaryUtilization : nil]
             .compactMap { $0 }
             .max() ?? 0
     }
@@ -294,6 +306,12 @@ final class UsageViewModel: ObservableObject {
     func bootstrap() {
         state = CookieStore.load() == nil ? .needsLogin : .loading
         openAIState = OpenAIUsageService.hasLocalSession() ? .loading : .unavailable
+        // 서비스를 다시 켜면 다음 주기(1분)를 기다리지 않고 바로 가져온다
+        visibilityObserver = NotificationCenter.default.addObserver(
+            forName: AppSettings.providerVisibilityChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.refreshNow() }
+        }
         startAutoRefresh()
     }
 
@@ -334,8 +352,9 @@ final class UsageViewModel: ObservableObject {
         defer { isRefreshing = false }
 
         let shouldRecordHistory = AppSettings.shared.usageHistoryEnabled
-        async let claudeFetch: Void = fetchClaude()
-        async let openAIFetch: Void = fetchOpenAI()
+        // 꺼진 서비스는 가져오지 않는다(네트워크 요청·Codex 실행 없음)
+        async let claudeFetch: Void = fetchClaudeIfShown()
+        async let openAIFetch: Void = fetchOpenAIIfShown()
         async let localTokenFetch: ClaudeLocalTokenUsage? = fetchLocalClaudeTokens(enabled: shouldRecordHistory)
         let (_, _, localTokens) = await (claudeFetch, openAIFetch, localTokenFetch)
 
@@ -356,6 +375,16 @@ final class UsageViewModel: ObservableObject {
         let usage = await ClaudeLocalTokenUsageService.fetch(now: now)
         lastLocalTokenFetchAt = now
         return usage
+    }
+
+    private func fetchClaudeIfShown() async {
+        guard showsClaude else { return }
+        await fetchClaude()
+    }
+
+    private func fetchOpenAIIfShown() async {
+        guard showsCodex else { return }
+        await fetchOpenAI()
     }
 
     private func fetchClaude() async {

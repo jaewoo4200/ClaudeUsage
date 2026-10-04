@@ -4,6 +4,8 @@ import AppKit
 struct MenuBarLabel: View {
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var language: LanguageStore
+    /// 표시할 서비스. 메뉴 막대는 환경 객체 없이 그려지는 곳(테스트 등)이 있어 공유 설정을 직접 본다.
+    @ObservedObject private var settings = AppSettings.shared
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -12,6 +14,8 @@ struct MenuBarLabel: View {
             claudeUtilization: vm.state.isLoaded ? vm.fiveHourUtilization : nil,
             codexValue: codexValue,
             codexUtilization: vm.openAIState.isLoaded ? vm.openAIPrimaryUtilization : nil,
+            showsClaude: settings.showClaude,
+            showsCodex: settings.showCodex,
             colorScheme: colorScheme,
             weight: appKitTextWeight
         )
@@ -22,7 +26,14 @@ struct MenuBarLabel: View {
             .interpolation(.high)
             .frame(width: image.size.width, height: image.size.height)
             .fixedSize(horizontal: true, vertical: false)
-            .accessibilityLabel("Claude \(claudeValue), Codex \(codexValue)")
+            .accessibilityLabel(accessibilityText)
+    }
+
+    private var accessibilityText: String {
+        [settings.showClaude ? "Claude \(claudeValue)" : nil,
+         settings.showCodex ? "Codex \(codexValue)" : nil]
+            .compactMap { $0 }
+            .joined(separator: ", ")
     }
 
     private var claudeValue: String {
@@ -77,13 +88,16 @@ private enum MenuBarLabelRenderer {
         claudeUtilization: Double?,
         codexValue: String,
         codexUtilization: Double?,
+        showsClaude: Bool = true,
+        showsCodex: Bool = true,
         colorScheme: ColorScheme,
         weight: NSFont.Weight
     ) -> NSImage {
+        // 숨긴 서비스는 아이콘·%를 그리지 않는다
         let items = [
-            Item(provider: .claude, value: claudeValue, utilization: claudeUtilization),
-            Item(provider: .codex, value: codexValue, utilization: codexUtilization)
-        ]
+            showsClaude ? Item(provider: .claude, value: claudeValue, utilization: claudeUtilization) : nil,
+            showsCodex ? Item(provider: .codex, value: codexValue, utilization: codexUtilization) : nil
+        ].compactMap { $0 }
         let font = NSFont.monospacedDigitSystemFont(ofSize: 12.5, weight: weight)
         let attributes = items.map {
             textAttributes(
@@ -98,7 +112,7 @@ private enum MenuBarLabelRenderer {
         }
         let contentWidth = zip(items, textSizes).reduce(CGFloat.zero) { partial, pair in
             partial + iconSlotWidth + iconTextSpacing + ceil(pair.1.width)
-        } + providerSpacing
+        } + providerSpacing * CGFloat(max(0, items.count - 1))
 
         let image = NSImage(
             size: NSSize(width: ceil(contentWidth), height: imageHeight),

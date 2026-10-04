@@ -14,6 +14,15 @@ final class TodayTokenTests: XCTestCase {
         XCTAssertEqual(summary(.available(123), .pending).reportedTotal, 123)
     }
 
+    /// 설정 > 표시할 서비스에서 숨긴 서비스는 합계에서 뺀다
+    func testHiddenProviderIsLeftOutOfTotals() {
+        XCTAssertEqual(summary(.available(1_000), .hidden).total, 1_000)
+        XCTAssertEqual(summary(.hidden, .available(2_500)).total, 2_500)
+        XCTAssertEqual(summary(.hidden, .available(0)).total, 0)
+        XCTAssertNil(summary(.pending, .hidden).total)
+        XCTAssertEqual(summary(.hidden, .available(7)).reportedTotal, 7)
+    }
+
     @MainActor
     func testMissingDataIsNotLabeledAsZero() {
         let language = LanguageStore.shared

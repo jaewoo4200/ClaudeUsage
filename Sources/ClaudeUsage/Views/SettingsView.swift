@@ -61,6 +61,10 @@ struct SettingsView: View {
                     LanguagePickerRow()
                         .padding(.horizontal, 20)
 
+                    SectionHeader(title: "section_services".l)
+                    ServiceVisibilityRow()
+                        .padding(.horizontal, 20)
+
                     SectionHeader(title: "section_account".l)
                     VStack(spacing: 8) {
                         ClaudeAccountRow()
@@ -93,11 +97,15 @@ private struct SectionHeader: View {
     }
 }
 
-private struct ThemeRow: View {
+struct ThemeRow: View {
     let kind: ThemeKind
     let isSelected: Bool
     let action: () -> Void
+    /// 왼쪽 미리보기 그림 배율. 상자 높이(40)와 줄 높이는 그대로 두고 그림만 키운다.
+    var previewScale: CGFloat = ThemeRow.previewScale
     @EnvironmentObject var theme: ThemeStore
+
+    static let previewScale: CGFloat = 2
 
     var body: some View {
         let active = theme.current.tokens
@@ -108,49 +116,8 @@ private struct ThemeRow: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(preview.bgSecondary)
-                        .frame(width: 56, height: 40)
-                    VStack(spacing: 4) {
-                        switch kind {
-                        case .daangn:
-                            HStack(spacing: 4) {
-                                Circle()
-                                    .trim(from: 0, to: 0.4)
-                                    .stroke(preview.accent, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                                    .rotationEffect(.degrees(-90))
-                                    .frame(width: 14, height: 14)
-                                Text("38%")
-                                    .font(.system(size: 8, weight: .heavy))
-                                    .foregroundStyle(preview.textPrimary)
-                            }
-                        case .toss:
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("38")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(preview.textPrimary)
-                                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                                    .fill(preview.accent)
-                                    .frame(width: 26, height: 3)
-                            }
-                        case .hybrid:
-                            VStack(alignment: .leading, spacing: 3) {
-                                HStack(spacing: 2) {
-                                    Text("38")
-                                        .font(.system(size: 10, weight: .heavy))
-                                        .foregroundStyle(preview.textPrimary)
-                                    Text("MAX")
-                                        .font(.system(size: 6, weight: .heavy))
-                                        .foregroundStyle(.white)
-                                        .padding(.horizontal, 2)
-                                        .padding(.vertical, 0.5)
-                                        .background(preview.textPrimary)
-                                        .clipShape(RoundedRectangle(cornerRadius: 2, style: .continuous))
-                                }
-                                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                                    .fill(LinearGradient(colors: [preview.accent, preview.accentSecondary], startPoint: .leading, endPoint: .trailing))
-                                    .frame(width: 30, height: 3)
-                            }
-                        }
-                    }
+                        .frame(width: max(56, 40 * previewScale + 8), height: 40)
+                    ThemeMiniPreview(kind: kind, scale: previewScale)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -200,7 +167,9 @@ struct WidgetSettingsRow: View {
                     Text("widget_layout".l)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(t.textPrimary)
-                    Text(settings.widgetLayoutMode.descriptionText)
+                    Text(settings.onlyVisibleProvider == nil
+                         ? settings.widgetLayoutMode.descriptionText
+                         : "widget_single_service_desc".l)
                         .font(.system(size: 11))
                         .foregroundStyle(t.textTertiary)
                         .lineLimit(2)
@@ -209,19 +178,22 @@ struct WidgetSettingsRow: View {
             }
             .padding(12)
 
-            Picker("widget_layout".l, selection: $settings.widgetLayoutMode) {
-                ForEach(WidgetLayoutMode.allCases) { mode in
-                    Label(mode.displayName, systemImage: mode.systemSymbol)
-                        .tag(mode)
-                        .help(mode.descriptionText)
+            // 서비스를 하나만 켜면 위젯은 한 장이라 배치를 고를 게 없다
+            if settings.onlyVisibleProvider == nil {
+                Picker("widget_layout".l, selection: $settings.widgetLayoutMode) {
+                    ForEach(WidgetLayoutMode.allCases) { mode in
+                        Label(mode.displayName, systemImage: mode.systemSymbol)
+                            .tag(mode)
+                            .help(mode.descriptionText)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .padding(.horizontal, 10)
+                .padding(.bottom, 10)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .padding(.horizontal, 10)
-            .padding(.bottom, 10)
 
-            if settings.widgetLayoutMode == .separate {
+            if settings.onlyVisibleProvider == nil && settings.widgetLayoutMode == .separate {
                 Divider().background(t.divider)
                 VStack(alignment: .leading, spacing: 8) {
                     Text("separate_widgets".l)
@@ -270,32 +242,36 @@ struct WidgetSettingsRow: View {
             }
             .padding(12)
 
-            Divider().background(t.divider)
+            // Spark 한도 표시는 Codex를 켰을 때만
+            if settings.showCodex {
+                Divider().background(t.divider)
 
-            HStack(spacing: 12) {
-                settingIcon("bolt.fill")
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("show_spark_limits".l)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(t.textPrimary)
-                        .lineLimit(2)
-                    Text("show_spark_limits_desc".l)
-                        .font(.system(size: 11))
-                        .foregroundStyle(t.textTertiary)
-                        .lineLimit(2)
+                HStack(spacing: 12) {
+                    settingIcon("bolt.fill")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("show_spark_limits".l)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(t.textPrimary)
+                            .lineLimit(2)
+                        Text("show_spark_limits_desc".l)
+                            .font(.system(size: 11))
+                            .foregroundStyle(t.textTertiary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $settings.showOpenAISparkLimits)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                        .tint(t.accent)
+                        .labelsHidden()
                 }
-                Spacer()
-                Toggle("", isOn: $settings.showOpenAISparkLimits)
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-                    .tint(t.accent)
-                    .labelsHidden()
+                .padding(12)
             }
-            .padding(12)
         }
         .background(t.bgSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .animation(.easeInOut(duration: 0.18), value: settings.widgetLayoutMode)
+        .animation(.easeInOut(duration: 0.18), value: settings.visibleProviders)
     }
 
     private func settingIcon(_ systemName: String) -> some View {
@@ -580,6 +556,71 @@ struct CompanionSettingsRow: View {
     }
 }
 
+/// 표시할 서비스: Claude·Codex를 각각 켜고 끈다. 언어 버튼과 같은 모양.
+/// 하나만 남으면 그 버튼은 자물쇠로 잠겨서 둘 다 끌 수 없다.
+struct ServiceVisibilityRow: View {
+    @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var settings: AppSettings
+
+    var body: some View {
+        let t = theme.current.tokens
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                chip(.claude, title: "Claude", isOn: $settings.showClaude,
+                     locked: settings.showClaude && !settings.showCodex, tokens: t)
+                chip(.codex, title: "Codex", isOn: $settings.showCodex,
+                     locked: settings.showCodex && !settings.showClaude, tokens: t)
+            }
+            Text("services_desc".l)
+                .font(.system(size: 11))
+                .foregroundStyle(t.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func chip(_ provider: ProviderBrand, title: String, isOn: Binding<Bool>,
+                      locked: Bool, tokens t: DesignTokens) -> some View {
+        Button {
+            guard !locked else { return }
+            withAnimation(.easeInOut(duration: 0.15)) { isOn.wrappedValue.toggle() }
+        } label: {
+            HStack(spacing: 8) {
+                ProviderBrandIcon(provider: provider, size: 18)
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(isOn.wrappedValue ? Color.white : t.textPrimary)
+                Spacer(minLength: 0)
+                Image(systemName: isOn.wrappedValue ? (locked ? "lock.fill" : "checkmark.circle.fill") : "circle")
+                    .font(.system(size: locked ? 10 : 13, weight: .bold))
+                    .foregroundStyle(isOn.wrappedValue ? Color.white.opacity(locked ? 0.7 : 1) : t.textTertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity)
+            .background(isOn.wrappedValue ? t.accent : t.bgSecondary)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(locked ? "services_last_one_help".l : "")
+        .accessibilityLabel(title)
+        .accessibilityValue(isOn.wrappedValue ? "services_shown".l : "provider_hidden".l)
+    }
+}
+
+/// 계정 줄의 "숨김" 표시
+private struct HiddenServiceTag: View {
+    let tokens: DesignTokens
+    var body: some View {
+        Text("provider_hidden".l)
+            .font(.system(size: 9.5, weight: .bold))
+            .foregroundStyle(tokens.textTertiary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .overlay(Capsule().stroke(tokens.textTertiary.opacity(0.6), lineWidth: 1))
+    }
+}
+
 private struct AppearancePickerRow: View {
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var settings: AppSettings
@@ -646,15 +687,19 @@ private struct LanguagePickerRow: View {
 private struct ClaudeAccountRow: View {
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var settings: AppSettings
     var body: some View {
         let t = theme.current.tokens
         HStack(spacing: 12) {
             ClaudeProviderIcon(size: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text(vm.organizationName ?? "Claude")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(t.textPrimary)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(vm.organizationName ?? "Claude")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(t.textPrimary)
+                        .lineLimit(1)
+                    if !settings.showClaude { HiddenServiceTag(tokens: t) }
+                }
                 if vm.state.isLoaded {
                     PlanBadge(plan: vm.plan, theme: theme.current)
                         .scaleEffect(0.85)
@@ -689,16 +734,20 @@ private struct ClaudeAccountRow: View {
 private struct OpenAIAccountRow: View {
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var settings: AppSettings
 
     var body: some View {
         let tokens = theme.current.tokens
         HStack(spacing: 12) {
             CodexProviderIcon(size: 36)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Codex")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(tokens.textPrimary)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text("Codex")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(tokens.textPrimary)
+                        .lineLimit(1)
+                    if !settings.showCodex { HiddenServiceTag(tokens: tokens) }
+                }
                 if vm.openAIState.isLoaded {
                     TextPlanBadge(
                         displayName: vm.openAIPlanDisplayName,
@@ -743,5 +792,71 @@ private struct OpenAIAccountRow: View {
     private func openUsagePage() {
         guard let url = URL(string: "https://chatgpt.com/codex/cloud/settings/analytics#usage") else { return }
         NSWorkspace.shared.open(url)
+    }
+}
+
+/// 설정 테마 목록의 작은 미리보기. 실제 게이지와 같은 모양을 38%로 줄여 그린다.
+/// 도넛: 색 띠 고리 + 헤일로, 헤일로 바: 그라데이션 막대 + 번지는 빛, 오라: 흐린 빛 위 %.
+/// scale 1 = 폭 40pt 기준 크기. 모든 치수에 scale을 곱한다.
+struct ThemeMiniPreview: View {
+    let kind: ThemeKind
+    var scale: CGFloat = 1
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        let c = GaugePalette.colors(kind, .ok)
+        let dark = scheme == .dark
+        let s = scale
+        switch kind {
+        case .daangn:
+            HStack(spacing: 4 * s) {
+                DonutGauge(progress: 38, diameter: 18 * s)
+                Text("38%")
+                    .font(.custom(GaugeFonts.percentName, fixedSize: 10 * s))
+                    .tracking(-0.3 * s)
+                    .foregroundStyle(c.ink)
+            }
+        case .toss:
+            let w = 40 * s, h = 12 * s, r = 3 * s
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: r, style: .continuous)
+                    .fill(LinearGradient(colors: [c.deep, c.mid], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: w * 0.38, height: h)
+                    .blur(radius: 3 * s)
+                    .opacity(dark ? 0.75 : 0.55)
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: r, style: .continuous).fill(c.mid.opacity(dark ? 0.14 : 0.10))
+                    Rectangle()
+                        .fill(LinearGradient(stops: [.init(color: c.deep, location: 0), .init(color: c.mid, location: 0.6),
+                                                     .init(color: c.bright, location: 1)], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: w * 0.38)
+                    Text("38%")
+                        .font(.custom(GaugeFonts.percentName, fixedSize: 9 * s))
+                        .tracking(-0.27 * s)
+                        .foregroundStyle(c.ink)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.trailing, 3 * s)
+                }
+                .frame(width: w, height: h)
+                .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
+            }
+        case .hybrid:
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(EllipticalGradient(stops: [.init(color: c.deep, location: 0), .init(color: c.mid, location: 0.45),
+                                                     .init(color: c.bright.opacity(0), location: 1)],
+                                             center: .leading, startRadiusFraction: 0, endRadiusFraction: 1.2))
+                    .frame(width: 26 * s, height: 14 * s)
+                    .blur(radius: 4 * s)
+                    .opacity(dark ? 0.9 : 0.75)
+                Text("38%")
+                    .font(.custom(GaugeFonts.percentName, fixedSize: 10 * s))
+                    .tracking(-0.3 * s)
+                    .foregroundStyle(c.ink)
+                    .modifier(GaugeTextShadow())
+                    .frame(width: 40 * s, alignment: .trailing)
+            }
+            .frame(width: 40 * s, height: 14 * s)
+        }
     }
 }
