@@ -16,7 +16,7 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-4.1MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.4MB-blueviolet">
 </p>
 
 <p align="center">
