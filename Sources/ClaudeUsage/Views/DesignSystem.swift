@@ -11,6 +11,18 @@ extension Color {
             return NSColor(isDark ? dark : light)
         })
     }
+
+    /// 0xRRGGBB 정수로 만드는 sRGB 색
+    init(hexRGB hex: UInt32) {
+        self.init(red: Double((hex >> 16) & 0xFF) / 255,
+                  green: Double((hex >> 8) & 0xFF) / 255,
+                  blue: Double(hex & 0xFF) / 255)
+    }
+
+    /// 라이트/다크 값을 0xRRGGBB로 지정
+    init(light: UInt32, dark: UInt32) {
+        self.init(light: Color(hexRGB: light), dark: Color(hexRGB: dark))
+    }
 }
 
 // 사용량 단계별 색상 키
@@ -24,12 +36,18 @@ enum UsageLevel {
 }
 
 // 테마별 디자인 토큰
+//
+// 사용량 단계 색(levelOk · warn · danger)은 라이트와 다크가 다르다.
+// 다크 값 = 라이트 값을 OKLCH 밝기만 0.06 낮춘 색(채도·색상 유지). 어두운 바탕에서 같은 색이
+// 더 밝아 보이는 것을 보정한다. 단, 어두운 배경과의 대비가 3:1 아래로 내려가면 거기서 멈춘다.
 struct DesignTokens {
     let accent: Color           // 메인 컬러 (브랜드) — 라이트/다크 동일
     let accentSecondary: Color  // 보조 (그라데이션)
-    let warn: Color
-    let danger: Color
-    let ok: Color
+    let warn: Color             // 사용량 70% 이상 (다른 화면의 경고 색으로도 쓰임)
+    let danger: Color           // 사용량 90% 이상
+    let ok: Color               // 상태 초록 (사용량 단계 색 아님)
+    let levelOk: Color          // 사용량 70% 미만 게이지 색
+    let levelOkTrack: Color     // 70% 미만일 때 도넛 트랙 색
 
     let textPrimary: Color
     let textSecondary: Color
@@ -47,7 +65,7 @@ struct DesignTokens {
 
     func color(forLevel level: UsageLevel) -> Color {
         switch level {
-        case .ok: return accent
+        case .ok: return levelOk
         case .warn: return warn
         case .danger: return danger
         }
@@ -55,11 +73,17 @@ struct DesignTokens {
 
     func bgColor(forLevel level: UsageLevel) -> Color {
         switch level {
-        case .ok: return bgRing
+        case .ok: return levelOkTrack
         case .warn: return warn.opacity(0.15)
         case .danger: return danger.opacity(0.15)
         }
     }
+
+    /// 헤더 이름 옆 연결 점. 라이트는 흰 바탕 대비 3:1 이상(#2F9E44), 다크는 기존 초록.
+    var statusDot: Color { Color(light: Color(hexRGB: 0x2F9E44), dark: ok) }
+
+    /// 게이지 화면의 작은 글자(줄 라벨, 요금제). 라이트는 흰 바탕 4.5:1 이상(#6B7280), 다크는 기존 3차 글자색.
+    var gaugeCaption: Color { Color(light: Color(hexRGB: 0x6B7280), dark: Color(white: 0.55)) }
 }
 
 extension ThemeKind {
@@ -81,19 +105,24 @@ extension ThemeKind {
 
         switch self {
         case .daangn:
-            let accent = Color(red: 1.0, green: 0.435, blue: 0.058)         // #FF6F0F
+            // 강조색 = 여유 단계 색(파랑). 주황·빨강은 경고·위험에만 쓴다. (예전 #FF6F0F는 경고 주황과 ΔE2000 2.7)
+            let accent = Color(light: 0x3182F6, dark: 0x1B6FE1)
             return DesignTokens(
                 accent: accent,
-                accentSecondary: Color(red: 1.0, green: 0.561, blue: 0.121),// #FF8F1F
-                warn: Color(red: 1.0, green: 0.584, blue: 0.0),
-                danger: Color(red: 0.945, green: 0.267, blue: 0.322),
+                accentSecondary: Color(red: 0.353, green: 0.659, blue: 1.0),// #5AA8FF
+                // 도넛 테마: 파랑 → 주황 → 빨강 (게이지 고리 색 띠의 세 기준 색)
+                warn: Color(light: 0xFF7A1A, dark: 0xE56B0A),
+                danger: Color(light: 0xF14452, dark: 0xDB2C41),
                 ok: Color(red: 0.318, green: 0.812, blue: 0.4),
+                levelOk: Color(light: 0x3182F6, dark: 0x1B6FE1),
+                levelOkTrack: Color(light: Color(hexRGB: 0x3182F6).opacity(0.15),
+                                    dark: Color(hexRGB: 0x1B6FE1).opacity(0.18)),
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
                 textTertiary: textTertiary,
                 bg: bg,
                 bgSecondary: bgSecondary,
-                bgRing: Color(light: Color(red: 1.0, green: 0.91, blue: 0.839),
+                bgRing: Color(light: Color(red: 0.910, green: 0.949, blue: 1.0),
                                dark: accent.opacity(0.18)),
                 border: border,
                 divider: divider,
@@ -102,13 +131,16 @@ extension ThemeKind {
                 cornerSmall: 999
             )
         case .toss:
-            let accent = Color(red: 0.192, green: 0.510, blue: 0.965)       // #3182F6
+            let accent = Color(light: 0x3182F6, dark: 0x1B6FE1)              // 여유 단계 색
             return DesignTokens(
                 accent: accent,
                 accentSecondary: Color(red: 0.353, green: 0.659, blue: 1.0),
-                warn: Color(red: 1.0, green: 0.584, blue: 0.0),
-                danger: Color(red: 0.941, green: 0.267, blue: 0.322),
+                warn: Color(light: 0xFF9500, dark: 0xE48608),
+                danger: Color(light: 0xF14452, dark: 0xDB2C41),
                 ok: Color(red: 0.318, green: 0.812, blue: 0.4),
+                levelOk: Color(light: 0x3182F6, dark: 0x1B6FE1),
+                levelOkTrack: Color(light: Color(red: 0.910, green: 0.949, blue: 1.0),
+                                    dark: Color(hexRGB: 0x1B6FE1).opacity(0.18)),
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
                 textTertiary: textTertiary,
@@ -123,13 +155,16 @@ extension ThemeKind {
                 cornerSmall: 6
             )
         case .hybrid:
-            let accent = Color(red: 0.055, green: 0.647, blue: 0.914)       // #0EA5E9
+            let accent = Color(light: 0x0EA5E9, dark: 0x0B92CE)              // 여유 단계 색
             return DesignTokens(
                 accent: accent,
                 accentSecondary: Color(red: 0.024, green: 0.714, blue: 0.831),// #06B6D4
-                warn: Color(red: 0.984, green: 0.451, blue: 0.122),
-                danger: Color(red: 0.957, green: 0.247, blue: 0.369),
+                warn: Color(light: 0xFB731F, dark: 0xE16411),
+                danger: Color(light: 0xF43F5E, dark: 0xE1294F),   // 다크는 대비 3:1 하한 때문에 밝기 −0.052
                 ok: Color(red: 0.204, green: 0.827, blue: 0.600),
+                levelOk: Color(light: 0x0EA5E9, dark: 0x0B92CE),
+                levelOkTrack: Color(light: Color(red: 0.886, green: 0.949, blue: 0.992),
+                                    dark: Color(hexRGB: 0x0B92CE).opacity(0.18)),
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
                 textTertiary: textTertiary,
