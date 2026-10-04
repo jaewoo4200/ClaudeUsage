@@ -9,7 +9,10 @@ BUILD_DIR="$PROJECT_ROOT/build"
 DERIVED="$BUILD_DIR/DerivedData"
 PRODUCTS="$DERIVED/Build/Products/Release"
 APP_NAME="ClaudeUsage"
-DMG_NAME="ClaudeUsage-1.6.3.dmg"
+# 버전은 project.yml의 MARKETING_VERSION을 따른다(손으로 고칠 필요 없음)
+VERSION="$(sed -nE 's/^[[:space:]]*MARKETING_VERSION:[[:space:]]*"?([^"]+)"?[[:space:]]*$/\1/p' "$PROJECT_ROOT/project.yml" | head -1)"
+: "${VERSION:?project.yml에서 MARKETING_VERSION을 찾지 못했습니다}"
+DMG_NAME="$APP_NAME-$VERSION.dmg"
 DMG_STAGING="$BUILD_DIR/dmg-staging"
 
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
