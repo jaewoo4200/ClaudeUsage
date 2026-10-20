@@ -10,9 +10,20 @@ enum UsageError: Error, Equatable {
 enum UsageService {
     private static let baseURL = "https://claude.ai"
     private static let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15"
+    private static let session: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.httpShouldSetCookies = false
+        configuration.httpCookieStorage = nil
+        configuration.timeoutIntervalForRequest = 20
+        return URLSession(configuration: configuration, delegate: ClaudeUsageRedirectPolicy(), delegateQueue: nil)
+    }()
 
     static func fetchSnapshot() async throws -> AccountSnapshot {
         guard let cookie = CookieStore.load() else { throw UsageError.noCookie }
+        return try await fetchSnapshot(cookie: cookie)
+    }
+
+    static func fetchSnapshot(cookie: String) async throws -> AccountSnapshot {
         let org = try await fetchOrganization(cookie: cookie)
         let usage = try await fetchUsage(orgId: org.uuid, cookie: cookie)
         return AccountSnapshot(organization: org, usage: usage)
@@ -28,14 +39,21 @@ enum UsageService {
             fflush(stdout)
         }
         #endif
+        return try selectOrganization(data: data, cookie: cookie)
+    }
+
+    static func selectOrganization(data: Data, cookie: String) throws -> Organization {
         let decoder = JSONDecoder()
-        if let arr = try? decoder.decode([Organization].self, from: data), let first = arr.first {
-            return first
-        }
-        if let single = try? decoder.decode(Organization.self, from: data) {
-            return single
-        }
-        throw UsageError.decode
+        let organizations: [Organization]
+        if let array = try? decoder.decode([Organization].self, from: data) { organizations = array }
+        else if let single = try? decoder.decode(Organization.self, from: data) { organizations = [single] }
+        else { throw UsageError.decode }
+        let preferred = cookie.split(separator: ";").map { $0.trimmingCharacters(in: .whitespaces) }
+            .first { $0.hasPrefix("lastActiveOrg=") }.map { String($0.dropFirst("lastActiveOrg=".count)) }
+        guard let selected = organizations.first(where: { $0.uuid == preferred })
+            ?? organizations.first(where: { $0.capabilities?.contains(where: { $0.lowercased() == "chat" }) == true })
+            ?? organizations.first else { throw UsageError.decode }
+        return selected
     }
 
     private static func fetchUsage(orgId: String, cookie: String) async throws -> UsageData {
@@ -78,7 +96,7 @@ enum UsageService {
         req.setValue("application/json, text/plain, */*", forHTTPHeaderField: "Accept")
 
         do {
-            return try await URLSession.shared.data(for: req)
+            return try await session.data(for: req)
         } catch {
             throw UsageError.network(error.localizedDescription)
         }
@@ -92,5 +110,19 @@ enum UsageService {
         guard (200..<300).contains(http.statusCode) else {
             throw UsageError.network("HTTP \(http.statusCode)")
         }
+    }
+}
+
+final class ClaudeUsageRedirectPolicy: NSObject, URLSessionTaskDelegate {
+    static func permits(_ url: URL?) -> Bool {
+        guard let url else { return false }
+        return url.scheme == "https" && url.host == "claude.ai"
+            && url.user == nil && url.password == nil && (url.port == nil || url.port == 443)
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask,
+                    willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest,
+                    completionHandler: @escaping (URLRequest?) -> Void) {
+        completionHandler(Self.permits(request.url) ? request : nil)
     }
 }

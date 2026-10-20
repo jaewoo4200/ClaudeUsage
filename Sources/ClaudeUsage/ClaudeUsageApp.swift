@@ -44,6 +44,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.setActivationPolicy(.accessory)
         // 저장된 appearance 즉시 적용
         AppSettings.shared.applyAppearance()
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            UsageNotifications.shared.start()
+            UpdateChecker.shared.start()
+        }
         #if DEBUG
         print("[App] launched")
         #endif
@@ -343,6 +347,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let win = controller.window!
         win.delegate = LoginWindowDelegate.shared
         LoginWindowDelegate.shared.onClose = { [weak self] in
+            self?.loginController?.prepareForClose()
             self?.loginWindow = nil
             self?.loginController = nil
         }

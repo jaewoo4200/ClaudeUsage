@@ -18,13 +18,12 @@ enum ClaudeLocalTokenUsageService {
     }
 
     private static func scan(now: Date, rootURL: URL?) -> ClaudeLocalTokenUsage? {
-        let root = rootURL ?? FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".claude/projects", isDirectory: true)
+        let root = rootURL ?? projectsURL()
         guard FileManager.default.fileExists(atPath: root.path) else { return nil }
 
         let calendar = Calendar.current
         let todayStart = calendar.startOfDay(for: now)
-        let keys: Set<URLResourceKey> = [.isRegularFileKey, .contentModificationDateKey]
+        let keys: Set<URLResourceKey> = [.isRegularFileKey, .isSymbolicLinkKey, .contentModificationDateKey]
         guard let enumerator = FileManager.default.enumerator(
             at: root,
             includingPropertiesForKeys: Array(keys),
@@ -32,12 +31,13 @@ enum ClaudeLocalTokenUsageService {
         ) else { return nil }
 
         var todayTokens: Int64 = 0
-        var seenMessages = Set<String>()
+        var seenMessages: [String: Int64] = [:]
 
         for case let url as URL in enumerator {
             guard url.pathExtension == "jsonl",
                   let values = try? url.resourceValues(forKeys: keys),
                   values.isRegularFile == true,
+                  values.isSymbolicLink != true,
                   (values.contentModificationDate ?? .distantPast) >= todayStart else {
                 continue
             }
@@ -51,14 +51,9 @@ enum ClaudeLocalTokenUsageService {
                       date >= todayStart,
                       date <= now else { return }
 
-                let identity = [
-                    object["requestId"] as? String,
-                    message["id"] as? String,
-                    timestamp
-                ]
-                .compactMap { $0 }
-                .joined(separator: "|")
-                guard identity.isEmpty || seenMessages.insert(identity).inserted else { return }
+                let requestID = object["requestId"] as? String ?? ""
+                let messageID = message["id"] as? String
+                let identity = "\(requestID)|\(messageID?.isEmpty == false ? messageID! : timestamp)"
 
                 let tokens = [
                     "input_tokens",
@@ -67,9 +62,12 @@ enum ClaudeLocalTokenUsageService {
                     "cache_read_input_tokens"
                 ]
                 .compactMap { number(usage[$0]) }
-                .reduce(0, +)
+                .reduce(Int64(0), saturatingAdd)
 
-                todayTokens += tokens
+                // Streaming snapshots repeat a message with growing usage, sometimes at new timestamps.
+                let previous = seenMessages[identity] ?? 0
+                seenMessages[identity] = max(previous, tokens)
+                todayTokens = saturatingAdd(todayTokens, max(0, tokens - previous))
             }
         }
 
@@ -77,6 +75,13 @@ enum ClaudeLocalTokenUsageService {
             todayTokens: todayTokens,
             updatedAt: now
         )
+    }
+
+    static func projectsURL(environment: [String: String] = ProcessInfo.processInfo.environment,
+                            home: URL = FileManager.default.homeDirectoryForCurrentUser) -> URL {
+        let configured = environment["CLAUDE_CONFIG_DIR"].flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0, isDirectory: true) }
+        return (configured ?? home.appendingPathComponent(".claude", isDirectory: true))
+            .appendingPathComponent("projects", isDirectory: true)
     }
 
     private static func forEachLine(in url: URL, body: (Data) -> Void) {
@@ -102,9 +107,17 @@ enum ClaudeLocalTokenUsageService {
     }
 
     private static func number(_ value: Any?) -> Int64? {
-        if let number = value as? NSNumber { return number.int64Value }
-        if let string = value as? String { return Int64(string) }
-        return nil
+        let parsed: Int64?
+        if let number = value as? NSNumber {
+            guard CFGetTypeID(number) != CFBooleanGetTypeID() else { return nil }
+            parsed = Int64(number.stringValue)
+        } else if let string = value as? String { parsed = Int64(string) }
+        else { parsed = nil }
+        return parsed.flatMap { $0 >= 0 ? $0 : nil }
+    }
+
+    private static func saturatingAdd(_ left: Int64, _ right: Int64) -> Int64 {
+        left > Int64.max - right ? Int64.max : left + right
     }
 }
 

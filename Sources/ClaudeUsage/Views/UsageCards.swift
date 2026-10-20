@@ -1,10 +1,7 @@
 import SwiftUI
 
-// MARK: - 사용량 줄 목록 (B안 큰 바 · C안 도넛) — 드롭다운과 위젯 공용
-//
-// 카드 없이 줄만 놓는다. 도넛(daangn)은 색 띠 도넛 줄, 헤일로 바(toss)는 큰 바 줄, 오라(hybrid)는 빛 줄.
-// 주간 구성(seven_day_breakdown)은 별도 블록 대신 7일 줄에 접어 두고,
-// 줄에 마우스를 올리거나 "구성" 버튼을 누르면(고정) 펼친다.
+// Shared metrics retain the classic themes and offer three independent gauge styles.
+// Dropdown details expand inline; widgets delegate details to their layout-specific panel.
 
 /// 드롭다운/위젯별 크기. 폭을 알면 겹치지 않는 크기를 계산한다.
 struct GaugeStyle {
@@ -69,10 +66,13 @@ struct GaugeMetricList: View {
     var style: GaugeStyle = .dropdown
     /// 처음부터 주간 구성을 펼친 상태로 보여줄지 (스크린샷용)
     var breakdownInitiallyPinned = false
+    var widgetBreakdownOpen = false
+    var onWidgetBreakdownHover: (() -> Void)?
+    var onWidgetBreakdownToggle: (() -> Void)?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            VStack(spacing: theme == .daangn ? style.donutRowSpacing : style.barRowSpacing) {
+            VStack(spacing: theme.isLegacy ? (style.isWidget ? 8 : 10) : style.donutRowSpacing) {
                 ForEach(metrics) { metric in
                     GaugeMetricRow(
                         metric: metric,
@@ -80,7 +80,10 @@ struct GaugeMetricList: View {
                         theme: theme,
                         style: style,
                         breakdown: metric.id == breakdownMetricID ? breakdown : nil,
-                        initiallyPinned: breakdownInitiallyPinned
+                        initiallyPinned: breakdownInitiallyPinned,
+                        widgetBreakdownOpen: widgetBreakdownOpen,
+                        onWidgetBreakdownHover: onWidgetBreakdownHover,
+                        onWidgetBreakdownToggle: onWidgetBreakdownToggle
                     )
                 }
             }
@@ -95,23 +98,33 @@ struct GaugeMetricRow: View {
     let theme: ThemeKind
     let style: GaugeStyle
     var breakdown: UsageBreakdown?
+    var widgetBreakdownOpen: Bool
+    var onWidgetBreakdownHover: (() -> Void)?
+    var onWidgetBreakdownToggle: (() -> Void)?
 
     @State private var hovering = false
     @State private var pinned: Bool
 
     init(metric: UsageDisplayMetric, now: Date, theme: ThemeKind, style: GaugeStyle,
-         breakdown: UsageBreakdown?, initiallyPinned: Bool = false) {
+         breakdown: UsageBreakdown?, initiallyPinned: Bool = false,
+         widgetBreakdownOpen: Bool = false, onWidgetBreakdownHover: (() -> Void)? = nil,
+         onWidgetBreakdownToggle: (() -> Void)? = nil) {
         self.metric = metric
         self.now = now
         self.theme = theme
         self.style = style
         self.breakdown = breakdown
+        self.widgetBreakdownOpen = widgetBreakdownOpen
+        self.onWidgetBreakdownHover = onWidgetBreakdownHover
+        self.onWidgetBreakdownToggle = onWidgetBreakdownToggle
         _pinned = State(initialValue: initiallyPinned)
     }
 
     private var tokens: DesignTokens { theme.tokens }
-    private var isDonut: Bool { theme == .daangn }
-    private var isOpen: Bool { breakdown != nil && (hovering || pinned) }
+    private var isDonut: Bool { theme == .donut || theme == .daangn }
+    private var isOpen: Bool {
+        breakdown != nil && (style.isWidget ? widgetBreakdownOpen : (hovering || pinned))
+    }
 
     private var segments: [GaugeSegment]? {
         guard isOpen, let breakdown else { return nil }
@@ -123,11 +136,13 @@ struct GaugeMetricRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: style.isWidget ? 4 : 6) {
             switch theme {
-            case .daangn: donutRow
-            case .toss: barRow
-            case .hybrid: auraRow
+            case .daangn, .toss, .hybrid:
+                LegacyMetricView(metric: metric, theme: theme, isWidget: style.isWidget, now: now) { label }
+            case .donut: donutRow
+            case .halo: barRow
+            case .aura: auraRow
             }
-            if isOpen, let breakdown {
+            if isOpen, !style.isWidget, let breakdown {
                 GaugeBreakdownLegend(
                     breakdown: breakdown,
                     utilization: metric.utilization,
@@ -138,9 +153,11 @@ struct GaugeMetricRow: View {
             }
         }
         .contentShape(Rectangle())
-        // 위젯은 펼치면 창 크기가 바뀌므로 호버로 열지 않고 "구성" 버튼으로만 연다.
-        // (호버 → 창 크기 변경 → 호버 해제가 반복되면 AppKit 레이아웃이 무한 반복되어 앱이 멈춘다)
-        // 크기가 바뀌는 동안 창이 매 프레임 다시 맞춰지지 않도록 애니메이션도 쓰지 않는다.
+        .background(
+            WidgetHoverRegion(enabled: style.isWidget && breakdown != nil) { inside in
+                if inside { onWidgetBreakdownHover?() }
+            }
+        )
         .onHover { inside in
             guard !style.isWidget else { return }
             hovering = inside
@@ -150,19 +167,37 @@ struct GaugeMetricRow: View {
     private var label: some View {
         HStack(spacing: style.isWidget ? 4 : 6) {
             Text(metric.title)
-                .font(.system(size: isDonut ? style.donutLabelSize : style.barLabelSize, weight: .semibold))
-                .tracking(0.12)
+                .font(.system(size: labelFontSize, weight: .semibold))
                 .foregroundStyle(tokens.gaugeCaption)
-                .lineLimit(1)
+                .lineLimit(theme.isLegacy ? 2 : 1)
+                .minimumScaleFactor(theme.isLegacy ? 0.75 : 1)
             if breakdown != nil {
-                GaugeBreakdownToggle(isOpen: isOpen, pinned: $pinned, tokens: tokens,
-                                     fontSize: style.toggleFontSize(donut: isDonut),
-                                     verticalPadding: isDonut ? nil : style.barToggleVerticalPadding)
+                if style.isWidget {
+                    Button { onWidgetBreakdownToggle?() } label: {
+                        Image(systemName: "chart.pie")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(isOpen ? tokens.accent : tokens.textSecondary)
+                            .frame(width: 20, height: 16)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("breakdown_toggle_help".l)
+                    .accessibilityLabel("breakdown_toggle_help".l)
+                } else {
+                    GaugeBreakdownToggle(isOpen: isOpen, pinned: $pinned, tokens: tokens,
+                                         fontSize: style.toggleFontSize(donut: isDonut),
+                                         verticalPadding: isDonut ? nil : style.barToggleVerticalPadding)
+                }
             }
         }
         // 도넛은 왼쪽 칸에 라벨·남은 시간을 쌓으므로 여유 있게, 바·오라는 막대를 두껍게 두려고 딱 글자 높이만큼
-        .frame(minHeight: isDonut ? style.labelHeight : nil, alignment: .leading)
-        .frame(height: isDonut ? nil : style.barLabelHeight, alignment: .leading)
+        .frame(minHeight: !theme.isLegacy && isDonut ? style.labelHeight : nil, alignment: .leading)
+        .frame(height: theme.isLegacy || isDonut ? nil : style.barLabelHeight, alignment: .leading)
+    }
+
+    private var labelFontSize: CGFloat {
+        if theme.isLegacy { return style.isWidget ? (theme == .daangn ? 11 : 10) : 13 }
+        return isDonut ? style.donutLabelSize : style.barLabelSize
     }
 
     private var timerText: String {
@@ -220,7 +255,7 @@ struct GaugeMetricRow: View {
             DonutGauge(progress: metric.utilization, diameter: diameter, segments: segments)
 
             // % 숫자는 섞인 색 없이 파랑·주황·빨강 세 가지만
-            GaugePercentText(value: metric.utilization, capHeight: percentCap, color: GaugePalette.colors(.daangn, level).ink)
+            GaugePercentText(value: metric.utilization, capHeight: percentCap, color: GaugePalette.colors(.donut, level).ink)
                 .frame(width: ceil(percentCap * GaugeFonts.percentWidthPerCap) + 2, height: diameter, alignment: .trailing)
                 .padding(.leading, 8)
         }

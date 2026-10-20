@@ -81,11 +81,12 @@ enum CompanionKind: String, CaseIterable, Codable, Identifiable {
     case muru
     case tori
     case pico
+    case codex
 
     var id: String { rawValue }
 
     var displayName: String {
-        rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+        self == .codex ? "Codex Pet" : rawValue.prefix(1).uppercased() + rawValue.dropFirst()
     }
 
     @MainActor
@@ -290,6 +291,22 @@ final class AppSettings: ObservableObject {
     }
 
     @Published var floatingWidgetVisible = false
+    @Published var widgetBreakdownPinned: Bool {
+        didSet { UserDefaults.standard.set(widgetBreakdownPinned, forKey: "widgetBreakdownPinned") }
+    }
+
+    @Published var usageAlertsEnabled: Bool {
+        didSet { UserDefaults.standard.set(usageAlertsEnabled, forKey: "usageAlertsEnabled") }
+    }
+    @Published var resetAlertsEnabled: Bool {
+        didSet { UserDefaults.standard.set(resetAlertsEnabled, forKey: "resetAlertsEnabled") }
+    }
+    @Published var connectionAlertsEnabled: Bool {
+        didSet { UserDefaults.standard.set(connectionAlertsEnabled, forKey: "connectionAlertsEnabled") }
+    }
+    @Published var automaticUpdateChecks: Bool {
+        didSet { UserDefaults.standard.set(automaticUpdateChecks, forKey: "automaticUpdateChecks") }
+    }
 
     /// 표시할 서비스. 둘 다 끌 수는 없다(마지막 하나를 끄려 하면 다시 켠다).
     @Published var showClaude: Bool {
@@ -329,6 +346,11 @@ final class AppSettings: ObservableObject {
     }
 
     init() {
+        widgetBreakdownPinned = UserDefaults.standard.bool(forKey: "widgetBreakdownPinned")
+        usageAlertsEnabled = UserDefaults.standard.bool(forKey: "usageAlertsEnabled")
+        resetAlertsEnabled = UserDefaults.standard.bool(forKey: "resetAlertsEnabled")
+        connectionAlertsEnabled = UserDefaults.standard.bool(forKey: "connectionAlertsEnabled")
+        automaticUpdateChecks = UserDefaults.standard.bool(forKey: "automaticUpdateChecks")
         // widget always-on-top
         if UserDefaults.standard.object(forKey: "widgetAlwaysOnTop") == nil {
             self.widgetAlwaysOnTop = true

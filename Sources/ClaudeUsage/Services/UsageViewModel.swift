@@ -310,19 +310,26 @@ final class UsageViewModel: ObservableObject {
         visibilityObserver = NotificationCenter.default.addObserver(
             forName: AppSettings.providerVisibilityChanged, object: nil, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.refreshNow() }
+            Task { @MainActor in
+                UsageNotifications.shared.forgetHiddenProviders()
+                self?.refreshNow()
+            }
         }
         startAutoRefresh()
     }
 
     func onLoggedIn(cookie: String) {
-        CookieStore.save(cookie)
+        guard CookieStore.save(cookie) else {
+            state = .error("login_keychain_error".l)
+            return
+        }
         state = .loading
         startAutoRefresh()
     }
 
     func logout() {
         CookieStore.clear()
+        UsageNotifications.shared.forget(.claude)
         state = .needsLogin
         lastUpdated = nil
     }
@@ -352,10 +359,11 @@ final class UsageViewModel: ObservableObject {
         defer { isRefreshing = false }
 
         let shouldRecordHistory = AppSettings.shared.usageHistoryEnabled
+        let shouldCollectClaudeTokens = shouldRecordHistory && showsClaude
         // 꺼진 서비스는 가져오지 않는다(네트워크 요청·Codex 실행 없음)
         async let claudeFetch: Void = fetchClaudeIfShown()
         async let openAIFetch: Void = fetchOpenAIIfShown()
-        async let localTokenFetch: ClaudeLocalTokenUsage? = fetchLocalClaudeTokens(enabled: shouldRecordHistory)
+        async let localTokenFetch: ClaudeLocalTokenUsage? = fetchLocalClaudeTokens(enabled: shouldCollectClaudeTokens)
         let (_, _, localTokens) = await (claudeFetch, openAIFetch, localTokenFetch)
 
         claudeLocalTokenUsage = localTokens
@@ -396,19 +404,25 @@ final class UsageViewModel: ObservableObject {
             let snapshot = try await UsageService.fetchSnapshot()
             state = .loaded(snapshot)
             lastUpdated = Date()
+            await UsageNotifications.shared.success(provider: .claude, metrics: claudeDisplayMetrics)
         } catch UsageError.noCookie {
             state = .needsLogin
         } catch UsageError.authExpired {
             state = .needsLogin
             CookieStore.clear()
+            await UsageNotifications.shared.failure(provider: .claude, loginRequired: true)
         } catch let e as UsageError {
+            guard !Task.isCancelled else { return }
+            await UsageNotifications.shared.failure(provider: .claude, loginRequired: false)
             if case .loaded = state {
                 // 잠시 실패 — 마지막 데이터 유지
             } else {
                 state = .error(describe(e))
             }
         } catch {
+            guard !Task.isCancelled else { return }
             state = .error(error.localizedDescription)
+            await UsageNotifications.shared.failure(provider: .claude, loginRequired: false)
         }
     }
 
@@ -417,16 +431,25 @@ final class UsageViewModel: ObservableObject {
             let usage = try await OpenAIUsageService.fetchUsage()
             openAIState = .loaded(usage)
             openAILastUpdated = Date()
+            await UsageNotifications.shared.success(
+                provider: .codex,
+                metrics: openAIDisplayMetrics(includingSpark: AppSettings.shared.showOpenAISparkLimits)
+            )
         } catch OpenAIUsageError.notConnected {
             openAIState = .unavailable
         } catch OpenAIUsageError.authExpired {
             openAIState = .error("openai_session_expired".l)
+            await UsageNotifications.shared.failure(provider: .codex, loginRequired: true)
         } catch let error as OpenAIUsageError {
+            guard !Task.isCancelled else { return }
+            await UsageNotifications.shared.failure(provider: .codex, loginRequired: false)
             if openAIState.isLoaded {
                 return
             }
             openAIState = .error(describe(error))
         } catch {
+            guard !Task.isCancelled else { return }
+            await UsageNotifications.shared.failure(provider: .codex, loginRequired: false)
             if !openAIState.isLoaded {
                 openAIState = .error(error.localizedDescription)
             }

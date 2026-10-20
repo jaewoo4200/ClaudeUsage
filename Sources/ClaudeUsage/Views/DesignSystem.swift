@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 
 // MARK: - Dark mode helper
 
@@ -105,6 +106,18 @@ extension ThemeKind {
 
         switch self {
         case .daangn:
+            let accent = Color(hexRGB: 0xFF6F0F)
+            let track = Color(light: Color(hexRGB: 0xFFE8D6), dark: accent.opacity(0.18))
+            return DesignTokens(
+                accent: accent, accentSecondary: Color(hexRGB: 0xFF8F1F),
+                warn: Color(hexRGB: 0xFF9500), danger: Color(hexRGB: 0xF14452),
+                ok: Color(red: 0.318, green: 0.812, blue: 0.4),
+                levelOk: accent, levelOkTrack: track,
+                textPrimary: textPrimary, textSecondary: textSecondary, textTertiary: textTertiary,
+                bg: bg, bgSecondary: bgSecondary, bgRing: track, border: border, divider: divider,
+                cornerCard: 16, cornerOuter: 22, cornerSmall: 999
+            )
+        case .donut:
             // 강조색 = 여유 단계 색(파랑). 주황·빨강은 경고·위험에만 쓴다. (예전 #FF6F0F는 경고 주황과 ΔE2000 2.7)
             let accent = Color(light: 0x3182F6, dark: 0x1B6FE1)
             return DesignTokens(
@@ -130,7 +143,7 @@ extension ThemeKind {
                 cornerOuter: 22,
                 cornerSmall: 999
             )
-        case .toss:
+        case .toss, .halo:
             let accent = Color(light: 0x3182F6, dark: 0x1B6FE1)              // 여유 단계 색
             return DesignTokens(
                 accent: accent,
@@ -154,7 +167,7 @@ extension ThemeKind {
                 cornerOuter: 16,
                 cornerSmall: 6
             )
-        case .hybrid:
+        case .hybrid, .aura:
             let accent = Color(light: 0x0EA5E9, dark: 0x0B92CE)              // 여유 단계 색
             return DesignTokens(
                 accent: accent,
@@ -185,19 +198,19 @@ extension ThemeKind {
     func comment(forUtilization u: Double, isWeekly: Bool) -> String {
         let level = UsageLevel.from(u)
         switch self {
-        case .daangn:
+        case .daangn, .donut:
             switch level {
             case .ok: return u < 30 ? "comment_relaxed".l : "comment_moderate".l
             case .warn: return isWeekly ? "comment_slow_down_week".l : "comment_slow_down_window".l
             case .danger: return isWeekly ? "comment_almost_done_week".l : "comment_almost_done_window".l
             }
-        case .hybrid:
+        case .hybrid, .aura:
             switch level {
             case .ok: return u < 30 ? "comment_h_plenty".l : "comment_h_pace".l
             case .warn: return "comment_h_slow".l
             case .danger: return "comment_h_limit".l
             }
-        case .toss:
+        case .toss, .halo:
             return ""
         }
     }
@@ -205,9 +218,9 @@ extension ThemeKind {
     var iconGradient: LinearGradient {
         let t = tokens
         switch self {
-        case .daangn, .toss:
+        case .daangn, .toss, .donut, .halo:
             return LinearGradient(colors: [t.accent, t.accentSecondary], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case .hybrid:
+        case .hybrid, .aura:
             // hybrid는 미드나이트 그라데이션 — 다크모드에선 약간 밝게
             return LinearGradient(
                 colors: [
@@ -223,7 +236,7 @@ extension ThemeKind {
     var menubarShowsIcon: Bool {
         switch self {
         case .toss: return false
-        case .daangn, .hybrid: return true
+        case .daangn, .hybrid, .donut, .halo, .aura: return true
         }
     }
 }

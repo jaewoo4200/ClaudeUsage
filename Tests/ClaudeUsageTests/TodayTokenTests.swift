@@ -67,7 +67,7 @@ final class TodayTokenTests: XCTestCase {
     func testNullOrMissingDailyBucketsRemainUnknown() throws {
         for json in ["{}", "{\"dailyUsageBuckets\":null}"] {
             let data = try CodexAppServerUsageService.decodeFixture(
-                rateLimitsJSON: Data("{\"rateLimits\":null}".utf8),
+                rateLimitsJSON: Data(#"{"rateLimits":{"limitId":"codex","primary":{"usedPercent":12,"windowDurationMins":300}}}"#.utf8),
                 tokenUsageJSON: Data(json.utf8)
             )
             XCTAssertNotNil(data.tokenActivity)

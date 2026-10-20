@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Release 빌드 → dmg 패키징
-# 본인용 (서명 없음). 다른 맥에 줄 거면 수신자가 우클릭→열기로 1회 허용 필요.
+# 로컬 ad-hoc 서명. Developer ID 서명/공증은 별도의 배포 단계다.
 
 set -euo pipefail
 
@@ -37,6 +37,10 @@ echo "📁 3/4 dmg 스테이징"
 rm -rf "$DMG_STAGING"
 mkdir -p "$DMG_STAGING"
 cp -R "$PRODUCTS/$APP_NAME.app" "$DMG_STAGING/"
+# Bind the bundle ID, Info.plist, and resources instead of shipping the linker's binary-only signature.
+BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$DMG_STAGING/$APP_NAME.app/Contents/Info.plist")"
+codesign --force --sign - --identifier "$BUNDLE_ID" "$DMG_STAGING/$APP_NAME.app"
+codesign --verify --deep --strict "$DMG_STAGING/$APP_NAME.app"
 ln -sf /Applications "$DMG_STAGING/Applications"
 
 echo "💿 4/4 dmg 생성"
