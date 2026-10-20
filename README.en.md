@@ -19,11 +19,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-5.2MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.4MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg">Download v1.7.0</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">Download v1.7.1</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
@@ -60,6 +60,16 @@ This is the account's current weekly composition, separate from this Mac's local
 The Codex responses used by this integration provide quota utilization and account-level daily token totals, but no Claude-style service composition (checked September 17, 2026). Separate quota percentages, such as Spark's, are not shares of total usage and are never combined into a composition chart. [Official OpenAI App Server documentation](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt)
 
 ## 📸 Screenshots
+
+### macOS 1.7.1: New app icon and a real reset notification
+
+The three-row Halo gauge icon comes from [@jwoo5377](https://github.com/jwoo5377)'s [PR #4](https://github.com/jaewoo4200/ClaudeUsage/pull/4). The app uses the dark icon; this README switches between light/dark previews with the page's color scheme. Automatic macOS app-icon appearance switching is not included.
+
+<p align="center">
+  <img src="docs/assets/releases/1.7.1/notification-reset-ko.png" width="724" alt="A real macOS Notification Center message from Codex: the 7-day usage limit has reset.">
+</p>
+
+> A **real notification received with 1.7.0**, shared by the user for publication. It still shows the previous orange icon because it predates this update. Opt-in usage warnings and server-confirmed reset notifications are unchanged in 1.7.1.
 
 ### macOS 1.7.0: Six themes, pinned breakdown, and notifications
 
@@ -165,7 +175,7 @@ The Codex responses used by this integration provide quota utilization and accou
 
 ## 🚀 Installation (Users)
 
-1. Download [ClaudeUsage-1.7.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. Download [ClaudeUsage-1.7.1.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
@@ -379,7 +389,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.7.0.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.7.1.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon
@@ -447,7 +457,7 @@ Contributions welcome — feel free to open issues or PRs.
 ## Contributors
 
 - [@jaewoo4200](https://github.com/jaewoo4200): project development and maintenance.
-- [@jwoo5377](https://github.com/jwoo5377): Donut / Halo Bar / Aura designs, provider visibility, website/screenshots, and DMG build improvements in [PR #2](https://github.com/jaewoo4200/ClaudeUsage/pull/2). All three original authored commits are preserved in the merge.
+- [@jwoo5377](https://github.com/jwoo5377): Donut / Halo Bar / Aura designs, provider visibility, website/screenshots, and DMG build improvements in [PR #2](https://github.com/jaewoo4200/ClaudeUsage/pull/2), plus the new app icon in [PR #4](https://github.com/jaewoo4200/ClaudeUsage/pull/4). Original authored commits are preserved in the merges.
 - A separately supplied AI-usage package informed login, local-pet, and compatibility improvements. Its binaries and personal pet artwork are not redistributed.
 
 ## 📜 Disclaimer

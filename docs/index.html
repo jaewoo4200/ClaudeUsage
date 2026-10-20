@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f7f5">
-    <meta name="description" content="ClaudeUsage 1.7.0: 기존 당근·토스·하이브리드를 유지하고 도넛·헤일로 바·오라를 추가한 6가지 테마. Claude와 Codex 사용량, 주간 구성 펼침과 고정을 macOS 메뉴바와 위젯에서 지원합니다.">
+    <meta name="description" content="ClaudeUsage 1.7.1: 새 세 줄 게이지 아이콘. Claude와 Codex 사용량, 실제 초기화 알림, 6가지 테마와 주간 구성 고정을 macOS 메뉴바와 위젯에서 지원합니다.">
     <meta property="og:title" content="ClaudeUsage for macOS">
-    <meta property="og:description" content="6가지 테마, 주간 구성 고정, 알림과 로컬 Codex 펫. ClaudeUsage 1.7.0 for macOS.">
+    <meta property="og:description" content="새 앱 아이콘과 실제 초기화 알림 화면. ClaudeUsage 1.7.1 for macOS.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jaewoo4200.github.io/ClaudeUsage/">
     <meta property="og:image" content="https://jaewoo4200.github.io/ClaudeUsage/assets/releases/1.7.0/widget-horizontal-daangn-ko.png">
     <meta name="twitter:card" content="summary_large_image">
     <title>ClaudeUsage - Claude와 Codex 사용량을 메뉴바에서</title>
     <link rel="canonical" href="https://jaewoo4200.github.io/ClaudeUsage/">
-    <link rel="icon" type="image/png" href="assets/app-icon.png">
-    <link rel="stylesheet" href="styles.css?v=1.7.0">
+    <link rel="icon" type="image/png" href="assets/app-icon.png?v=1.7.1">
+    <link rel="stylesheet" href="styles.css?v=1.7.1">
   </head>
   <body>
     <a class="skip-link" href="#main">본문으로 건너뛰기</a>
@@ -22,7 +22,7 @@
     <nav class="site-nav" aria-label="주요 탐색">
       <div class="nav-inner">
         <a class="brand" href="#top" aria-label="ClaudeUsage 홈">
-          <img src="assets/app-icon.png" alt="" width="30" height="30">
+          <img src="assets/app-icon.png?v=1.7.1" alt="" width="30" height="30">
           <span>ClaudeUsage</span>
         </a>
         <div class="nav-links">
@@ -46,16 +46,16 @@
         <h1>ClaudeUsage</h1>
         <p class="hero-lead">Claude·Codex 사용량과 주간 내역,<br>오늘 토큰까지 한곳에서.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg">
+          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            <span>macOS v1.7.0 다운로드</span>
+            <span>macOS v1.7.1 다운로드</span>
           </a>
-          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.7.0" target="_blank" rel="noreferrer">
+          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.7.1" target="_blank" rel="noreferrer">
             릴리스 노트
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
         </div>
-        <p class="download-meta">5.2MB DMG · Intel + Apple Silicon · 빌드 22 · 오픈소스</p>
+        <p class="download-meta">4.4MB DMG · Intel + Apple Silicon · 빌드 23 · 오픈소스</p>
       </div>
 
       <div class="hero-stage" aria-label="ClaudeUsage 가로 위젯 미리보기">
@@ -81,6 +81,21 @@
 
       <section class="section release-section" id="whats-new">
         <div class="section-inner">
+          <div class="section-heading compact">
+            <p class="kicker">macOS 1.7.1 · 아이콘 업데이트</p>
+            <h2>세 줄 게이지로<br>새로워진 아이콘.</h2>
+            <p><a href="https://github.com/jwoo5377">@jwoo5377</a>의 새 아이콘을 앱과 홈페이지에 적용했습니다. 기존 6개 테마와 위젯, 알림 기능은 그대로 유지합니다.</p>
+          </div>
+          <div class="release-shots release-update">
+            <figure class="release-logo">
+              <img src="assets/app-icon.png?v=1.7.1" alt="다크 타일에 파랑·주황·파랑의 세 줄 게이지가 있는 새 ClaudeUsage 아이콘" width="160" height="160" loading="lazy">
+              <figcaption><strong>새 앱 아이콘</strong><span>앱에는 다크 버전을 사용합니다. README에서는 화면 모드에 따라 라이트·다크 미리보기를 전환합니다.</span></figcaption>
+            </figure>
+            <figure class="notification-example">
+              <img src="assets/releases/1.7.1/notification-reset-ko.png" alt="macOS 알림 센터의 실제 Codex 알림: 7일 사용량이 초기화되었습니다." width="724" height="218" loading="lazy">
+              <figcaption><strong>실제로 받은 초기화 알림</strong><span>사용자가 제공한 1.7.0 실수신 화면입니다. 이전 주황 아이콘이 보이는 원본을 그대로 실었습니다. 사용량 경고·초기화·연결 알림은 설정에서 각각 켤 수 있습니다.</span></figcaption>
+            </figure>
+          </div>
           <div class="section-heading compact">
             <p class="kicker">macOS 1.7.0 · 새 게이지 디자인과 표시할 서비스</p>
             <h2>세 가지 게이지.<br>필요한 서비스만.</h2>
@@ -271,15 +286,15 @@
           </div>
 
           <ol class="install-steps">
-            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.7.0입니다.</p></li>
+            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.7.1입니다.</p></li>
             <li><span>2</span><strong>Applications로 이동</strong><p>아이콘을 폴더로 드래그합니다.</p></li>
             <li><span>3</span><strong>출처와 무결성 확인</strong><p>ad-hoc 서명이며 Developer ID 공증은 없습니다. 릴리즈의 SHA-256과 실행 안내를 확인하세요.</p></li>
           </ol>
 
           <div class="final-download">
-            <img src="assets/app-icon.png" alt="" width="72" height="72">
-            <div><strong>ClaudeUsage 1.7.0</strong><span>무료 · MIT License · Universal</span></div>
-            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg">
+            <img src="assets/app-icon.png?v=1.7.1" alt="" width="72" height="72">
+            <div><strong>ClaudeUsage 1.7.1</strong><span>무료 · MIT License · Universal</span></div>
+            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               <span>DMG 받기</span>
             </a>
@@ -342,8 +357,8 @@
 
     <footer>
       <div class="section-inner footer-inner">
-        <div class="brand footer-brand"><img src="assets/app-icon.png" alt="" width="26" height="26"><span>ClaudeUsage</span></div>
-        <p>Anthropic 및 OpenAI와 무관한 개인 오픈소스 프로젝트입니다.<br>개발 <a href="https://github.com/jaewoo4200">@jaewoo4200</a> · 새 게이지·사이트 기여 <a href="https://github.com/jwoo5377">@jwoo5377</a></p>
+        <div class="brand footer-brand"><img src="assets/app-icon.png?v=1.7.1" alt="" width="26" height="26"><span>ClaudeUsage</span></div>
+        <p>Anthropic 및 OpenAI와 무관한 개인 오픈소스 프로젝트입니다.<br>개발 <a href="https://github.com/jaewoo4200">@jaewoo4200</a> · 게이지·앱 아이콘·사이트 기여 <a href="https://github.com/jwoo5377">@jwoo5377</a></p>
         <div class="footer-links"><a href="https://github.com/jaewoo4200/ClaudeUsage">GitHub</a><a href="https://github.com/jaewoo4200/ClaudeUsage/releases">Releases</a><a href="https://github.com/jaewoo4200/ClaudeUsage/blob/main/README.en.md">English</a></div>
       </div>
     </footer>
