@@ -138,6 +138,21 @@ struct UsageHistorySnapshot: Equatable {
 
     var hasUsage: Bool { pressure != nil }
 
+    func visible(showClaude: Bool, showCodex: Bool) -> UsageHistorySnapshot {
+        UsageHistorySnapshot(
+            claudeFiveHour: showClaude ? claudeFiveHour : nil,
+            claudeWeekly: showClaude ? claudeWeekly : nil,
+            claudeModelMaximum: showClaude ? claudeModelMaximum : nil,
+            openAIFiveHour: showCodex ? openAIFiveHour : nil,
+            openAIWeekly: showCodex ? openAIWeekly : nil,
+            openAIModelMaximum: showCodex ? openAIModelMaximum : nil,
+            claudeTodayTokens: showClaude ? claudeTodayTokens : nil,
+            openAITodayTokens: showCodex ? openAITodayTokens : nil,
+            claudeModelCounters: showClaude ? claudeModelCounters : [],
+            openAIModelCounters: showCodex ? openAIModelCounters : []
+        )
+    }
+
     private func appendPressureSource(
         value: Double?,
         id: String,

@@ -360,7 +360,7 @@ struct GaugeLevelColors {
 enum GaugePalette {
     static func colors(_ theme: ThemeKind, _ level: UsageLevel) -> GaugeLevelColors {
         switch theme {
-        case .daangn:
+        case .daangn, .donut:
             let c: Color
             switch level {
             case .ok: c = Color(light: 0x3182F6, dark: 0x1B6FE1)
@@ -368,13 +368,13 @@ enum GaugePalette {
             case .danger: c = Color(light: 0xF14452, dark: 0xDB2C41)
             }
             return GaugeLevelColors(deep: c, mid: c, bright: c, ink: c)
-        case .toss:
+        case .toss, .halo:
             switch level {
             case .ok: return make((0x1149D4, 0x126EFF), (0x126EFF, 0x2F8CFF), (0x179DE0, 0x7CD3FF), (0x1149D4, 0x6CC4FF))
             case .warn: return make((0xC2410C, 0xE8590C), (0xF06418, 0xF57C1F), (0xE47600, 0xFFC078), (0xC2410C, 0xFFA94D))
             case .danger: return make((0xB3123A, 0xD6204A), (0xE1294F, 0xF0455F), (0xE37182, 0xFF9AAA), (0xB3123A, 0xFF7A8F))
             }
-        case .hybrid:
+        case .hybrid, .aura:
             switch level {
             case .ok: return make((0x1149D4, 0x126EFF), (0x126EFF, 0x2F8CFF), (0x44BBFF, 0x7CD3FF), (0x1149D4, 0x6CC4FF))
             case .warn: return make((0xC2410C, 0xE8590C), (0xF06418, 0xF57C1F), (0xFFB347, 0xFFC078), (0xC2410C, 0xFFA94D))

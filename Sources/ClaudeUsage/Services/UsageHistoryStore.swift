@@ -47,9 +47,14 @@ final class UsageHistoryStore: ObservableObject {
         try? FileManager.default.removeItem(at: fileURL)
     }
 
-    func trend(now: Date = Date(), window: TimeInterval = 60 * 60) -> UsageTrend {
+    func trend(
+        now: Date = Date(), window: TimeInterval = 60 * 60,
+        showClaude: Bool = true, showCodex: Bool = true
+    ) -> UsageTrend {
         let cutoff = now.addingTimeInterval(-window)
         var recent = samples.filter { $0.timestamp >= cutoff && $0.timestamp <= now }
+            .map { UsageHistorySample(timestamp: $0.timestamp,
+                                      snapshot: $0.snapshot.visible(showClaude: showClaude, showCodex: showCodex)) }
         guard !recent.isEmpty else { return .empty }
         recent.sort { $0.timestamp < $1.timestamp }
 

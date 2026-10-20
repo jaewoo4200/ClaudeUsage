@@ -5,19 +5,22 @@ enum CookieStore {
     private static let service = "app.claudeusage"
     private static let account = "claude.ai-cookie"
 
-    static func save(_ cookieString: String) {
-        guard let data = cookieString.data(using: .utf8) else { return }
+    @discardableResult
+    static func save(_ cookieString: String) -> Bool {
+        guard let data = cookieString.data(using: .utf8) else { return false }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account
         ]
-        SecItemDelete(query as CFDictionary)
+        let status = SecItemUpdate(query as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+        if status == errSecSuccess { return true }
+        guard status == errSecItemNotFound else { return false }
         var attributes = query
         attributes[kSecValueData as String] = data
         // 이 기기에서만 접근, 첫 unlock 후에만 접근 가능 — iCloud 백업/다른 기기 복원 방지
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        SecItemAdd(attributes as CFDictionary, nil)
+        return SecItemAdd(attributes as CFDictionary, nil) == errSecSuccess
     }
 
     static func load() -> String? {

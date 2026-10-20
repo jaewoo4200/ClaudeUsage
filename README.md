@@ -16,7 +16,7 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-4.4MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-5.2MB-blueviolet">
 </p>
 
 <p align="center">
@@ -31,7 +31,7 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
 
 - 🤖 **Claude + Codex**: 두 계정 상태를 독립적으로 조회하고 한 화면에 표시
 - 👁️ **표시할 서비스**: 하나만 쓴다면 다른 쪽을 끄세요. 끈 서비스는 메뉴바·드롭다운·위젯에서 빠지고 조회도 하지 않습니다
-- 🎨 **3가지 게이지 테마**: 도넛 / 헤일로 바 / 오라 — 실시간 전환, 테마를 바꿔도 창 크기는 그대로
+- 🎨 **6가지 테마**: 기존 당근 / 토스 / 하이브리드 유지 + 도넛 / 헤일로 바 / 오라 추가. 이전 테마 선택값도 유지합니다.
 - 🪟 **4가지 위젯 배치**: 세로 / 가로 / 화살표 전환 / Claude·Codex 독립 위젯 중 선택, 끌어서 옮긴 위치를 기억
 - **Claude 주간 사용 구성**: 7일 줄의 "구성"을 펼치면 Claude Code·채팅·Cowork 등의 비중이 게이지 색과 비율로 표시
 - 🧭 **새 모델 자동 대응**: 서버가 내려주는 모델별 한도를 이름 고정 없이 표시하며 GPT-5.3-Codex-Spark는 기본 숨김·선택 표시
@@ -48,8 +48,8 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
 Claude 서버가 제공하는 `seven_day_breakdown`을 **주간 사용량의 서비스별 비율**로 표시합니다. 예를 들어 주간 한도 사용률이 35%, Code 비중이 90%라면, 해당 주간 사용량 중 90%가 Claude Code에서 발생했다는 뜻입니다. Code 한도를 90% 소진했다는 의미는 아닙니다.
 
 - 메뉴바 드롭다운: Claude 7일 줄에 마우스를 올리면 펼쳐지고, **구성** 버튼을 누르면 펼친 상태로 고정됩니다. 펼치면 7일 게이지가 Code·채팅·Cowork·기타 색으로 나뉘고 아래에 항목별 비율이 표시됩니다.
-- 위젯: 모든 배치에서 7일 줄의 **구성** 버튼으로 펼치고 접습니다. 위젯은 펼칠 때 창 크기가 바뀌므로 마우스를 올리는 것만으로는 펼치지 않습니다. Codex 전용 위젯에는 Claude 구성이 나타나지 않습니다.
-- 세 테마(도넛·헤일로 바·오라)와 한국어·영어에서 모두 같은 방식으로 동작합니다.
+- 위젯: Claude의 7일 줄이나 주간 구성 제목에 마우스를 올리면 펼쳐집니다. 가로 위젯은 **Codex 아래**, 세로·전환·Claude 단독 위젯은 **Claude 사용량 아래**에 표시합니다. 위젯 밖으로 커서를 옮기면 접히며, 핀 버튼으로 펼침을 고정하거나 해제할 수 있습니다. 고정 여부는 재실행 후에도 유지됩니다.
+- Codex 전용 위젯에는 Claude 구성이 나타나지 않습니다. 기존 3개와 새 3개 테마, 한국어·영어에서 모두 지원합니다. 기존 테마는 원래 크기와 형태를 유지하고, 새 게이지 3개는 같은 높이를 사용합니다.
 
 이 내역은 계정의 이번 주 사용 구성으로, 이 Mac의 로컬 토큰 합계와는 별개입니다. 새로고침 때 서버가 제공하는 최신 집계를 표시하며 별도 한도·Mimo 최고 사용률에 포함하지 않습니다. 기존 버전이 잘못 저장했던 `Breakdown 0%`는 기록을 읽을 때 제외합니다. 실제 사용 내역은 로컬 추이 파일에 추가 저장하지 않습니다.
 
@@ -77,7 +77,7 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 > 메뉴바에 Claude 아이콘과 퍼센트, Codex 아이콘과 퍼센트가 함께 표시됩니다. 각 서비스는 독립적으로 갱신되며, 설정에서 한 서비스를 끄면 켠 서비스만 표시됩니다.
 
-### 드롭다운 (3가지 테마)
+### 드롭다운 (새 게이지 3종)
 
 <table>
   <tr>
@@ -86,15 +86,15 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
     <td align="center"><b>✨ 오라</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.7.0/dropdown-daangn-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.7.0/dropdown-toss-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.7.0/dropdown-hybrid-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-donut-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-halo-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-aura-ko.png" width="300"></td>
   </tr>
 </table>
 
 > 도넛은 사용률에 따라 고리가 파랑에서 주황, 빨강으로 이어지고, 헤일로 바는 빛이 번지는 그라데이션 막대, 오라는 사용률만큼 퍼지는 빛으로 보여 줍니다. 주황과 빨강은 경고(70%)와 위험(90%)에만 씁니다.
 
-### 떠다니는 위젯 (3가지 테마)
+### 떠다니는 위젯 (새 게이지 3종)
 
 <table>
   <tr>
@@ -103,9 +103,9 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
     <td align="center"><b>✨ 오라</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.7.0/widget-stacked-daangn-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.7.0/widget-stacked-toss-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.7.0/widget-stacked-hybrid-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-donut-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-halo-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-aura-ko.png" width="220"></td>
   </tr>
 </table>
 
@@ -175,7 +175,7 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 🔑 처음 실행할 때 읽어주세요
 
-이 앱은 **Apple Developer ID 코드 서명이 없습니다** (개인 오픈소스라 $99/년 비용을 들이지 않았어요). 그래서 macOS가 다음 두 가지 보안 다이얼로그를 띄울 수 있는데, **둘 다 정상이고 안전**합니다.
+이 앱은 번들 무결성 검증용 **ad-hoc 서명**을 사용하며, **Apple Developer ID 서명과 공증은 없습니다**. macOS 보안 경고가 나타날 수 있습니다. 공식 릴리즈에서 받은 파일인지와 첨부된 SHA-256을 확인한 뒤 실행 여부를 결정하세요. 서명 검증만으로 앱의 안전성이 보장되지는 않습니다.
 
 ### 1) "확인되지 않은 개발자" 경고 우회
 
@@ -203,10 +203,32 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 
 ### 2) 로그인 + 첫 사용량 조회
 
-- 메뉴바 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
+- 메뉴바 **[C] 로그인** 클릭 → 앱 안에서는 **이메일로 로그인**을 사용합니다.
+- Google 계정은 **브라우저 로그인 → 고급 세션 연결**을 사용합니다. 기본 브라우저에서 claude.ai에 로그인한 뒤, 개발자 도구의 Cookies에서 본인의 `sessionKey` 값만 보안 입력란에 넣습니다. Chrome/Edge는 Application → Cookies → https://claude.ai, Safari는 Web Inspector → Storage → Cookies입니다. Google 비밀번호·Google 토큰·전체 쿠키 헤더는 입력하지 마세요. 연결 후 클립보드의 키도 지워 주세요.
+- 입력된 세션은 claude.ai에서 검증한 뒤 이 Mac의 Keychain에 저장합니다. 검증 실패 시 기존 세션을 바꾸지 않으며, 브라우저 쿠키를 자동으로 수집하지 않습니다. 브라우저에서 로그인했다고 앱 내부 웹뷰까지 로그인되는 것은 아닙니다. Google의 [내장 브라우저 OAuth 제한](https://developers.google.com/identity/protocols/oauth2/policies)에 따라 Google 인증은 외부 브라우저에서 진행합니다.
 - OpenAI 사용량은 Codex 또는 Codex가 통합된 ChatGPT 앱이 설치되어 있고 ChatGPT 계정으로 로그인되어 있으면 자동 연결. GUI 앱은 꺼져 있어도 됩니다.
 - 로그인 완료 → 각 서비스의 사용량을 독립적으로 표시 ✨
 - Claude나 Codex 중 하나만 쓴다면 **설정 → 표시할 서비스**에서 다른 쪽을 끄세요. 끈 서비스는 화면에서 빠지고 조회도 하지 않습니다(둘 다 끌 수는 없습니다).
+
+### 알림 및 업데이트 (1.7.0)
+
+- **설정 → 알림 및 업데이트**에서 사용량 경고, 초기화, 로그인·조회 오류 알림을 각각 켤 수 있습니다. 기본은 꺼짐이며 처음 켤 때 macOS 알림 권한을 요청합니다. **알림 권한 요청** 버튼으로 먼저 허용할 수도 있고, **테스트 알림**은 필요한 권한을 요청한 뒤 알림을 전송합니다. 이미 거절했다면 **macOS 알림 설정 열기**에서 직접 허용해야 합니다. 요청 오류는 오류 코드와 함께 표시하며 다시 시도할 수 있습니다. 전송 완료는 macOS에 전달됐다는 뜻으로, 집중 모드나 배너 설정에 따라 화면에 보이지 않을 수 있습니다.
+- 사용량 경고는 표시 중인 서비스의 각 5시간·주간·모델 한도에서 70%, 90%에 도달했을 때 구간당 한 번씩 보냅니다. 처음 조회한 값이 이미 높으면 해당 경고를 한 번 보냅니다. 90%를 한 번에 넘으면 90% 경고만 보냅니다. 숨긴 서비스와 꺼 둔 Spark는 제외합니다.
+- 초기화는 카운트다운만 보고 예약하지 않습니다. 앱 실행 중 다음 서버 조회에서 초기화 시각이 바뀌고 사용량이 감소한 경우 확인해서 알립니다. 2시간 이상 조회가 끊겼던 구간의 초기화는 뒤늦게 알리지 않습니다.
+- 세션 만료는 연결 안내를 한 번, 일시적 조회 오류는 연속 3회 실패했을 때 한 번 알립니다. 정상 조회 후 다시 실패하면 새 오류 구간으로 처리합니다. 알림의 중복 방지에는 마지막 사용량·초기화 시각·경고 단계만 로컬 설정에 저장하며 대화 내용이나 인증키를 넣지 않습니다.
+- 새 버전 확인에는 별도 푸시 서버가 없습니다. 수동 확인 또는 사용자가 켠 하루 1회 확인으로 [GitHub Releases API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release)를 조회합니다. 정식 버전과 해당 macOS DMG가 공개되었을 때만 앱 안내창을 띄우며, 자동 설치는 하지 않습니다. GitHub에는 IP와 앱 버전이 포함된 요청이 전달되지만 사용량·토큰·세션은 보내지 않습니다.
+
+### Codex 펫 연동 (macOS 1.7.0)
+
+기존 9종 펫 외에 **설정 → 캐릭터 → Codex Pet**을 선택할 수 있습니다. 기본값과 기존 펫 선택은 바꾸지 않습니다. 이 Mac의 `CODEX_HOME`(기본 `~/.codex`)에서 Codex가 선택한 펫 ID를 읽고 `pets/*/pet.json` 또는 이전 `avatars/*/avatar.json`의 PNG/WebP 시트를 표시합니다. v1(9행)과 v2(11행)를 지원하며 사용량 상태에 따라 대기·집중·휴식 등의 프레임이 바뀝니다. 동작 줄이기와 정지 모드를 따릅니다.
+
+- 최신 `pet_...` ID도 Codex의 로컬 마이그레이션 기록이 원본 `custom:...` 펫을 가리키면 **로컬 사본**을 읽습니다. 클라우드에서만 생성한 펫이나 로컬 원본이 삭제된 펫은 지원하지 않으며, 클라우드에서 수정한 이미지를 자동 다운로드하지 않습니다.
+- 내장 Codex 펫은 설치된 ChatGPT/Codex 앱의 리소스를 읽기 전용으로 참조합니다. 해당 이미지나 개인 펫을 ClaudeUsage 배포 파일에 넣지 않습니다. 계정 인증 파일, 브라우저 쿠키, 클라우드 펫 API는 사용하지 않습니다.
+- 최대 5초 간격으로 선택 변경을 확인하며 이미지와 프레임을 캐시합니다. 시트 크기·경로를 검사하고, 잘못된 파일은 대체 아이콘으로 표시합니다. Codex 내부 파일 형식이 바뀌면 호환성 수정이 필요할 수 있습니다.
+
+이번 Mac 통합에는 Codex 이름별 한도 우선 조회, Claude 활성 조직 우선 선택, 스트리밍 중 같은 메시지의 토큰을 **최대 누적값으로 한 번만 계산**하는 수정도 포함됩니다. `CLAUDE_CONFIG_DIR`을 지정한 경우 그 아래 `projects`를 조회합니다. 이 토큰 합계는 여전히 해당 Mac에 남아 있는 Claude Code 로그 범위이며, 다른 PC의 로그까지 합산하지 않습니다.
+
+Windows 포팅과 5600H MiniPC 실기 테스트는 다음 단계로 분리했습니다. 위 macOS 추가 기능이 기존 Windows 알파에 들어간 것으로 간주하면 안 됩니다. 현재 검증 범위와 배포 전 남은 항목은 [통합 검토 기록](docs/release-integration-review.md)에 있습니다.
 
 ## 🔒 안전한가요? Keychain 안내
 
@@ -420,12 +442,18 @@ ClaudeUsage/
 - [x] 🎭 **9종 선택형 펫과 캐릭터별 상태 동작** — v1.5.0에서 추가
 - [x] 🧩 **Claude 주간 사용 구성 + 서비스별 오늘 토큰 상세** — v1.6에서 추가
 - [x] 🍩 **새 게이지 테마(도넛·헤일로 바·오라) + 표시할 서비스 선택** — v1.7.0에서 추가
-- [ ] 🔔 70% / 90% 도달 시 macOS 알림
+- [x] 🔔 70% / 90% · 초기화 · 연결 오류 알림 및 새 버전 안내 — v1.7.0에서 추가
 - [ ] 📊 90일+ 장기 통계와 데이터 내보내기
 - [ ] 👥 다중 organization 계정 지원
 - [ ] 🖥️ macOS Sonoma+ 데스크탑 위젯 (WidgetKit)
 
 기여 환영합니다! 이슈/PR 부담 없이 올려주세요.
+
+## Contributors
+
+- [@jaewoo4200](https://github.com/jaewoo4200): 프로젝트 개발 및 유지보수.
+- [@jwoo5377](https://github.com/jwoo5377): [PR #2](https://github.com/jaewoo4200/ClaudeUsage/pull/2)의 도넛·헤일로 바·오라 디자인, 서비스 표시 설정, 홈페이지·스크린샷 및 DMG 빌드 개선. 원저자의 세 커밋을 보존해 병합했습니다.
+- 별도로 제공받은 AI-usage 배포물은 로그인·로컬 펫·호환성 개선의 참고 자료로 분석했습니다. 해당 바이너리나 개인 펫 이미지는 재배포하지 않습니다.
 
 ## 📜 Disclaimer
 

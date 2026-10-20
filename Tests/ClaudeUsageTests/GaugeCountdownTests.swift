@@ -105,9 +105,9 @@ final class GaugeCountdownTests: XCTestCase {
                 host.layoutSubtreeIfNeeded()
                 return host.fittingSize.height
             }
-            let donut = height(.daangn)
-            XCTAssertEqual(height(.toss), donut, accuracy: 0.5, "헤일로 바, 폭 \(style.width)")
-            XCTAssertEqual(height(.hybrid), donut, accuracy: 0.5, "오라, 폭 \(style.width)")
+            let donut = height(.donut)
+            XCTAssertEqual(height(.halo), donut, accuracy: 0.5, "헤일로 바, 폭 \(style.width)")
+            XCTAssertEqual(height(.aura), donut, accuracy: 0.5, "오라, 폭 \(style.width)")
         }
     }
 }

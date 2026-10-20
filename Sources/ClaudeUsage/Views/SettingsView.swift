@@ -61,6 +61,10 @@ struct SettingsView: View {
                     LanguagePickerRow()
                         .padding(.horizontal, 20)
 
+                    SectionHeader(title: "section_notifications".l)
+                    NotificationSettingsRow()
+                        .padding(.horizontal, 20)
+
                     SectionHeader(title: "section_services".l)
                     ServiceVisibilityRow()
                         .padding(.horizontal, 20)
@@ -242,6 +246,25 @@ struct WidgetSettingsRow: View {
             }
             .padding(12)
 
+            if settings.showClaude {
+                Divider().background(t.divider)
+                HStack(spacing: 12) {
+                    settingIcon("pin")
+                    Text("widget_breakdown_pin".l)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(t.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 4)
+                    Toggle("", isOn: $settings.widgetBreakdownPinned)
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                        .tint(t.accent)
+                        .labelsHidden()
+                        .accessibilityLabel("widget_breakdown_pin".l)
+                }
+                .padding(12)
+            }
+
             // Spark 한도 표시는 Codex를 켰을 때만
             if settings.showCodex {
                 Divider().background(t.divider)
@@ -320,7 +343,8 @@ struct CompanionSettingsRow: View {
 
     var body: some View {
         let tokens = theme.current.tokens
-        let trend = settings.usageHistoryEnabled ? history.trend() : .empty
+        let trend = settings.usageHistoryEnabled
+            ? history.trend(showClaude: settings.showClaude, showCodex: settings.showCodex) : .empty
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
         let mood = PetMood.resolve(
             snapshot: snapshot,
@@ -809,6 +833,17 @@ struct ThemeMiniPreview: View {
         let s = scale
         switch kind {
         case .daangn:
+            RingView(progress: 38, size: 18 * s, lineWidth: 2 * s,
+                     label: "38%", tokens: kind.tokens)
+        case .toss, .hybrid:
+            VStack(alignment: .leading, spacing: 3 * s) {
+                Text("38%")
+                    .font(.system(size: 9 * s, weight: .bold))
+                    .foregroundStyle(kind.tokens.textPrimary)
+                LinearBar(progress: 38, height: 3 * s, tokens: kind.tokens, gradient: kind == .hybrid)
+            }
+            .frame(width: 40 * s)
+        case .donut:
             HStack(spacing: 4 * s) {
                 DonutGauge(progress: 38, diameter: 18 * s)
                 Text("38%")
@@ -816,7 +851,7 @@ struct ThemeMiniPreview: View {
                     .tracking(-0.3 * s)
                     .foregroundStyle(c.ink)
             }
-        case .toss:
+        case .halo:
             let w = 40 * s, h = 12 * s, r = 3 * s
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: r, style: .continuous)
@@ -840,7 +875,7 @@ struct ThemeMiniPreview: View {
                 .frame(width: w, height: h)
                 .clipShape(RoundedRectangle(cornerRadius: r, style: .continuous))
             }
-        case .hybrid:
+        case .aura:
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(EllipticalGradient(stops: [.init(color: c.deep, location: 0), .init(color: c.mid, location: 0.45),

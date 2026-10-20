@@ -45,6 +45,8 @@ struct CompanionCharacter: View {
                 size: size,
                 time: time
             )
+        case .codex:
+            CodexPetAvatar(mood: mood, size: size, animated: false, time: time)
         }
     }
 }

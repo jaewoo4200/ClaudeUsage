@@ -193,19 +193,23 @@ private struct ProviderHeaderSection: View {
     @EnvironmentObject var theme: ThemeStore
 
     var body: some View {
-        // 앱 아이콘 + 이름(오른쪽 위 연결 점) + 요금제 작은 대문자. 상태 문구는 툴팁.
-        GaugeProviderHeader(
-            name: title,
-            nameColor: isOpenAI ? ProviderNameColor.codex : ProviderNameColor.claude,
-            plan: planDisplayName,
-            isLoaded: planDisplayName != nil,
-            status: status,
-            tokens: theme.current.tokens
-        ) {
-            if isOpenAI {
-                CodexProviderIcon(size: 28)
-            } else {
-                ClaudeProviderIcon(size: 28)
+        if theme.current.isLegacy {
+            LegacyProviderHeader(provider: isOpenAI ? .codex : .claude, plan: planDisplayName,
+                                 status: status, theme: theme.current)
+        } else {
+            GaugeProviderHeader(
+                name: title,
+                nameColor: isOpenAI ? ProviderNameColor.codex : ProviderNameColor.claude,
+                plan: planDisplayName,
+                isLoaded: planDisplayName != nil,
+                status: status,
+                tokens: theme.current.tokens
+            ) {
+                if isOpenAI {
+                    CodexProviderIcon(size: 28)
+                } else {
+                    ClaudeProviderIcon(size: 28)
+                }
             }
         }
     }

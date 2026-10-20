@@ -16,6 +16,7 @@ final class ReleaseScreenshotTests: XCTestCase {
         let original = (theme.current, language.current, settings.widgetLayoutMode,
                         settings.usagePetEnabled, settings.usageHistoryEnabled,
                         settings.mimoAnimationMode, settings.companionKind)
+        let originalVisibility = (settings.showClaude, settings.showCodex, settings.widgetBreakdownPinned)
         defer {
             theme.current = original.0
             language.current = original.1
@@ -24,7 +25,14 @@ final class ReleaseScreenshotTests: XCTestCase {
             settings.usageHistoryEnabled = original.4
             settings.mimoAnimationMode = original.5
             settings.companionKind = original.6
+            settings.showClaude = true
+            settings.showCodex = originalVisibility.1
+            settings.showClaude = originalVisibility.0
+            settings.widgetBreakdownPinned = originalVisibility.2
         }
+        settings.showClaude = true
+        settings.showCodex = true
+        settings.widgetBreakdownPinned = true
         settings.usagePetEnabled = true
         settings.usageHistoryEnabled = true
         settings.mimoAnimationMode = .still
@@ -82,8 +90,45 @@ final class ReleaseScreenshotTests: XCTestCase {
                     .environmentObject(theme).environmentObject(language).padding(20).frame(width: 340)
                     .background(theme.current.tokens.bg),
                     name: "breakdown-\(kind.rawValue)-\(lang.rawValue)", output: output)
+                try render(VStack(alignment: .leading, spacing: 12) {
+                    Text(kind.displayName).font(.headline)
+                    GaugeMetricList(metrics: vm.claudeDisplayMetrics, theme: kind)
+                }.padding(16).frame(width: 350).background(kind.tokens.bg)
+                    .environmentObject(theme).environmentObject(language),
+                    name: "theme-\(kind.rawValue)-\(lang.rawValue)", output: output)
             }
         }
+
+        theme.current = .daangn
+        for lang in AppLanguage.allCases {
+            language.current = lang
+            try render(SettingsView().environmentObject(vm).environmentObject(theme)
+                .environmentObject(language).environmentObject(settings).environmentObject(history),
+                name: "settings-\(lang.rawValue)", output: output)
+            try render(WidgetSettingsRow().environmentObject(theme).environmentObject(settings)
+                .environmentObject(language).padding(16).frame(width: 420).background(theme.current.tokens.bg),
+                name: "settings-layout-\(lang.rawValue)", output: output)
+            try render(ServiceVisibilityRow().environmentObject(theme).environmentObject(settings)
+                .environmentObject(language).padding(16).frame(width: 420).background(theme.current.tokens.bg),
+                name: "settings-services-\(lang.rawValue)", output: output)
+            let notifications = UsageNotifications(
+                client: FakeNotificationClient(), defaults: UserDefaults(suiteName: UUID().uuidString)!
+            )
+            try render(NotificationSettingsRow(notifications: notifications).environmentObject(theme)
+                .environmentObject(settings).environmentObject(language)
+                .padding(16).frame(width: 420).background(theme.current.tokens.bg),
+                name: "settings-notifications-\(lang.rawValue)", output: output)
+        }
+        language.current = .ko
+        try render(HStack(alignment: .top, spacing: 16) {
+            ForEach(ThemeKind.gaugeThemes) { kind in
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(kind.displayName).font(.headline)
+                    GaugeMetricList(metrics: vm.claudeDisplayMetrics, theme: kind)
+                }.padding(16).frame(width: 350)
+            }
+        }.environmentObject(theme).environmentObject(language).background(Color.white),
+        name: "themes-ko", output: output)
     }
 
     @MainActor

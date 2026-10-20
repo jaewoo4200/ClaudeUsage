@@ -79,7 +79,7 @@ struct TextPlanBadge: View {
     var body: some View {
         let t = theme.tokens
         switch theme {
-        case .daangn:
+        case .daangn, .donut:
             Text(displayName)
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(t.accent)
@@ -87,7 +87,7 @@ struct TextPlanBadge: View {
                 .padding(.vertical, 4)
                 .background(t.bgRing)
                 .clipShape(Capsule())
-        case .toss:
+        case .toss, .halo:
             Text(displayName)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(t.accent)
@@ -95,7 +95,7 @@ struct TextPlanBadge: View {
                 .padding(.vertical, 3)
                 .background(t.bgRing)
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        case .hybrid:
+        case .hybrid, .aura:
             Text(compactName)
                 .font(.system(size: 10, weight: .heavy))
                 .foregroundStyle(.white)
@@ -127,7 +127,12 @@ struct AppIconDot: View {
         let hairline = dark ? Color.white.opacity(0.10) : Color.black.opacity(0.09)
         Group {
             switch theme {
-            case .daangn:
+            case .daangn, .toss, .hybrid:
+                ZStack {
+                    shape.fill(theme.iconGradient)
+                    glyph(.white)
+                }
+            case .donut:
                 let lineWidth = size * 0.16
                 // 색 띠 전체(0~100%)를 고리의 288°에 펼친다. 89% 값을 쓰면 90%부터의 빨강 물듦이 섞이지 않는다.
                 let spectrum = AngularGradient(stops: GaugePalette.donutStops(progress: 89), center: .center,
@@ -141,8 +146,8 @@ struct AppIconDot: View {
                     arc.blur(radius: size * 0.07).opacity(dark ? 0.9 : 0.65)
                     arc
                 }
-            case .toss:
-                let c = GaugePalette.colors(.toss, .ok)
+            case .halo:
+                let c = GaugePalette.colors(.halo, .ok)
                 let fill = LinearGradient(stops: [.init(color: c.deep, location: 0), .init(color: c.mid, location: 0.6),
                                                   .init(color: c.bright, location: 1)],
                                           startPoint: .leading, endPoint: .trailing)
@@ -161,8 +166,8 @@ struct AppIconDot: View {
                     .clipShape(shape)
                     .overlay(shape.strokeBorder(hairline, lineWidth: 1))
                 }
-            case .hybrid:
-                let c = GaugePalette.colors(.hybrid, .ok)
+            case .aura:
+                let c = GaugePalette.colors(.aura, .ok)
                 ZStack {
                     shape.fill(surface)
                     Rectangle()

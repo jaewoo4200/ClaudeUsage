@@ -37,17 +37,32 @@ struct WidgetView: View {
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var language: LanguageStore
     @EnvironmentObject var settings: AppSettings
+    @StateObject private var breakdownPresentation: WidgetBreakdownPresentation
 
-    init(
+    @MainActor init(
         panelID: String = WidgetPanelKind.combined.rawValue,
-        provider: WidgetProvider? = nil
+        provider: WidgetProvider? = nil,
+        breakdownPresentation: WidgetBreakdownPresentation? = nil
     ) {
         self.panelID = panelID
         self.provider = provider
+        _breakdownPresentation = StateObject(wrappedValue: breakdownPresentation ?? WidgetBreakdownPresentation())
     }
 
     var body: some View {
         layout
+            .environmentObject(breakdownPresentation)
+            .contentShape(Rectangle())
+            .background(WidgetHoverRegion { breakdownPresentation.isWidgetHovered = $0 })
+            .task(id: breakdownPresentation.isWidgetHovered) {
+                guard !breakdownPresentation.isWidgetHovered else { return }
+                // Keep the detail open while crossing columns or while AppKit resizes the panel.
+                try? await Task.sleep(nanoseconds: 250_000_000)
+                guard !Task.isCancelled else { return }
+                breakdownPresentation.dismissAfterExit()
+            }
+            .onChange(of: settings.widgetLayoutMode) { _ in breakdownPresentation.resetForLayoutChange() }
+            .onChange(of: theme.current) { _ in breakdownPresentation.resetForLayoutChange() }
             .background(
                 GeometryReader { proxy in
                     Color.clear.preference(key: WidgetContentSizeKey.self, value: proxy.size)
@@ -163,13 +178,19 @@ private struct HorizontalWidget: View {
         let tokens = theme.current.tokens
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
-                ProviderWidgetSection(provider: .claude, contentWidth: WidgetGaugeWidth.horizontalColumn)
+                ProviderWidgetSection(provider: .claude, contentWidth: WidgetGaugeWidth.horizontalColumn, showsBreakdown: false)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
                 Divider().background(tokens.divider)
 
-                ProviderWidgetSection(provider: .openAI, contentWidth: WidgetGaugeWidth.horizontalColumn)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                VStack(alignment: .leading, spacing: 8) {
+                    ProviderWidgetSection(provider: .openAI, contentWidth: WidgetGaugeWidth.horizontalColumn)
+                    if let breakdown = vm.claudeWeeklyBreakdown {
+                        Divider().background(tokens.divider)
+                        WidgetBreakdownView(breakdown: breakdown)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .fixedSize(horizontal: false, vertical: true)
 
@@ -207,7 +228,8 @@ private struct HorizontalUsageBrief: View {
     var body: some View {
         let tokens = theme.current.tokens
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
-        let trend = settings.usageHistoryEnabled ? history.trend() : .empty
+        let trend = settings.usageHistoryEnabled
+            ? history.trend(showClaude: settings.showClaude, showCodex: settings.showCodex) : .empty
 
         let columns = Array(repeating: GridItem(.flexible(), alignment: .leading), count: twoColumns ? 2 : 1)
         LazyVGrid(columns: columns, alignment: .leading, spacing: 4) {
@@ -427,18 +449,23 @@ private struct ProviderWidgetSection: View {
     let provider: WidgetProvider
     /// 줄이 차지하는 폭. 세로·전환·분리 위젯은 240 − 여백 18×2
     var contentWidth: CGFloat = WidgetGaugeWidth.narrow
+    var showsBreakdown = true
 
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var settings: AppSettings
+    @EnvironmentObject var breakdownPresentation: WidgetBreakdownPresentation
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             providerHeader
             if provider == .claude {
                 if vm.snapshot != nil {
-                    // 주간 구성은 7일 줄 안에 접혀 있다가 호버·"구성" 버튼으로 펼친다
                     metricRows(vm.claudeDisplayMetrics, breakdown: vm.claudeWeeklyBreakdown)
+                    if showsBreakdown, let breakdown = vm.claudeWeeklyBreakdown {
+                        Divider().background(theme.current.tokens.divider)
+                        WidgetBreakdownView(breakdown: breakdown)
+                    }
                 } else {
                     EmptyStateInline()
                 }
@@ -460,21 +487,36 @@ private struct ProviderWidgetSection: View {
             metrics: metrics,
             breakdown: breakdown,
             theme: theme.current,
-            style: .widget(width: contentWidth)
+            style: .widget(width: contentWidth),
+            widgetBreakdownOpen: breakdownPresentation.isOpen(pinned: settings.widgetBreakdownPinned),
+            onWidgetBreakdownHover: { breakdownPresentation.reveal() },
+            onWidgetBreakdownToggle: {
+                if breakdownPresentation.isOpen(pinned: settings.widgetBreakdownPinned) {
+                    settings.widgetBreakdownPinned = false
+                    breakdownPresentation.dismiss()
+                } else {
+                    breakdownPresentation.show()
+                }
+            }
         )
     }
 
+    @ViewBuilder
     private var providerHeader: some View {
-        // 드롭다운과 같은 헤더를 작게: 앱 아이콘 + 이름(오른쪽 위 연결 점) + 요금제 작은 대문자
-        GaugeProviderHeader(
-            name: provider.displayName,
-            nameColor: provider == .claude ? ProviderNameColor.claude : ProviderNameColor.codex,
-            plan: providerPlan,
-            isLoaded: providerIsLoaded,
-            tokens: theme.current.tokens,
-            compact: true
-        ) {
-            providerIcon(size: 18)
+        if theme.current.isLegacy {
+            LegacyProviderHeader(provider: provider == .claude ? .claude : .codex,
+                                 plan: providerPlan, status: "", theme: theme.current, compact: true)
+        } else {
+            GaugeProviderHeader(
+                name: provider.displayName,
+                nameColor: provider == .claude ? ProviderNameColor.claude : ProviderNameColor.codex,
+                plan: providerPlan,
+                isLoaded: providerIsLoaded,
+                tokens: theme.current.tokens,
+                compact: true
+            ) {
+                providerIcon(size: 18)
+            }
         }
     }
 
@@ -529,7 +571,7 @@ private struct WidgetPanelSurface: View {
         let tokens = theme.tokens
         let shape = RoundedRectangle(cornerRadius: tokens.cornerOuter, style: .continuous)
         Group {
-            if theme == .hybrid {
+            if theme == .hybrid || theme == .aura {
                 shape.fill(
                     LinearGradient(
                         colors: [tokens.bg, tokens.bgSecondary],

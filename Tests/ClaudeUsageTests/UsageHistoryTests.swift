@@ -119,10 +119,10 @@ final class UsageHistoryTests: XCTestCase {
         XCTAssertEqual(MimoAnimationMode.lively.transitionDuration(for: .calm), 0.16)
     }
 
-    func testCompanionCatalogContainsNineStableIdentifiers() throws {
+    func testCompanionCatalogPreservesBuiltInsAndAddsOptInCodexPet() throws {
         XCTAssertEqual(
             CompanionKind.allCases,
-            [.mimo, .lumi, .kumo, .dot, .navi, .bori, .muru, .tori, .pico]
+            [.mimo, .lumi, .kumo, .dot, .navi, .bori, .muru, .tori, .pico, .codex]
         )
         let encoded = try JSONEncoder().encode(CompanionKind.allCases)
         XCTAssertEqual(try JSONDecoder().decode([CompanionKind].self, from: encoded), CompanionKind.allCases)

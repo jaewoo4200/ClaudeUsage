@@ -5,8 +5,14 @@ enum ThemeKind: String, CaseIterable, Codable, Identifiable {
     case daangn
     case toss
     case hybrid
+    case donut
+    case halo
+    case aura
 
     var id: String { rawValue }
+    var isLegacy: Bool { Self.legacyThemes.contains(self) }
+    static let legacyThemes: [Self] = [.daangn, .toss, .hybrid]
+    static let gaugeThemes: [Self] = [.donut, .halo, .aura]
 
     @MainActor
     var displayName: String {
@@ -14,6 +20,9 @@ enum ThemeKind: String, CaseIterable, Codable, Identifiable {
         case .daangn: return "theme_daangn".l
         case .toss: return "theme_toss".l
         case .hybrid: return "theme_hybrid".l
+        case .donut: return "theme_donut".l
+        case .halo: return "theme_halo".l
+        case .aura: return "theme_aura".l
         }
     }
 
@@ -23,6 +32,9 @@ enum ThemeKind: String, CaseIterable, Codable, Identifiable {
         case .daangn: return "theme_daangn_sub".l
         case .toss: return "theme_toss_sub".l
         case .hybrid: return "theme_hybrid_sub".l
+        case .donut: return "theme_donut_sub".l
+        case .halo: return "theme_halo_sub".l
+        case .aura: return "theme_aura_sub".l
         }
     }
 }

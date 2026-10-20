@@ -9,7 +9,8 @@ struct PetSummaryCard: View {
     var body: some View {
         let tokens = theme.current.tokens
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
-        let trend = settings.usageHistoryEnabled ? history.trend() : .empty
+        let trend = settings.usageHistoryEnabled
+            ? history.trend(showClaude: settings.showClaude, showCodex: settings.showCodex) : .empty
         let companion = settings.companionKind
         let mood = PetMood.resolve(
             snapshot: snapshot,
@@ -97,7 +98,8 @@ struct WidgetMimoCompanion: View {
     var body: some View {
         let tokens = theme.current.tokens
         let snapshot = vm.historySnapshot(includingSpark: settings.showOpenAISparkLimits)
-        let trend = settings.usageHistoryEnabled ? history.trend() : .empty
+        let trend = settings.usageHistoryEnabled
+            ? history.trend(showClaude: settings.showClaude, showCodex: settings.showCodex) : .empty
         let companion = settings.companionKind
         let mood = PetMood.resolve(
             snapshot: snapshot,
@@ -294,7 +296,11 @@ struct MimoAvatar: View {
 
     @ViewBuilder
     private func character(tokens: DesignTokens, stateColor: Color) -> some View {
-        if let animationTime {
+        if kind == .codex {
+            CodexPetAvatar(mood: mood, size: size,
+                           animated: !reduceMotion && animationActive && animationMode != .still,
+                           time: reduceMotion ? 0 : animationTime, refreshActive: animationActive)
+        } else if let animationTime {
             CompanionCharacter(
                 kind: kind,
                 mood: mood,

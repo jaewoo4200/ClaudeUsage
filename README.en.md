@@ -16,11 +16,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-4.1MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-5.2MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg">Download v1.6.3</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg">Download v1.7.0</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
@@ -36,7 +36,7 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 - 🧡 **Nine selectable companions**: Pick Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, or Pico and adjust sensitivity and animation
 - 📈 **Local usage charts**: Optionally keep five-minute samples on this Mac for 14 days and inspect them by time range and provider
 - 🪶 **Adaptive native animation**: Uses a low update cadence while calm and stops rendering when the floating widget is hidden
-- 🎨 **3 themes**: Daangn / Toss / Hybrid — switch live
+- 🎨 **6 themes**: Keep the original Daangn / Toss / Hybrid styles and saved selections, plus Donut / Halo Bar / Aura.
 - 🌏 **Multilingual**: Korean / English — toggle instantly
 - 🔄 **Auto-refresh every 60s** plus manual refresh
 - 🌑 **Dark mode** — follows system appearance
@@ -48,7 +48,9 @@ The server's `seven_day_breakdown` appears as usage composition. If weekly utili
 
 - Horizontal: Claude limits on the upper left; Codex limits and a clearly labeled **Claude weekly breakdown** on the upper right. Mimo and the combined summary share the bottom row. With the pet disabled, the summary uses two columns.
 - Stacked, separate Claude, and paged widgets: A compact composition bar and legend follow Claude's limits. The Codex-only widget does not show Claude's breakdown.
-- Menu bar dropdown: Individual bars and the server's aggregation time appear in the Claude section. All layouts support Daangn, Toss, and Hybrid themes in Korean and English.
+- Menu bar dropdown: Hover over Claude's weekly row or click **Mix** to expand its composition.
+- Widgets: Hover over Claude's weekly row or the breakdown heading. Details open **below Codex in horizontal mode**, or below Claude's limits in stacked, paged, and Claude-only modes. They stay open while the pointer is within the widget. The pin button keeps them expanded after the pointer leaves and across app restarts; click again to unpin.
+- All six themes support Korean and English. Classic themes retain their original layouts; the three new gauge themes share the same metric-row height.
 
 This is the account's current weekly composition, separate from this Mac's local token total. It updates with server snapshots and is excluded from quota gauges and Mimo's peak usage. Incorrect `Breakdown 0%` counters from older versions are filtered when reading history. Composition snapshots are not additionally stored in the local history file.
 
@@ -56,14 +58,14 @@ The Codex responses used by this integration provide quota utilization and accou
 
 ## 📸 Screenshots
 
-### macOS 1.6.2: Weekly breakdown and daily token status
+### macOS 1.7.0: Six themes, pinned breakdown, and notifications
 
 <p align="center">
-  <img src="docs/assets/releases/1.6.2/widget-horizontal-daangn-en.png" width="720" alt="1.6.2 horizontal widget with weekly breakdown and pending token status">
+  <img src="docs/assets/releases/1.7.0/widget-horizontal-daangn-en.png" width="720" alt="1.7.0 horizontal widget with the pinned weekly breakdown below Codex">
 </p>
 <p align="center">
-  <img src="docs/assets/releases/1.6.2/breakdown-daangn-en.png" width="340" alt="Claude weekly usage by service">
-  <img src="docs/assets/releases/1.6.2/tokens-daangn-en.png" width="310" alt="Daily token details and the latest Codex server total">
+  <img src="docs/assets/releases/1.7.0/breakdown-daangn-en.png" width="340" alt="Claude weekly usage by service">
+  <img src="docs/assets/releases/1.7.0/settings-notifications-en.png" width="420" alt="Notification permission and test controls">
 </p>
 
 > These are real app views rendered with demo data, without personal accounts, conversation content, or credentials. These macOS updates are separate from the Windows alpha.
@@ -76,7 +78,7 @@ The Codex responses used by this integration provide quota utilization and accou
 
 > The menu bar shows the Claude icon and percentage alongside the Codex icon and percentage. Each provider refreshes independently.
 
-### Dropdown (3 themes)
+### Dropdown (3 classic themes, plus Donut / Halo Bar / Aura)
 
 <table>
   <tr>
@@ -85,13 +87,13 @@ The Codex responses used by this integration provide quota utilization and accou
     <td align="center"><b>✨ Hybrid</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-toss-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-hybrid-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-daangn-en.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-toss-en.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-hybrid-en.png" width="300"></td>
   </tr>
 </table>
 
-### Floating widget (3 themes)
+### Floating widget (classic themes)
 
 <table>
   <tr>
@@ -100,9 +102,9 @@ The Codex responses used by this integration provide quota utilization and accou
     <td align="center"><b>✨ Hybrid</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-toss-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-hybrid-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-paged-daangn-en.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-paged-toss-en.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-paged-hybrid-en.png" width="220"></td>
   </tr>
 </table>
 
@@ -114,12 +116,12 @@ The Codex responses used by this integration provide quota utilization and accou
     <td align="center"><b>🇺🇸 English</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-en.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-daangn-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-daangn-en.png" width="300"></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-en.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-paged-daangn-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-paged-daangn-en.png" width="220"></td>
   </tr>
 </table>
 
@@ -131,8 +133,8 @@ The Codex responses used by this integration provide quota utilization and accou
     <td align="center"><b>🇺🇸 English</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/settings.png" width="420"></td>
-    <td><img src="docs/screenshots/settings-en.png" width="420"></td>
+    <td><img src="docs/assets/releases/1.7.0/settings-ko.png" width="420"></td>
+    <td><img src="docs/assets/releases/1.7.0/settings-en.png" width="420"></td>
   </tr>
 </table>
 
@@ -160,7 +162,7 @@ The Codex responses used by this integration provide quota utilization and accou
 
 ## 🚀 Installation (Users)
 
-1. Download [ClaudeUsage-1.6.3.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. Download [ClaudeUsage-1.7.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
@@ -170,7 +172,7 @@ The Codex responses used by this integration provide quota utilization and accou
 
 ## 🔑 Read before first launch
 
-This app is **not signed with an Apple Developer ID** (free open-source — didn't pay the $99/year fee). macOS may show two security dialogs as a result. **Both are normal and safe.**
+This app uses **ad-hoc bundle signing**, not **Apple Developer ID signing or notarization**. macOS may show security warnings. Verify the official release source and attached SHA-256 before deciding to open it; a valid signature alone does not establish that an app is safe.
 
 ### 1) Bypass "unidentified developer"
 
@@ -198,9 +200,29 @@ Removes the macOS quarantine flag (auto-added to downloaded files). After this, 
 
 ### 2) Sign in & first fetch
 
-- Click **[C] Sign in** in the menu bar → log in to claude.ai (Google supported)
+- Click **[C] Sign in** in the menu bar and use **Continue with email** inside the app.
+- For Google accounts, use **Browser sign-in → Advanced session**. Sign in to claude.ai in your default browser, then enter only your own `sessionKey` from Developer Tools (Chrome/Edge: Application → Cookies → https://claude.ai; Safari: Web Inspector → Storage → Cookies). Never enter a Google password/token or a full cookie header. Clear the key from your clipboard afterward.
+- ClaudeUsage validates the session with claude.ai before storing it in this Mac's Keychain; failed validation does not replace your existing session. Browser cookies are not collected automatically. External browser sign-in does not sign the embedded web view in. Google authentication stays in the external browser in accordance with [Google's embedded-browser OAuth restriction](https://developers.google.com/identity/protocols/oauth2/policies).
 - OpenAI usage connects automatically when Codex or a ChatGPT app with Codex integration is installed and signed in. Its GUI can remain closed.
 - Once connected, each provider updates independently ✨
+
+### Notifications and updates (1.7.0)
+
+Settings has separate, opt-in switches for 70%/90% usage warnings, confirmed resets, and sign-in/connection errors. Enabling notifications requests macOS permission. **Request permission** can request it separately, and **Test notification** requests any necessary permission before submitting a test. If permission was denied, use **Open macOS notification settings** to enable it manually. Request failures include an error code and can be retried. A successful test means macOS accepted the notification, not that a banner appeared: Focus mode and system settings can suppress banners. Each provider/window warns once per threshold; a first observation already above a threshold warns once, and a jump past 90% sends only the higher warning. Hidden providers and disabled Spark counters are excluded.
+
+Reset notifications require a refreshed server snapshot with a new reset time and lower usage, not merely an expired countdown. Resets after a refresh gap of two hours or more are not announced retroactively. Authentication expiry alerts once; other errors alert after three consecutive failed refreshes, and successful refreshes rearm error alerts. Only the last observation/reset time and warning state are retained locally for deduplication, never conversations or credentials.
+
+Update checks need no push server. Manual checks, or opt-in daily checks, query the public [GitHub Releases API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release). A prompt appears only for a newer stable release with its macOS DMG attached. Downloads and installation are user initiated. GitHub receives the connection IP and app-version user agent, not usage data or session credentials.
+
+### Codex pet integration (macOS 1.7.0)
+
+Alongside the nine built-in companions, **Settings → Companion → Codex Pet** follows the pet selected in the local Codex configuration. Existing selections and defaults are preserved. It reads `CODEX_HOME` (default `~/.codex`), v1/v2 PNG/WebP sheets under `pets/*/pet.json` or legacy `avatars/*/avatar.json`, and mood-specific sprite frames. Still mode and Reduce Motion are respected.
+
+New `pet_...` IDs are resolved only when Codex's local migration map points to an existing `custom:...` original. This displays the **local copy**, not a fresh cloud download. Cloud-only pets, removed local originals, and later cloud edits cannot be synchronized through this read-only integration. Built-in sheets are referenced from the installed ChatGPT/Codex app; no personal or proprietary pet images are bundled in ClaudeUsage. No authentication files, browser cookies, or cloud pet API are used. Selection checks run at most every five seconds; decoded sheets and frames are cached, paths and dimensions are bounded, and missing/invalid images show a placeholder.
+
+This Mac integration also prioritizes named Codex quotas and the active Claude organization, honors `CLAUDE_CONFIG_DIR/projects`, and counts the maximum cumulative token usage per streaming Claude message rather than summing repeated snapshots. Local Claude tokens still cover this Mac's available Claude Code logs, not other computers.
+
+Windows porting and runtime checks on the 5600H MiniPC are deferred. These macOS additions are not yet included in the Windows alpha. See [integration evidence and release gates](docs/release-integration-review.md).
 
 ## 🔒 Is it safe? Keychain explained
 
@@ -354,7 +376,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.6.3.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.7.0.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon
@@ -386,7 +408,7 @@ ClaudeUsage/
 ## 🛠️ Tech Stack
 
 - **SwiftUI** + AppKit (native macOS)
-- **WKWebView** (claude.ai OAuth/Google sign-in → cookie capture)
+- **WKWebView** for email sign-in; external-browser Google sign-in with explicit, validated session entry
 - **Keychain Services** (secure session cookie storage)
 - **Codex app-server JSON-RPC** (documented local usage interface)
 - **Local Claude Code JSONL aggregation** (optional token trends; no content retained)
@@ -412,12 +434,18 @@ ClaudeUsage/
 - [x] 🧡 **Mimo companion + 14-day local trends + 4 widget layouts** — added in v1.3.0
 - [x] 📊 **Usage charts + Mimo sensitivity, animation, and performance improvements** — added in v1.4.0
 - [x] 🎭 **Nine selectable companions with character-specific state actions** — added in v1.5.0
-- [ ] 🔔 macOS notifications at 70% / 90%
+- [x] 🔔 Usage/reset/connection notifications and opt-in release checks in v1.7.0
 - [ ] 📊 90-day+ statistics and data export
 - [ ] 👥 Multiple organization accounts
 - [ ] 🖥️ macOS Sonoma+ desktop widget (WidgetKit)
 
 Contributions welcome — feel free to open issues or PRs.
+
+## Contributors
+
+- [@jaewoo4200](https://github.com/jaewoo4200): project development and maintenance.
+- [@jwoo5377](https://github.com/jwoo5377): Donut / Halo Bar / Aura designs, provider visibility, website/screenshots, and DMG build improvements in [PR #2](https://github.com/jaewoo4200/ClaudeUsage/pull/2). All three original authored commits are preserved in the merge.
+- A separately supplied AI-usage package informed login, local-pet, and compatibility improvements. Its binaries and personal pet artwork are not redistributed.
 
 ## 📜 Disclaimer
 

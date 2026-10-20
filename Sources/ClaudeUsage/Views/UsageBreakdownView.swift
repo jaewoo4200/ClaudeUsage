@@ -4,6 +4,7 @@ struct UsageBreakdownView: View {
     let breakdown: UsageBreakdown
     var compact = true
     var includesProvider = false
+    var showsTitle = true
 
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var language: LanguageStore
@@ -12,9 +13,11 @@ struct UsageBreakdownView: View {
         let tokens = theme.current.tokens
         VStack(alignment: .leading, spacing: compact ? 7 : 10) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(includesProvider ? "breakdown_claude_title".l : "breakdown_title".l)
-                    .font(.system(size: compact ? 11 : 13, weight: .bold))
-                    .foregroundStyle(tokens.textPrimary)
+                if showsTitle {
+                    Text(includesProvider ? "breakdown_claude_title".l : "breakdown_title".l)
+                        .font(.system(size: compact ? 11 : 13, weight: .bold))
+                        .foregroundStyle(tokens.textPrimary)
+                }
                 Text("breakdown_share".l)
                     .font(.system(size: compact ? 9 : 11))
                     .foregroundStyle(tokens.textTertiary)
@@ -70,7 +73,7 @@ struct UsageBreakdownView: View {
         }
         .frame(height: compact ? 7 : 9)
         .background(theme.current.tokens.bgRing)
-        .clipShape(RoundedRectangle(cornerRadius: theme.current == .hybrid ? 2 : 4))
+        .clipShape(RoundedRectangle(cornerRadius: theme.current == .hybrid || theme.current == .aura ? 2 : 4))
         .accessibilityHidden(true)
     }
 
@@ -105,6 +108,7 @@ struct UsageBreakdownView: View {
     }
 
     private func color(for key: String) -> Color {
+        if !theme.current.isLegacy { return GaugeSegment.color(forKey: key) }
         let tokens = theme.current.tokens
         switch key {
         case "claude_code": return tokens.accent

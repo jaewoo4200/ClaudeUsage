@@ -15,30 +15,36 @@ enum CodexAppServerUsageService {
     static func fetchUsage() async throws -> OpenAIUsageData {
         guard let executableURL = executableURL() else { throw CodexAppServerUsageError.unavailable }
         let response = try await CodexRPCSession.run(executableURL: executableURL)
-        return makeUsageData(rateLimits: response.rateLimits, tokenUsage: response.tokenUsage)
+        return try makeUsageData(rateLimits: response.rateLimits, tokenUsage: response.tokenUsage)
     }
 
     static func decodeFixture(rateLimitsJSON: Data, tokenUsageJSON: Data?) throws -> OpenAIUsageData {
         let decoder = JSONDecoder()
         let rateLimits = try decoder.decode(CodexRateLimitsResult.self, from: rateLimitsJSON)
-        let tokenUsage = try tokenUsageJSON.map { try decoder.decode(CodexTokenUsageResult.self, from: $0) }
-        return makeUsageData(rateLimits: rateLimits, tokenUsage: tokenUsage)
+        let tokenUsage = tokenUsageJSON.flatMap { try? decoder.decode(CodexTokenUsageResult.self, from: $0) }
+        return try makeUsageData(rateLimits: rateLimits, tokenUsage: tokenUsage)
     }
 
     private static func makeUsageData(
         rateLimits: CodexRateLimitsResult,
         tokenUsage: CodexTokenUsageResult?
-    ) -> OpenAIUsageData {
+    ) throws -> OpenAIUsageData {
         let indexed = rateLimits.rateLimitsByLimitID ?? [:]
-        let standard = rateLimits.rateLimits
-            ?? indexed["codex"]
-            ?? indexed.values.first { $0.limitName == nil }
+        let ordered = indexed.sorted(by: { $0.key < $1.key })
+        let indexedStandard = indexed["codex"].map { (key: "codex", value: $0) }
+            ?? ordered.first { $0.value.limitID == "codex" }
+        let fallback = ordered.first { $0.value.limitName == nil }
+        let standard = indexedStandard?.value ?? rateLimits.rateLimits ?? fallback?.value
+        let selectedKey = indexedStandard?.key ?? (rateLimits.rateLimits == nil ? fallback?.key : nil)
+        guard let standard, standard.primary != nil || standard.secondary != nil else {
+            throw CodexAppServerUsageError.decode
+        }
 
         var codeReview: OpenAIRateLimit?
         var additional: [OpenAIAdditionalRateLimit] = []
 
         for (limitID, limit) in indexed.sorted(by: { $0.key < $1.key }) {
-            if limitID == standard?.limitID || (limitID == "codex" && limit.limitName == nil) {
+            if limitID == selectedKey || limitID == standard.limitID {
                 continue
             }
             let normalized = "\(limitID) \(limit.limitName ?? "")".lowercased()
@@ -73,8 +79,8 @@ enum CodexAppServerUsageService {
         }
 
         return OpenAIUsageData(
-            planType: standard?.planType,
-            rateLimit: standard?.openAIRateLimit,
+            planType: standard.planType,
+            rateLimit: standard.openAIRateLimit,
             codeReviewRateLimit: codeReview,
             additionalRateLimits: additional,
             tokenActivity: activity,

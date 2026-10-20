@@ -362,7 +362,7 @@ final class WidgetLayoutTests: XCTestCase {
         let featuredMoods: [PetMood] = [
             .focused, .focused, .tired,
             .calm, .focused, .refreshed,
-            .refreshed, .focused, .sleepy
+            .refreshed, .focused, .sleepy, .calm
         ]
         let columns = Array(repeating: GridItem(.fixed(170), spacing: 12), count: 3)
         let lineup = LazyVGrid(columns: columns, spacing: 12) {
@@ -479,7 +479,8 @@ final class WidgetLayoutTests: XCTestCase {
         host.cacheDisplay(in: host.bounds, to: bitmap)
         let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
         XCTAssertEqual(size.width, 720, accuracy: 2)
-        XCTAssertLessThan(size.height, 310)
+        let gridRows = (CompanionKind.allCases.count + 2) / 3
+        XCTAssertLessThan(size.height, CGFloat(gridRows * 94 + 32))
         XCTAssertGreaterThan(png.count, 25_000)
         try png.write(
             to: URL(fileURLWithPath: "/private/tmp/ClaudeUsage-companion-widget-grid.png"),
@@ -1203,7 +1204,8 @@ final class WidgetLayoutTests: XCTestCase {
 
         XCTAssertEqual(size.width, 420, accuracy: 1)
         XCTAssertGreaterThan(size.height, 260)
-        XCTAssertLessThan(size.height, 550)
+        // Ten choices occupy four grid rows; the parent settings view scrolls.
+        XCTAssertLessThan(size.height, 600)
         let bitmap = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
         host.cacheDisplay(in: host.bounds, to: bitmap)
         let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
@@ -1235,15 +1237,20 @@ final class WidgetLayoutTests: XCTestCase {
         let oldLayout = settings.widgetLayoutMode
         let oldPet = settings.usagePetEnabled
         let oldMotion = settings.mimoAnimationMode
+        let oldPinned = settings.widgetBreakdownPinned
+        let oldCompanion = settings.companionKind
         defer {
             theme.current = oldTheme
             language.current = oldLanguage
             settings.widgetLayoutMode = oldLayout
             settings.usagePetEnabled = oldPet
             settings.mimoAnimationMode = oldMotion
+            settings.widgetBreakdownPinned = oldPinned
+            settings.companionKind = oldCompanion
         }
         settings.usagePetEnabled = true
         settings.mimoAnimationMode = .still
+        settings.companionKind = .mimo
         let layouts: [(WidgetLayoutMode, WidgetProvider?)] = [
             (.horizontal, nil), (.stacked, nil), (.paged, nil),
             (.separate, .claude), (.separate, .openAI)
@@ -1254,13 +1261,16 @@ final class WidgetLayoutTests: XCTestCase {
                 language.current = lang
                 for (layout, provider) in layouts {
                     settings.widgetLayoutMode = layout
-                    let name = "ClaudeUsage-breakdown-\(themeKind.rawValue)-\(layout.rawValue)-\(provider?.rawValue ?? "both")-\(lang.rawValue).png"
-                    let size = try renderWidget(
-                        provider: provider, viewModel: vm, themeStore: theme, languageStore: language,
-                        appSettings: settings, historyStore: history, fileName: name
-                    )
-                    XCTAssertEqual(size.width, layout == .horizontal ? 480 : 240, accuracy: 1)
-                    XCTAssertLessThan(size.height, layout == .horizontal ? 420 : 640, name)
+                    for pinned in [false, true] {
+                        settings.widgetBreakdownPinned = pinned
+                        let name = "ClaudeUsage-breakdown-\(themeKind.rawValue)-\(layout.rawValue)-\(provider?.rawValue ?? "both")-\(lang.rawValue)-\(pinned ? "pinned" : "auto").png"
+                        let size = try renderWidget(
+                            provider: provider, viewModel: vm, themeStore: theme, languageStore: language,
+                            appSettings: settings, historyStore: history, fileName: name
+                        )
+                        XCTAssertEqual(size.width, layout == .horizontal ? 480 : 240, accuracy: 1)
+                        XCTAssertLessThan(size.height, layout == .horizontal ? 420 : 640, name)
+                    }
                 }
             }
         }
