@@ -19,11 +19,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-5.2MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.4MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg">v1.7.0 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">v1.7.1 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
 </p>
 
 ---
@@ -59,6 +59,16 @@ Claude 서버가 제공하는 `seven_day_breakdown`을 **주간 사용량의 서
 Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 일별 토큰을 제공하지만, Claude와 같은 서비스별 구성 비율은 제공하지 않습니다(2026-09-17 확인). Spark 등의 별도 한도 사용률은 전체 사용량에서 차지하는 비중이 아니므로 합산하거나 구성 비율로 바꾸지 않습니다. [OpenAI 공식 App Server 문서](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt)
 
 ## 📸 스크린샷
+
+### 1.7.1: 새 앱 아이콘과 실제 초기화 알림
+
+[@jwoo5377](https://github.com/jwoo5377)의 [PR #4](https://github.com/jaewoo4200/ClaudeUsage/pull/4)로 세 줄 헤일로 게이지 아이콘을 적용했습니다. 앱은 다크 아이콘을 사용하고 이 README의 아이콘은 화면 모드에 따라 라이트·다크로 바뀝니다. macOS 앱 아이콘의 자동 모드 전환은 아닙니다.
+
+<p align="center">
+  <img src="docs/assets/releases/1.7.1/notification-reset-ko.png" width="724" alt="macOS 알림 센터에서 받은 Codex 알림: 7일 사용량이 초기화되었습니다.">
+</p>
+
+> 사용자가 제공하고 공개를 요청한 **실제 1.7.0 알림 수신 화면**입니다. 새 로고 적용 전 캡처라 이전 주황 아이콘이 보입니다. 알림을 켜면 사용량 경고와 서버 조회로 확인한 초기화 등을 안내하며, 1.7.1에서도 같은 기능을 유지합니다.
 
 ### 1.7.0: 세 가지 게이지와 표시할 서비스
 
@@ -168,7 +178,7 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 🚀 설치 (사용자)
 
-1. [ClaudeUsage-1.7.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. [ClaudeUsage-1.7.1.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. dmg 열기 → `Applications` 폴더로 드래그
 3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
 
@@ -385,7 +395,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.7.0.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.7.1.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성
@@ -455,7 +465,7 @@ ClaudeUsage/
 ## Contributors
 
 - [@jaewoo4200](https://github.com/jaewoo4200): 프로젝트 개발 및 유지보수.
-- [@jwoo5377](https://github.com/jwoo5377): [PR #2](https://github.com/jaewoo4200/ClaudeUsage/pull/2)의 도넛·헤일로 바·오라 디자인, 서비스 표시 설정, 홈페이지·스크린샷 및 DMG 빌드 개선. 원저자의 세 커밋을 보존해 병합했습니다.
+- [@jwoo5377](https://github.com/jwoo5377): [PR #2](https://github.com/jaewoo4200/ClaudeUsage/pull/2)의 도넛·헤일로 바·오라 디자인, 서비스 표시 설정, 홈페이지·스크린샷 및 DMG 빌드 개선과 [PR #4](https://github.com/jaewoo4200/ClaudeUsage/pull/4)의 새 앱 아이콘. 원저자의 커밋을 보존해 병합했습니다.
 - 별도로 제공받은 AI-usage 배포물은 로그인·로컬 펫·호환성 개선의 참고 자료로 분석했습니다. 해당 바이너리나 개인 펫 이미지는 재배포하지 않습니다.
 
 ## 📜 Disclaimer
