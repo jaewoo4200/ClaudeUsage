@@ -76,6 +76,15 @@ struct UsageHistoryDashboardView: View {
     @State private var range: UsageHistoryRange = .day
     @State private var scope: UsageHistoryProviderScope = .all
 
+    /// 서비스를 하나만 켜 두었으면(설정 > 표시할 서비스) 그 서비스로 고정한다
+    private var activeScope: UsageHistoryProviderScope {
+        switch settings.onlyVisibleProvider {
+        case .claude: return .claude
+        case .openAI: return .codex
+        case nil: return scope
+        }
+    }
+
     var body: some View {
         let _ = language.current
         let tokens = theme.current.tokens
@@ -160,22 +169,24 @@ struct UsageHistoryDashboardView: View {
 
             Spacer(minLength: 12)
 
-            Picker("history_scope_all".l, selection: $scope) {
-                ForEach(UsageHistoryProviderScope.allCases) { item in
-                    Text(item.title).tag(item)
+            if settings.onlyVisibleProvider == nil {
+                Picker("history_scope_all".l, selection: $scope) {
+                    ForEach(UsageHistoryProviderScope.allCases) { item in
+                        Text(item.title).tag(item)
+                    }
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 230)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: 230)
         }
     }
 
     private func summary(samples: [UsageHistorySample], tokens: DesignTokens) -> some View {
-        let pressures = samples.compactMap { Self.pressure(in: $0, scope: scope) }
+        let pressures = samples.compactMap { Self.pressure(in: $0, scope: activeScope) }
         let peak = pressures.max()
         let delta = pressures.count > 1 ? (pressures.last ?? 0) - (pressures.first ?? 0) : nil
-        let resets = Self.detectedResetCount(samples, scope: scope)
+        let resets = Self.detectedResetCount(samples, scope: activeScope)
 
         return HStack(spacing: 0) {
             summaryMetric(
@@ -385,7 +396,7 @@ struct UsageHistoryDashboardView: View {
         provider: UsagePressureSource.Provider,
         to points: inout [UsageHistoryChartPoint]
     ) {
-        guard scope.includes(provider), let value else { return }
+        guard activeScope.includes(provider), let value else { return }
         points.append(
             UsageHistoryChartPoint(
                 timestamp: timestamp,

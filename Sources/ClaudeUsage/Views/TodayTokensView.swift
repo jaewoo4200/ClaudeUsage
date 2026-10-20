@@ -34,8 +34,12 @@ struct TodayTokensView: View {
                     .fixedSize()
             }
             Divider()
-            providerRow("Claude", source: "today_tokens_claude_source".l, state: summary.claude)
-            providerRow("Codex", source: "today_tokens_codex_source".l, state: summary.codex)
+            if summary.claude != .hidden {
+                providerRow("Claude", source: "today_tokens_claude_source".l, state: summary.claude)
+            }
+            if summary.codex != .hidden {
+                providerRow("Codex", source: "today_tokens_codex_source".l, state: summary.codex)
+            }
 
             if summary.codex == .pending {
                 Text("today_tokens_codex_pending".l)
@@ -103,6 +107,7 @@ extension TodayTokenState {
         case .pending: return "today_tokens_pending".l
         case .disabled: return "today_tokens_disabled".l
         case .unavailable: return "today_tokens_unavailable".l
+        case .hidden: return "provider_hidden".l
         }
     }
 }

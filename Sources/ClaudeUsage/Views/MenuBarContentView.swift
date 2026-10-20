@@ -17,6 +17,9 @@ private struct DashboardDropdown: View {
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var settings: AppSettings
     @State private var scrollHeight: CGFloat = 360
+    /// 바깥 여백(20)만큼 좌우로, 아래 구분선까지(14) 번짐이 퍼질 자리
+    private static let glowRoomX: CGFloat = 20
+    private static let glowRoomBottom: CGFloat = 14
 
     var body: some View {
         let tokens = theme.current.tokens
@@ -26,11 +29,22 @@ private struct DashboardDropdown: View {
                     if settings.usagePetEnabled {
                         PetSummaryCard()
                     }
-                    ClaudeProviderSection()
-                    Divider().background(tokens.divider)
-                    OpenAIProviderSection()
+                    // 설정 > 표시할 서비스에서 끈 서비스는 빼고, 둘 다 보일 때만 구분선
+                    if settings.showClaude {
+                        ClaudeProviderSection()
+                    }
+                    if settings.showClaude && settings.showCodex {
+                        Divider().background(tokens.divider)
+                    }
+                    if settings.showCodex {
+                        OpenAIProviderSection()
+                    }
                 }
                 .padding(.trailing, 2)
+                // 빛 번짐(헤일로·오라)이 스크롤 영역 경계에서 잘리지 않도록, 스크롤 영역을 바깥 여백까지 넓히고
+                // 같은 만큼 안쪽 여백을 준다. 겉보기 배치는 그대로다.
+                .padding(.horizontal, Self.glowRoomX)
+                .padding(.bottom, Self.glowRoomBottom)
                 .background(
                     GeometryReader { proxy in
                         Color.clear.preference(
@@ -41,9 +55,11 @@ private struct DashboardDropdown: View {
                 )
             }
             .frame(height: scrollHeight)
+            .padding(.horizontal, -Self.glowRoomX)
+            .padding(.bottom, -Self.glowRoomBottom)
             .onPreferenceChange(MenuScrollContentHeightKey.self) { measuredHeight in
                 guard measuredHeight > 0 else { return }
-                let clampedHeight = min(ceil(measuredHeight), 560)
+                let clampedHeight = min(ceil(measuredHeight), 560 + Self.glowRoomBottom)
                 if abs(scrollHeight - clampedHeight) >= 0.5 {
                     scrollHeight = clampedHeight
                 }
@@ -71,21 +87,20 @@ private struct ClaudeProviderSection: View {
     var body: some View {
         VStack(spacing: 12) {
             ProviderHeaderSection(
-                title: "claude_usage".l,
+                title: "claude_short".l,
                 status: statusText,
                 isOpenAI: false,
-                planDisplayName: vm.state.isLoaded ? vm.plan.displayName : nil,
-                planCompactName: vm.state.isLoaded ? vm.plan.compactName : nil
+                planDisplayName: vm.state.isLoaded ? vm.plan.displayName : nil
             )
 
             switch vm.state {
             case .loaded:
-                ForEach(vm.claudeDisplayMetrics) { metric in
-                    usageCard(metric)
-                }
-                if let breakdown = vm.claudeWeeklyBreakdown {
-                    UsageBreakdownView(breakdown: breakdown, compact: false)
-                }
+                // 주간 구성은 7일 줄 안에 접혀 있다가 호버·"구성" 버튼으로 펼친다
+                GaugeMetricList(
+                    metrics: vm.claudeDisplayMetrics,
+                    breakdown: vm.claudeWeeklyBreakdown,
+                    theme: theme.current
+                )
             case .loading:
                 ProviderLoadingView()
             case .needsLogin:
@@ -112,16 +127,6 @@ private struct ClaudeProviderSection: View {
         case .error: return "load_failed".l
         }
     }
-
-    private func usageCard(_ metric: UsageDisplayMetric) -> some View {
-        ThemedUsageCard(
-            title: metric.title,
-            utilization: metric.utilization,
-            resetsAt: metric.resetsAt,
-            isWeekly: metric.isWeekly,
-            theme: theme.current
-        )
-    }
 }
 
 private struct OpenAIProviderSection: View {
@@ -133,11 +138,10 @@ private struct OpenAIProviderSection: View {
         let metrics = vm.openAIDisplayMetrics(includingSpark: settings.showOpenAISparkLimits)
         VStack(spacing: 12) {
             ProviderHeaderSection(
-                title: "openai_usage".l,
+                title: "openai_short".l,
                 status: statusText,
                 isOpenAI: true,
-                planDisplayName: vm.openAIState.isLoaded ? vm.openAIPlanDisplayName : nil,
-                planCompactName: vm.openAIState.isLoaded ? vm.openAIPlanCompactName : nil
+                planDisplayName: vm.openAIState.isLoaded ? vm.openAIPlanDisplayName : nil
             )
 
             switch vm.openAIState {
@@ -145,15 +149,7 @@ private struct OpenAIProviderSection: View {
                 if metrics.isEmpty {
                     ProviderMessageView(message: "usage_unavailable".l)
                 } else {
-                    ForEach(metrics) { metric in
-                        ThemedUsageCard(
-                            title: metric.title,
-                            utilization: metric.utilization,
-                            resetsAt: metric.resetsAt,
-                            isWeekly: metric.isWeekly,
-                            theme: theme.current
-                        )
-                    }
+                    GaugeMetricList(metrics: metrics, theme: theme.current)
                 }
             case .loading:
                 ProviderLoadingView()
@@ -193,41 +189,23 @@ private struct ProviderHeaderSection: View {
     let status: String
     let isOpenAI: Bool
     let planDisplayName: String?
-    let planCompactName: String?
 
     @EnvironmentObject var theme: ThemeStore
 
     var body: some View {
-        let tokens = theme.current.tokens
-        HStack(spacing: 10) {
-            Group {
-                if isOpenAI {
-                    CodexProviderIcon(size: 36)
-                } else {
-                    ClaudeProviderIcon(size: 36)
-                }
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(tokens.textPrimary)
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(planDisplayName == nil ? tokens.textTertiary : tokens.ok)
-                        .frame(width: 5, height: 5)
-                    Text(status)
-                        .font(.system(size: 11))
-                        .foregroundStyle(tokens.textTertiary)
-                        .lineLimit(1)
-                }
-            }
-            Spacer(minLength: 8)
-            if let planDisplayName, let planCompactName {
-                TextPlanBadge(
-                    displayName: planDisplayName,
-                    compactName: planCompactName,
-                    theme: theme.current
-                )
+        // 앱 아이콘 + 이름(오른쪽 위 연결 점) + 요금제 작은 대문자. 상태 문구는 툴팁.
+        GaugeProviderHeader(
+            name: title,
+            nameColor: isOpenAI ? ProviderNameColor.codex : ProviderNameColor.claude,
+            plan: planDisplayName,
+            isLoaded: planDisplayName != nil,
+            status: status,
+            tokens: theme.current.tokens
+        ) {
+            if isOpenAI {
+                CodexProviderIcon(size: 28)
+            } else {
+                ClaudeProviderIcon(size: 28)
             }
         }
     }

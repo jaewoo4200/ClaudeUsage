@@ -212,6 +212,8 @@ final class AppSettings: ObservableObject {
     static let widgetAlwaysOnTopChanged = Notification.Name("widgetAlwaysOnTopChanged")
     static let widgetConfigurationChanged = Notification.Name("widgetConfigurationChanged")
     static let appearanceChanged = Notification.Name("appearanceChanged")
+    /// 표시할 서비스(Claude·Codex)가 바뀜. 꺼진 서비스는 화면에서 빠지고 사용량도 가져오지 않는다.
+    static let providerVisibilityChanged = Notification.Name("providerVisibilityChanged")
 
     private let topKey = "widgetAlwaysOnTop"
     private let apprKey = "appearanceMode"
@@ -224,6 +226,8 @@ final class AppSettings: ObservableObject {
     private let companionKindKey = "companionKind"
     private let mimoSensitivityKey = "mimoSensitivity"
     private let mimoAnimationModeKey = "mimoAnimationMode"
+    private let showClaudeKey = "providerClaudeVisible"
+    private let showCodexKey = "providerCodexVisible"
 
     @Published var widgetAlwaysOnTop: Bool {
         didSet {
@@ -286,6 +290,43 @@ final class AppSettings: ObservableObject {
     }
 
     @Published var floatingWidgetVisible = false
+
+    /// 표시할 서비스. 둘 다 끌 수는 없다(마지막 하나를 끄려 하면 다시 켠다).
+    @Published var showClaude: Bool {
+        didSet {
+            guard showClaude || showCodex else { showClaude = true; return }
+            UserDefaults.standard.set(showClaude, forKey: showClaudeKey)
+            postProviderVisibilityChange(old: oldValue, new: showClaude)
+        }
+    }
+
+    @Published var showCodex: Bool {
+        didSet {
+            guard showClaude || showCodex else { showCodex = true; return }
+            UserDefaults.standard.set(showCodex, forKey: showCodexKey)
+            postProviderVisibilityChange(old: oldValue, new: showCodex)
+        }
+    }
+
+    /// 켜 둔 서비스 (Claude, Codex 순)
+    var visibleProviders: [WidgetProvider] {
+        [showClaude ? .claude : nil, showCodex ? .openAI : nil].compactMap { $0 }
+    }
+
+    /// 서비스를 하나만 켰으면 그 서비스, 둘 다 켰으면 nil
+    var onlyVisibleProvider: WidgetProvider? {
+        visibleProviders.count == 1 ? visibleProviders.first : nil
+    }
+
+    func isVisible(_ provider: WidgetProvider) -> Bool {
+        provider == .claude ? showClaude : showCodex
+    }
+
+    private func postProviderVisibilityChange(old: Bool, new: Bool) {
+        guard old != new else { return }
+        NotificationCenter.default.post(name: Self.providerVisibilityChanged, object: nil)
+        NotificationCenter.default.post(name: Self.widgetConfigurationChanged, object: nil)
+    }
 
     init() {
         // widget always-on-top
@@ -353,6 +394,15 @@ final class AppSettings: ObservableObject {
         } else {
             self.mimoAnimationMode = .automatic
         }
+
+        // 표시할 서비스: 처음엔 둘 다. 저장값이 둘 다 꺼져 있으면(있어선 안 되는 상태) 둘 다 켠다.
+        let storedShowClaude = UserDefaults.standard.object(forKey: showClaudeKey) == nil
+            ? true : UserDefaults.standard.bool(forKey: showClaudeKey)
+        let storedShowCodex = UserDefaults.standard.object(forKey: showCodexKey) == nil
+            ? true : UserDefaults.standard.bool(forKey: showCodexKey)
+        let noneShown = !storedShowClaude && !storedShowCodex
+        self.showClaude = storedShowClaude || noneShown
+        self.showCodex = storedShowCodex || noneShown
     }
 
     /// 앱 전체 appearance를 강제 적용 (nil이면 시스템 따라감)

@@ -16,11 +16,11 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-4.1MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.4MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg">v1.6.3 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg">v1.7.0 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
 </p>
 
 ---
@@ -30,25 +30,26 @@
 Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다. Claude의 5시간·7일·모델별 한도뿐 아니라 OpenAI의 5시간·주간 한도와 서버가 제공하는 모델별 한도를 함께 표시합니다.
 
 - 🤖 **Claude + Codex**: 두 계정 상태를 독립적으로 조회하고 한 화면에 표시
-- 🪟 **4가지 위젯 배치**: 세로 / 가로 / 화살표 전환 / Claude·Codex 독립 위젯 중 선택
-- **Claude 주간 사용 내역**: Claude Code·채팅·Cowork 등의 사용 비중을 구성 막대로 표시
+- 👁️ **표시할 서비스**: 하나만 쓴다면 다른 쪽을 끄세요. 끈 서비스는 메뉴바·드롭다운·위젯에서 빠지고 조회도 하지 않습니다
+- 🎨 **3가지 게이지 테마**: 도넛 / 헤일로 바 / 오라 — 실시간 전환, 테마를 바꿔도 창 크기는 그대로
+- 🪟 **4가지 위젯 배치**: 세로 / 가로 / 화살표 전환 / Claude·Codex 독립 위젯 중 선택, 끌어서 옮긴 위치를 기억
+- **Claude 주간 사용 구성**: 7일 줄의 "구성"을 펼치면 Claude Code·채팅·Cowork 등의 비중이 게이지 색과 비율로 표시
 - 🧭 **새 모델 자동 대응**: 서버가 내려주는 모델별 한도를 이름 고정 없이 표시하며 GPT-5.3-Codex-Spark는 기본 숨김·선택 표시
 - 🧡 **9종 선택형 펫**: Mimo, Lumi, Kumo, Dot, Navi, Bori, Muru, Tori, Pico 중 하나를 고르고 반응 민감도와 애니메이션 조절
 - 📈 **로컬 사용량 그래프**: 5분 간격 사용량을 이 Mac에만 14일 보관하고 기간·서비스별 추이를 별도 창에서 분석; 기본값은 꺼짐
 - 🪶 **적응형 네이티브 애니메이션**: 편안할 때는 저주기로 움직이고 위젯을 숨기면 렌더링을 멈춰 상시 CPU 사용을 줄임
-- 🎨 **3가지 테마**: 당근 / 토스 / 하이브리드 — 실시간 전환
 - 🌏 **다국어**: 한국어 / English — 즉시 토글
 - 🔄 **60초 자동 새로고침** + 수동 새로고침
 - 🌑 **다크 모드** 자동 대응 (시스템 설정 따라감)
 - 💻 **Universal Binary** (Intel + Apple Silicon)
 
-### 주간 사용 내역 (v1.6.0)
+### 주간 사용 구성
 
 Claude 서버가 제공하는 `seven_day_breakdown`을 **주간 사용량의 서비스별 비율**로 표시합니다. 예를 들어 주간 한도 사용률이 35%, Code 비중이 90%라면, 해당 주간 사용량 중 90%가 Claude Code에서 발생했다는 뜻입니다. Code 한도를 90% 소진했다는 의미는 아닙니다.
 
-- 가로 위젯: 위쪽 왼편에 Claude 한도, 오른편에 Codex 한도와 **Claude 주간 사용 내역**을 배치합니다. 하단은 Mimo와 전체 요약 정보를 나란히 표시해 빈 공간을 줄입니다. 펫을 끄면 요약 정보가 두 열로 표시됩니다.
-- 세로·Claude 분리·화살표 전환 위젯: Claude 한도 아래에 작은 구성 막대와 항목별 비중을 표시합니다. Codex 전용 위젯에는 Claude 내역이 나타나지 않습니다.
-- 메뉴바 드롭다운: Claude 영역에서 항목별 막대와 집계 시각을 확인할 수 있습니다. 모든 배치가 당근·토스·하이브리드, 한국어·영어를 지원합니다.
+- 메뉴바 드롭다운: Claude 7일 줄에 마우스를 올리면 펼쳐지고, **구성** 버튼을 누르면 펼친 상태로 고정됩니다. 펼치면 7일 게이지가 Code·채팅·Cowork·기타 색으로 나뉘고 아래에 항목별 비율이 표시됩니다.
+- 위젯: 모든 배치에서 7일 줄의 **구성** 버튼으로 펼치고 접습니다. 위젯은 펼칠 때 창 크기가 바뀌므로 마우스를 올리는 것만으로는 펼치지 않습니다. Codex 전용 위젯에는 Claude 구성이 나타나지 않습니다.
+- 세 테마(도넛·헤일로 바·오라)와 한국어·영어에서 모두 같은 방식으로 동작합니다.
 
 이 내역은 계정의 이번 주 사용 구성으로, 이 Mac의 로컬 토큰 합계와는 별개입니다. 새로고침 때 서버가 제공하는 최신 집계를 표시하며 별도 한도·Mimo 최고 사용률에 포함하지 않습니다. 기존 버전이 잘못 저장했던 `Breakdown 0%`는 기록을 읽을 때 제외합니다. 실제 사용 내역은 로컬 추이 파일에 추가 저장하지 않습니다.
 
@@ -56,14 +57,14 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 📸 스크린샷
 
-### macOS 1.6.2: 주간 내역과 오늘 토큰
+### 1.7.0: 세 가지 게이지와 표시할 서비스
 
 <p align="center">
-  <img src="docs/assets/releases/1.6.2/widget-horizontal-daangn-ko.png" width="720" alt="1.6.2 가로 위젯의 주간 사용 내역과 오늘 토큰 집계 대기">
+  <img src="docs/assets/releases/1.7.0/themes-ko.png" width="900" alt="도넛, 헤일로 바, 오라 세 테마의 드롭다운">
 </p>
 <p align="center">
-  <img src="docs/assets/releases/1.6.2/breakdown-daangn-ko.png" width="340" alt="Claude 주간 사용 비율">
-  <img src="docs/assets/releases/1.6.2/tokens-daangn-ko.png" width="310" alt="서비스별 오늘 토큰과 최근 Codex 서버 집계">
+  <img src="docs/assets/releases/1.7.0/breakdown-ko.png" width="340" alt="7일 줄의 주간 사용 구성을 펼친 모습">
+  <img src="docs/assets/releases/1.7.0/settings-services-ko.png" width="400" alt="설정의 표시할 서비스">
 </p>
 
 > 실제 앱을 데모 데이터로 렌더링한 화면입니다. 개인 계정, 대화 내용, 인증정보는 포함하지 않았습니다. 새로운 macOS 기능은 Windows 알파와 별도로 배포됩니다.
@@ -74,37 +75,41 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
   <img src="docs/screenshots/menubar.png" width="200" alt="Menu Bar">
 </p>
 
-> 메뉴바에 Claude 아이콘과 퍼센트, Codex 아이콘과 퍼센트가 함께 표시됩니다. 각 서비스는 독립적으로 갱신됩니다.
+> 메뉴바에 Claude 아이콘과 퍼센트, Codex 아이콘과 퍼센트가 함께 표시됩니다. 각 서비스는 독립적으로 갱신되며, 설정에서 한 서비스를 끄면 켠 서비스만 표시됩니다.
 
 ### 드롭다운 (3가지 테마)
 
 <table>
   <tr>
-    <td align="center"><b>🥕 당근</b></td>
-    <td align="center"><b>💙 토스</b></td>
-    <td align="center"><b>✨ 하이브리드</b></td>
+    <td align="center"><b>🍩 도넛</b></td>
+    <td align="center"><b>💠 헤일로 바</b></td>
+    <td align="center"><b>✨ 오라</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-toss-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-hybrid-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-daangn-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-toss-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-hybrid-ko.png" width="300"></td>
   </tr>
 </table>
+
+> 도넛은 사용률에 따라 고리가 파랑에서 주황, 빨강으로 이어지고, 헤일로 바는 빛이 번지는 그라데이션 막대, 오라는 사용률만큼 퍼지는 빛으로 보여 줍니다. 주황과 빨강은 경고(70%)와 위험(90%)에만 씁니다.
 
 ### 떠다니는 위젯 (3가지 테마)
 
 <table>
   <tr>
-    <td align="center"><b>🥕 당근</b></td>
-    <td align="center"><b>💙 토스</b></td>
-    <td align="center"><b>✨ 하이브리드</b></td>
+    <td align="center"><b>🍩 도넛</b></td>
+    <td align="center"><b>💠 헤일로 바</b></td>
+    <td align="center"><b>✨ 오라</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-toss-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-hybrid-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-daangn-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-toss-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-hybrid-ko.png" width="220"></td>
   </tr>
 </table>
+
+> 위젯은 아무 곳이나 끌어서 옮길 수 있고, 옮긴 위치는 다음 실행에도 유지됩니다.
 
 ### 다국어 — 한국어 / English
 
@@ -114,12 +119,12 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
     <td align="center"><b>🇺🇸 English</b></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-ko.png" width="300"></td>
-    <td><img src="docs/assets/releases/1.6.2/dropdown-daangn-en.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-daangn-ko.png" width="300"></td>
+    <td><img src="docs/assets/releases/1.7.0/dropdown-daangn-en.png" width="300"></td>
   </tr>
   <tr>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-ko.png" width="220"></td>
-    <td><img src="docs/assets/releases/1.6.2/widget-paged-daangn-en.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-daangn-ko.png" width="220"></td>
+    <td><img src="docs/assets/releases/1.7.0/widget-stacked-daangn-en.png" width="220"></td>
   </tr>
 </table>
 
@@ -131,17 +136,17 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
     <td align="center"><b>🇺🇸 English</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/settings.png" width="420"></td>
-    <td><img src="docs/screenshots/settings-en.png" width="420"></td>
+    <td><img src="docs/assets/releases/1.7.0/settings-ko.png" width="420"></td>
+    <td><img src="docs/assets/releases/1.7.0/settings-en.png" width="420"></td>
   </tr>
 </table>
 
-> 위젯 배치 / 분리할 서비스 / Spark 표시 / 테마 / 펫 / 로컬 기록 / 언어 — 모두 실시간 토글 가능. 변경 즉시 모든 화면에 반영됩니다.
+> 테마 / 위젯 배치 / 분리할 서비스 / Spark 표시 / 펫 / 로컬 기록 / 언어 / 표시할 서비스 — 모두 실시간 토글 가능. 변경 즉시 모든 화면에 반영됩니다. 설정 창 위쪽 로고도 고른 테마에 맞춰 바뀝니다.
 
 ### 로컬 사용량 그래프
 
 <p align="center">
-  <img src="docs/assets/history-dashboard.png" width="700" alt="Claude와 Codex의 24시간 사용량 그래프">
+  <img src="docs/assets/releases/1.7.0/history-dashboard-ko.png" width="700" alt="Claude와 Codex의 24시간 사용량 그래프">
 </p>
 
 > 메뉴바의 그래프 아이콘 또는 설정의 **사용량 그래프 열기**에서 1시간·24시간·7일·14일과 전체·Claude·Codex 범위를 전환할 수 있습니다.
@@ -160,13 +165,13 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 🚀 설치 (사용자)
 
-1. [ClaudeUsage-1.6.3.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.6.3/ClaudeUsage-1.6.3.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. [ClaudeUsage-1.7.0.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.0/ClaudeUsage-1.7.0.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. dmg 열기 → `Applications` 폴더로 드래그
 3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
 
 > **Codex 사용량 표시 조건:** ChatGPT/Codex 앱 또는 호환되는 Codex 실행 파일이 설치되어 있고, 해당 Codex 세션에 로그인되어 있어야 합니다. **GUI 앱을 계속 켜 둘 필요는 없습니다.** ClaudeUsage가 조회할 때 로컬 `codex app-server` 프로세스를 직접 시작합니다.
 
-> **v1.6.3 연결 호환성 패치:** 최신 ChatGPT/Codex 앱의 `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex`와 기존 `Contents/Resources/codex`를 모두 지원합니다. `/Applications`, `~/Applications`의 앱과 기존 CLI 설치 경로를 조회할 때마다 확인합니다. 앱 업데이트 후 Codex가 연결되지 않는다면 ClaudeUsage를 업데이트하세요. 로그인 정보나 사용 기록을 초기화할 필요는 없습니다. 초기화권 상세가 서버에서 `null`로 오는 경우에도 한도 조회를 유지합니다.
+> **Codex 앱 업데이트 호환:** 최신 ChatGPT/Codex 앱의 `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex`와 기존 `Contents/Resources/codex`를 모두 지원합니다. `/Applications`, `~/Applications`의 앱과 기존 CLI 설치 경로를 조회할 때마다 확인합니다. 앱 업데이트 후 Codex가 연결되지 않는다면 ClaudeUsage를 업데이트하세요. 로그인 정보나 사용 기록을 초기화할 필요는 없습니다. 초기화권 상세가 서버에서 `null`로 오는 경우에도 한도 조회를 유지합니다.
 
 ## 🔑 처음 실행할 때 읽어주세요
 
@@ -201,6 +206,7 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 - 메뉴바 **[C] 로그인** 클릭 → claude.ai 로그인 (Google 가능)
 - OpenAI 사용량은 Codex 또는 Codex가 통합된 ChatGPT 앱이 설치되어 있고 ChatGPT 계정으로 로그인되어 있으면 자동 연결. GUI 앱은 꺼져 있어도 됩니다.
 - 로그인 완료 → 각 서비스의 사용량을 독립적으로 표시 ✨
+- Claude나 Codex 중 하나만 쓴다면 **설정 → 표시할 서비스**에서 다른 쪽을 끄세요. 끈 서비스는 화면에서 빠지고 조회도 하지 않습니다(둘 다 끌 수는 없습니다).
 
 ## 🔒 안전한가요? Keychain 안내
 
@@ -238,11 +244,11 @@ xattr -dr com.apple.quarantine /Applications/ClaudeUsage.app
 | Codex 일별 토큰·추이 | `codex app-server`의 `account/usage/read`가 제공하는 계정 단위 일별 버킷 | 아니요 |
 | 펫 14일 기록 | ClaudeUsage가 사용자가 켠 경우에만 만드는 `usage-history.json` | ClaudeUsage 자체 기록 |
 
-일반 ChatGPT 대화나 ChatGPT Classic 기록, Codex 세션 본문을 스캔하지 않습니다. 현재 ChatGPT 앱의 Codex 통합, 독립 Codex 앱 또는 호환되는 Codex 실행 파일과 로그인된 세션을 사용합니다.
+설정의 **표시할 서비스**에서 끈 서비스는 위 표의 어떤 값도 조회하지 않습니다. 일반 ChatGPT 대화나 ChatGPT Classic 기록, Codex 세션 본문을 스캔하지 않습니다. 현재 ChatGPT 앱의 Codex 통합, 독립 Codex 앱 또는 호환되는 Codex 실행 파일과 로그인된 세션을 사용합니다.
 
 ### 오늘 토큰의 집계 상태 (v1.6.2)
 
-- 두 서비스의 오늘 값이 모두 있을 때만 합계를 표시합니다. 실제로 두 값이 0이면 `0`, 오늘 데이터가 아직 없으면 `집계 대기`, 양수인 한쪽 값만 확인되면 `일부 2.9M`처럼 표시합니다. `M`은 백만 토큰이며 누적 전체 토큰을 오늘 값으로 사용하지 않습니다.
+- 표시 중인 서비스의 오늘 값이 모두 있을 때만 합계를 표시합니다(설정에서 끈 서비스는 합계와 상세 목록에서 빠집니다). 실제로 두 값이 0이면 `0`, 오늘 데이터가 아직 없으면 `집계 대기`, 양수인 한쪽 값만 확인되면 `일부 2.9M`처럼 표시합니다. `M`은 백만 토큰이며 누적 전체 토큰을 오늘 값으로 사용하지 않습니다.
 - 가로 위젯의 **오늘 토큰** 또는 메뉴바 드롭다운의 **Σ** 버튼을 누르면 서비스별 정확한 토큰 수와 `집계 대기`·`로컬 집계 꺼짐`·`조회 불가` 상태를 볼 수 있습니다. Claude는 이 Mac의 Claude Code 로그(캐시 입력 포함), Codex는 계정 단위 서버 일별 합계입니다.
 - Codex는 서버가 반환한 날짜 중 Mac의 오늘 날짜와 같은 항목만 사용합니다. 오늘 항목이 없으면 이전 날짜의 값으로 대체하지 않으며, 최근 서버 집계를 날짜와 함께 별도로 보여줍니다. 서버 집계 지연이나 시간대 차이 때문에 실시간 사용량 게이지와 갱신 시점이 다를 수 있습니다.
 - 자정이 지나면 전날 Claude 토큰 캐시는 제외합니다. 최근 1시간 토큰 변화는 같은 서비스의 데이터가 구간 내내 확인되는 경우에만 계산해, 뒤늦게 도착한 하루 누적값을 사용 급증으로 오해하지 않도록 합니다. 서버가 보고한 수치의 변화이지 정확한 작업 발생 시각별 토큰은 아닙니다.
@@ -265,7 +271,7 @@ max(Claude 5시간, Claude 주간, Claude 모델별 한도,
     Codex 5시간, Codex 주간, 표시 중인 Codex 모델별 한도)
 ```
 
-Spark 표시를 끄면 Spark 전용 한도는 계산에서도 제외됩니다. 기록을 켠 경우 최근 1시간의 최고 사용률 증가 속도도 함께 사용합니다.
+Spark 표시를 끄면 Spark 전용 한도는 계산에서도 제외되고, 표시할 서비스에서 끈 서비스의 값도 모두 제외됩니다. 기록을 켠 경우 최근 1시간의 최고 사용률 증가 속도도 함께 사용합니다.
 
 | 민감도 | 집중 시작 | 졸림 시작 | 지침 시작 |
 |---|---:|---:|---:|
@@ -354,7 +360,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.6.3.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.7.0.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성
@@ -379,7 +385,7 @@ ClaudeUsage/
 │   ├── Models/                  # Claude/OpenAI 사용량 응답과 표시 모델
 │   ├── Services/                # 인증, API, ViewModel, ThemeStore, AppSettings, LanguageStore, Localization
 │   ├── Views/                   # 메뉴바, 위젯, 설정 + 디자인 시스템
-│   └── Resources/               # Info.plist, entitlements, AppIcon.icns
+│   └── Resources/               # Info.plist, entitlements, AppIcon.icns, Fonts(Barlow Condensed)
 └── docs/screenshots/            # README용 캡쳐
 ```
 
@@ -412,6 +418,8 @@ ClaudeUsage/
 - [x] 🧡 **Mimo 펫 + 14일 로컬 추이 + 4가지 위젯 배치** — v1.3.0에서 추가
 - [x] 📊 **사용량 그래프 + Mimo 민감도·애니메이션·성능 개선** — v1.4.0에서 추가
 - [x] 🎭 **9종 선택형 펫과 캐릭터별 상태 동작** — v1.5.0에서 추가
+- [x] 🧩 **Claude 주간 사용 구성 + 서비스별 오늘 토큰 상세** — v1.6에서 추가
+- [x] 🍩 **새 게이지 테마(도넛·헤일로 바·오라) + 표시할 서비스 선택** — v1.7.0에서 추가
 - [ ] 🔔 70% / 90% 도달 시 macOS 알림
 - [ ] 📊 90일+ 장기 통계와 데이터 내보내기
 - [ ] 👥 다중 organization 계정 지원
@@ -434,6 +442,7 @@ ClaudeUsage/
 
 - 원본 **Claude Widget** by [ficklestudio26](https://ficklestudio26.blogspot.com/2026/05/mac.html) — Electron 위젯의 동작 패턴을 참고했습니다.
 - UI 디자인 영감: [토스(Toss)](https://toss.im/) / [당근(Daangn)](https://www.daangn.com/) — 차분하고 친근한 한국 fintech/커뮤니티 앱 디자인 언어.
+- 남은 시간 숫자 서체: [Barlow Condensed](https://github.com/jpt/barlow) — Copyright 2017 The Barlow Project Authors, [SIL Open Font License 1.1](Sources/ClaudeUsage/Resources/Fonts/BarlowCondensed-OFL.txt).
 - 본 작업은 **[Claude](https://claude.ai)** 와 **[Claude Code](https://claude.com/claude-code)** 를 적극 활용해 만들어졌습니다. 분석, 설계, SwiftUI 코드 작성, 디버깅, 아이콘 SVG 디자인, 다국어 처리, README 작성까지 — 모든 단계에서 Claude의 도움을 받았습니다.
 
 ## 📄 License

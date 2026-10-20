@@ -1293,6 +1293,62 @@ final class WidgetLayoutTests: XCTestCase {
         )
     }
 
+    /// 설정 > 표시할 서비스: 하나는 꼭 남고, 하나만 켜면 메뉴 막대·위젯이 그 서비스만 그린다.
+    @MainActor
+    func testShowingOnlyOneServiceKeepsOneAndShrinksMenuBarAndWidget() throws {
+        let settings = AppSettings.shared
+        let original = (settings.showClaude, settings.showCodex, settings.widgetLayoutMode, settings.usagePetEnabled)
+        let historyURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("single-service-\(UUID().uuidString).json")
+        defer {
+            settings.showClaude = true
+            settings.showCodex = true
+            settings.showCodex = original.1
+            settings.showClaude = original.0
+            settings.widgetLayoutMode = original.2
+            settings.usagePetEnabled = original.3
+            try? FileManager.default.removeItem(at: historyURL)
+        }
+        settings.showClaude = true
+        settings.showCodex = true
+
+        // 둘 다 끌 수는 없다
+        settings.showClaude = false
+        settings.showCodex = false
+        XCTAssertTrue(settings.showCodex, "마지막으로 남은 서비스는 꺼지지 않아야 한다")
+        XCTAssertEqual(settings.onlyVisibleProvider, .openAI)
+        settings.showClaude = true
+        XCTAssertNil(settings.onlyVisibleProvider)
+
+        // 메뉴 막대: Codex를 끄면 아이콘·%가 하나만 남아 폭이 줄어든다
+        let viewModel = try makeStressViewModel()
+        func labelWidth() -> CGFloat {
+            let host = NSHostingView(rootView: MenuBarLabel()
+                .environmentObject(viewModel)
+                .environmentObject(ThemeStore())
+                .environmentObject(LanguageStore()))
+            host.layoutSubtreeIfNeeded()
+            return host.fittingSize.width
+        }
+        let bothWidth = labelWidth()
+        settings.showCodex = false
+        let claudeOnlyWidth = labelWidth()
+        XCTAssertLessThan(claudeOnlyWidth, bothWidth - 20)
+
+        // 위젯: 가로 배치여도 서비스가 하나면 한 장(폭 240)
+        settings.usagePetEnabled = false
+        settings.widgetLayoutMode = .horizontal
+        let size = try renderWidget(
+            viewModel: viewModel, themeStore: ThemeStore(), languageStore: LanguageStore(),
+            appSettings: settings, historyStore: UsageHistoryStore(fileURL: historyURL),
+            fileName: "ClaudeUsage-single-service-widget.png"
+        )
+        XCTAssertEqual(size.width, 240, accuracy: 1)
+
+        // 오늘 토큰: 숨긴 Codex는 합계에서 빠진다
+        XCTAssertEqual(viewModel.todayTokenSummary(localCollectionEnabled: true).codex, .hidden)
+    }
+
     @MainActor
     private func renderWidget(
         provider: WidgetProvider? = nil,

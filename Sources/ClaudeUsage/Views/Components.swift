@@ -108,21 +108,88 @@ struct TextPlanBadge: View {
     }
 }
 
-// MARK: - App icon dot (헤더 등에 쓰는 작은 아이콘)
+// MARK: - App icon dot (설정 머리 로고)
 
+/// 설정 머리 로고. 타일 모양·크기·C 자리는 테마와 상관없이 같고, 재질만 각 테마의 게이지를 따른다.
+/// - 도넛: 3시 방향이 열린 색 띠 고리(파랑 → 주황 → 빨강)가 곧 C. 헤일로를 깐다.
+/// - 헤일로 바: 왼쪽 62%만 채운 막대 타일. C는 채움 위에선 흰색(녹아웃), 트랙 위에선 단계 글자 색.
+/// - 오라: 왼쪽에서 번지는 빛 위의 먹색 C(다크는 흰색) + 바탕 쪽 글자 그림자.
+/// 실제 앱 아이콘(.icns)은 바꾸지 않는다. theme.iconGradient는 Mimo도 쓰므로 여기서는 쓰지 않는다.
 struct AppIconDot: View {
     let theme: ThemeKind
     let size: CGFloat
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
-                .fill(theme.iconGradient)
-                .frame(width: size, height: size)
-            Text("C")
-                .font(.system(size: size * 0.55, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
+        let dark = scheme == .dark
+        let shape = RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+        let surface = Color(light: 0xFFFFFF, dark: 0x2A2C31)
+        let hairline = dark ? Color.white.opacity(0.10) : Color.black.opacity(0.09)
+        Group {
+            switch theme {
+            case .daangn:
+                let lineWidth = size * 0.16
+                // 색 띠 전체(0~100%)를 고리의 288°에 펼친다. 89% 값을 쓰면 90%부터의 빨강 물듦이 섞이지 않는다.
+                let spectrum = AngularGradient(stops: GaugePalette.donutStops(progress: 89), center: .center,
+                                               startAngle: .degrees(0), endAngle: .degrees(288))
+                let arc = Circle().inset(by: lineWidth / 2 + size * 0.17).trim(from: 0, to: 0.8)
+                    .stroke(spectrum, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                    .rotationEffect(.degrees(36))   // 열린 곳을 3시 방향 가운데로
+                ZStack {
+                    shape.fill(surface)
+                    shape.strokeBorder(hairline, lineWidth: 1)
+                    arc.blur(radius: size * 0.07).opacity(dark ? 0.9 : 0.65)
+                    arc
+                }
+            case .toss:
+                let c = GaugePalette.colors(.toss, .ok)
+                let fill = LinearGradient(stops: [.init(color: c.deep, location: 0), .init(color: c.mid, location: 0.6),
+                                                  .init(color: c.bright, location: 1)],
+                                          startPoint: .leading, endPoint: .trailing)
+                let fillWidth = size * 0.62
+                ZStack(alignment: .leading) {
+                    // 헤일로: 채움을 흐리게 깔아 타일 밖으로 번지게
+                    Rectangle().fill(fill).frame(width: fillWidth)
+                        .blur(radius: size * 0.12).opacity(dark ? 0.75 : 0.55)
+                    ZStack(alignment: .leading) {
+                        shape.fill(surface)
+                        shape.fill(c.mid.opacity(dark ? 0.16 : 0.12))
+                        Rectangle().fill(fill).frame(width: fillWidth)
+                        glyph(c.ink)
+                        glyph(.white).mask(alignment: .leading) { Rectangle().frame(width: fillWidth) }
+                    }
+                    .clipShape(shape)
+                    .overlay(shape.strokeBorder(hairline, lineWidth: 1))
+                }
+            case .hybrid:
+                let c = GaugePalette.colors(.hybrid, .ok)
+                ZStack {
+                    shape.fill(surface)
+                    Rectangle()
+                        .fill(EllipticalGradient(stops: [.init(color: c.deep, location: 0),
+                                                         .init(color: c.mid, location: 0.45),
+                                                         .init(color: c.bright.opacity(0.9), location: 0.75),
+                                                         .init(color: c.bright.opacity(0), location: 1)],
+                                                 center: .leading, startRadiusFraction: 0, endRadiusFraction: 1.2))
+                        .frame(width: size * 0.85, height: size * 0.62)
+                        .blur(radius: size * 0.13)
+                        .opacity(dark ? 0.9 : 0.75)
+                        .frame(width: size, height: size, alignment: .leading)
+                    glyph(Color(light: 0x1D1D1F, dark: 0xFFFFFF)).modifier(GaugeTextShadow())
+                }
+                .clipShape(shape)
+                .overlay(shape.strokeBorder(hairline, lineWidth: 1))
+            }
         }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+
+    private func glyph(_ color: Color) -> some View {
+        Text("C")
+            .font(.system(size: size * 0.55, weight: .heavy, design: .rounded))
+            .foregroundStyle(color)
+            .frame(width: size, height: size)
     }
 }
 

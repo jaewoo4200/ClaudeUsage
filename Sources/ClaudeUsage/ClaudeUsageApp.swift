@@ -255,6 +255,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     private func desiredWidgetKinds() -> [WidgetPanelKind] {
         let settings = AppSettings.shared
+        // 서비스를 하나만 켰으면 위젯도 한 장(합친 위젯 자리에 그 서비스만 그린다)
+        guard settings.onlyVisibleProvider == nil else { return [.combined] }
         guard settings.widgetLayoutMode == .separate else { return [.combined] }
 
         var kinds: [WidgetPanelKind] = []

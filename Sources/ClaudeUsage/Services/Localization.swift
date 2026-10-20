@@ -69,6 +69,9 @@ enum L10n {
         "breakdown_chats": [.ko: "채팅", .en: "Chats"],
         "breakdown_other": [.ko: "기타", .en: "Other"],
         "breakdown_as_of": [.ko: "집계 시각", .en: "As of"],
+        "breakdown_toggle": [.ko: "구성", .en: "Mix"],
+        "breakdown_toggle_help": [.ko: "주간 사용 구성 보기", .en: "Show weekly usage mix"],
+        "breakdown_of_week": [.ko: "7일 사용분 %d%%의 구성", .en: "Mix of %d%% weekly usage"],
         "breakdown_explanation": [.ko: "Claude의 주간 사용량을 서비스별로 나눈 비율입니다. 별도 한도가 아니며 Mimo의 최고 사용률에 포함되지 않습니다.", .en: "The service mix of your consumed Claude weekly usage. These shares are not separate limits and do not affect Mimo's peak usage."],
 
         // ==== Companion ====
@@ -190,14 +193,21 @@ enum L10n {
         "section_widget": [.ko: "위젯", .en: "Widget"],
         "section_account": [.ko: "계정", .en: "Account"],
         "section_language": [.ko: "언어", .en: "Language"],
+        "section_services": [.ko: "표시할 서비스", .en: "Services"],
+        "services_desc": [.ko: "끈 서비스는 메뉴 막대·드롭다운·위젯에서 빠지고 사용량도 가져오지 않아요. 하나는 꼭 켜져 있어야 해요.",
+                          .en: "A service you turn off disappears from the menu bar, dropdown and widget, and its usage isn't fetched. At least one must stay on."],
+        "services_last_one_help": [.ko: "하나는 꼭 켜져 있어야 해요", .en: "At least one service must stay on"],
+        "services_shown": [.ko: "표시", .en: "Shown"],
+        "provider_hidden": [.ko: "숨김", .en: "Hidden"],
+        "widget_single_service_desc": [.ko: "서비스를 하나만 켜서 위젯이 한 장으로 보여요", .en: "Only one service is on, so the widget shows a single card"],
 
         // ==== 테마 ====
-        "theme_daangn": [.ko: "당근 스타일", .en: "Daangn Style"],
-        "theme_toss": [.ko: "토스 스타일", .en: "Toss Style"],
-        "theme_hybrid": [.ko: "하이브리드", .en: "Hybrid"],
-        "theme_daangn_sub": [.ko: "따뜻한 오렌지, 원형 그래프", .en: "Warm orange, ring graph"],
-        "theme_toss_sub": [.ko: "정돈된 블루, 막대 그래프", .en: "Calm blue, bar graph"],
-        "theme_hybrid_sub": [.ko: "미드나이트 + 그라데이션", .en: "Midnight + gradient"],
+        "theme_daangn": [.ko: "도넛", .en: "Donut"],
+        "theme_toss": [.ko: "헤일로 바", .en: "Halo Bar"],
+        "theme_hybrid": [.ko: "오라", .en: "Aura"],
+        "theme_daangn_sub": [.ko: "파랑에서 빨강으로 이어지는 도넛", .en: "A ring that runs from blue to red"],
+        "theme_toss_sub": [.ko: "빛이 번지는 그라데이션 막대", .en: "A gradient bar with a soft glow"],
+        "theme_hybrid_sub": [.ko: "사용량만큼 퍼지는 빛", .en: "A glow that spreads with usage"],
 
         // ==== 위젯 설정 ====
         "always_on_top": [.ko: "항상 위에 표시", .en: "Always on top"],
