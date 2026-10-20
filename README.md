@@ -5,7 +5,10 @@
 # Claude + Codex Usage
 
 <p align="center">
-  <img src="docs/screenshots/app-icon.png" width="120" alt="App Icon">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/app-icon-dark.png">
+    <img src="docs/screenshots/app-icon-light.png" width="120" alt="App Icon">
+  </picture>
 </p>
 
 <p align="center">
