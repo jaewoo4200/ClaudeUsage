@@ -33,6 +33,8 @@ cp "$TMP/master-1024.png" "$ICONSET/icon_512x512@2x.png"
 
 echo "💎 3) iconutil로 .icns 생성"
 ICNS="$PROJECT_ROOT/Sources/ClaudeUsage/Resources/AppIcon.icns"
+# Keep Apple's encoder: hand-packed PNG icp4/icp5 slots can render as noise in Finder.
+# AppIconTests checks a system-decoder round trip, not just PNG payload validity.
 iconutil -c icns "$ICONSET" -o "$ICNS"
 
 echo ""

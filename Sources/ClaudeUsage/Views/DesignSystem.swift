@@ -246,16 +246,14 @@ extension ThemeKind {
 struct CountdownText: View {
     let resetsAt: Date?
     let isWeekly: Bool
-    @State private var now: Date = Date()
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
     var body: some View {
-        Text(label)
-            .monospacedDigit()
-            .onReceive(timer) { now = $0 }
+        TimelineView(UsageCountdownSchedule(resetsAt: resetsAt, isWeekly: isWeekly)) { context in
+            Text(label(now: context.date))
+                .monospacedDigit()
+        }
     }
 
-    private var label: String {
+    private func label(now: Date) -> String {
         guard let r = resetsAt else { return "–" }
         let d = r.timeIntervalSince(now)
         if d <= 0 { return "resetting".l }

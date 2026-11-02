@@ -6,7 +6,19 @@ import XCTest
 final class ReleaseScreenshotTests: XCTestCase {
     @MainActor
     func testRenderPublicReleaseScreenshotsWithDemoData() throws {
-        let output = URL(fileURLWithPath: "/private/tmp/ClaudeUsage-release-previews", isDirectory: true)
+        try renderPublicReleaseScreenshots(verifiedUltra: false)
+    }
+
+    @MainActor
+    func testRenderVerifiedUltraAcrossThemesAndLayouts() throws {
+        try renderPublicReleaseScreenshots(verifiedUltra: true)
+    }
+
+    @MainActor
+    private func renderPublicReleaseScreenshots(verifiedUltra: Bool) throws {
+        let output = URL(fileURLWithPath: verifiedUltra
+                         ? "/private/tmp/ClaudeUsage-ultra-previews"
+                         : "/private/tmp/ClaudeUsage-release-previews", isDirectory: true)
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
         let vm = UsageViewModel(autoStart: false)
         let theme = ThemeStore()
@@ -49,9 +61,9 @@ final class ReleaseScreenshotTests: XCTestCase {
         vm.state = .loaded(AccountSnapshot(
             organization: .init(uuid: "demo", name: "Demo", capabilities: ["claude_max"], rateLimitTier: "max_20x"),
             usage: .init(
-                fiveHour: .init(utilization: 38, resetsAt: now.addingTimeInterval(9_000)),
-                sevenDay: .init(utilization: 18, resetsAt: now.addingTimeInterval(300_000)),
-                sevenDayFable: .init(utilization: 24, resetsAt: now.addingTimeInterval(300_000)),
+                fiveHour: verifiedUltra ? nil : .init(utilization: 38, resetsAt: now.addingTimeInterval(9_000)),
+                sevenDay: .init(utilization: verifiedUltra ? 88 : 18, resetsAt: now.addingTimeInterval(300_000)),
+                sevenDayFable: .init(utilization: verifiedUltra ? 64 : 24, resetsAt: now.addingTimeInterval(300_000)),
                 sevenDayBreakdown: breakdown
             )
         ))
@@ -80,6 +92,15 @@ final class ReleaseScreenshotTests: XCTestCase {
                         .environmentObject(language).environmentObject(settings).environmentObject(history),
                         name: "widget-\(layout.rawValue)-\(kind.rawValue)-\(lang.rawValue)", output: output)
                 }
+                if verifiedUltra {
+                    settings.widgetLayoutMode = .separate
+                    for provider in WidgetProvider.allCases {
+                        try render(WidgetView(panelID: provider.rawValue, provider: provider)
+                            .environmentObject(vm).environmentObject(theme).environmentObject(language)
+                            .environmentObject(settings).environmentObject(history),
+                            name: "widget-separate-\(provider.rawValue)-\(kind.rawValue)-\(lang.rawValue)", output: output)
+                    }
+                }
                 try render(MenuBarContentView().environmentObject(vm).environmentObject(AppDelegate())
                     .environmentObject(theme).environmentObject(language).environmentObject(settings)
                     .environmentObject(history), name: "dropdown-\(kind.rawValue)-\(lang.rawValue)", output: output)
@@ -98,6 +119,12 @@ final class ReleaseScreenshotTests: XCTestCase {
                     name: "theme-\(kind.rawValue)-\(lang.rawValue)", output: output)
             }
         }
+
+        theme.current = .aura
+        language.current = .ko
+        try render(SettingsView().environmentObject(vm).environmentObject(theme)
+            .environmentObject(language).environmentObject(settings).environmentObject(history),
+            name: "settings-aura-ko", output: output)
 
         theme.current = .daangn
         for lang in AppLanguage.allCases {

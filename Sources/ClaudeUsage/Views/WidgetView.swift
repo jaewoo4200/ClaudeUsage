@@ -33,6 +33,7 @@ enum WidgetPanelKind: String, CaseIterable, Hashable {
 struct WidgetView: View {
     let panelID: String
     let provider: WidgetProvider?
+    var onHide: () -> Void
 
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var language: LanguageStore
@@ -42,15 +43,18 @@ struct WidgetView: View {
     @MainActor init(
         panelID: String = WidgetPanelKind.combined.rawValue,
         provider: WidgetProvider? = nil,
-        breakdownPresentation: WidgetBreakdownPresentation? = nil
+        breakdownPresentation: WidgetBreakdownPresentation? = nil,
+        onHide: @escaping () -> Void = {}
     ) {
         self.panelID = panelID
         self.provider = provider
+        self.onHide = onHide
         _breakdownPresentation = StateObject(wrappedValue: breakdownPresentation ?? WidgetBreakdownPresentation())
     }
 
     var body: some View {
         layout
+            .environment(\.hideWidget, onHide)
             .environmentObject(breakdownPresentation)
             .contentShape(Rectangle())
             .background(WidgetHoverRegion { breakdownPresentation.isWidgetHovered = $0 })
@@ -76,7 +80,7 @@ struct WidgetView: View {
                     userInfo: ["size": size, "panelID": panelID]
                 )
             }
-            .modifier(WidgetWindowDrag(panelID: panelID))
+            .modifier(WidgetWindowDrag())
     }
 
     @ViewBuilder
@@ -99,38 +103,72 @@ struct WidgetView: View {
     }
 }
 
-/// 위젯 창을 끌어서 옮긴다.
-/// 창의 isMovableByWindowBackground만으로는 안 움직인다: SwiftUI 호스팅 뷰가 마우스 누름을 직접 받아 창까지 넘기지 않기 때문.
-/// 그래서 위젯 아무 곳(버튼 제외)이나 3pt 이상 끌면 커서가 움직인 만큼 창을 옮기고, 놓으면 위치를 저장한다.
+/// SwiftUI decides which non-button presses become drags; AppKit owns the actual window movement.
 private struct WidgetWindowDrag: ViewModifier {
-    let panelID: String
-    @State private var start: (mouse: NSPoint, origin: NSPoint, window: NSWindow)?
-
     func body(content: Content) -> some View {
         content.gesture(
             DragGesture(minimumDistance: 3)
-                .onChanged { value in
-                    let mouse = NSEvent.mouseLocation          // 화면 좌표(아래가 0)
-                    if start == nil, let window = Self.window(at: mouse) {
-                        // 끌기가 인식되기 전 움직인 거리만큼 되돌려 처음 누른 곳을 기준으로 삼는다
-                        let pressed = NSPoint(x: mouse.x - value.translation.width,
-                                              y: mouse.y + value.translation.height)
-                        start = (pressed, window.frame.origin, window)
-                    }
-                    guard let start else { return }
-                    start.window.setFrameOrigin(NSPoint(x: start.origin.x + mouse.x - start.mouse.x,
-                                                        y: start.origin.y + mouse.y - start.mouse.y))
-                }
-                .onEnded { _ in
-                    if let start { WidgetPositionStore.save(start.window.frame.origin, id: panelID) }
-                    start = nil
+                .onChanged { _ in
+                    (NSApp.currentEvent?.window as? FloatingPanel)?.beginWidgetDrag()
                 }
         )
     }
+}
 
-    private static func window(at mouse: NSPoint) -> NSWindow? {
-        if let window = NSApp.currentEvent?.window, window is FloatingPanel { return window }
-        return NSApp.windows.first { $0 is FloatingPanel && $0.isVisible && $0.frame.contains(mouse) }
+private struct HideWidgetKey: EnvironmentKey {
+    static let defaultValue: () -> Void = {}
+}
+
+extension EnvironmentValues {
+    var hideWidget: () -> Void {
+        get { self[HideWidgetKey.self] }
+        set { self[HideWidgetKey.self] = newValue }
+    }
+}
+
+struct WidgetHideButton: View {
+    @Environment(\.hideWidget) private var hideWidget
+    @EnvironmentObject private var theme: ThemeStore
+    @State private var isHovered = false
+
+    var body: some View {
+        WidgetHideControl(color: NSColor(theme.current.tokens.textSecondary), action: hideWidget)
+            .frame(width: 22, height: 22)
+            .background(theme.current.tokens.bgSecondary.opacity(isHovered ? 1 : 0),
+                        in: RoundedRectangle(cornerRadius: 5))
+            .background(WidgetHoverRegion { isHovered = $0 })
+    }
+}
+
+/// A native control owns its mouse-down tracking, separate from the surrounding window drag gesture.
+private struct WidgetHideControl: NSViewRepresentable {
+    let color: NSColor
+    let action: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> NSButton {
+        let image = NSImage(systemSymbolName: "minus", accessibilityDescription: nil)!
+            .withSymbolConfiguration(.init(pointSize: 10, weight: .semibold))!
+        let button = NSButton(image: image, target: context.coordinator, action: #selector(Coordinator.hide))
+        button.isBordered = false
+        button.imageScaling = .scaleNone
+        button.focusRingType = .none
+        button.identifier = NSUserInterfaceItemIdentifier("widget-hide")
+        button.setAccessibilityIdentifier("widget-hide")
+        return button
+    }
+
+    func updateNSView(_ button: NSButton, context: Context) {
+        context.coordinator.action = action
+        button.contentTintColor = color
+        button.toolTip = "widget_hide_this".l
+        button.setAccessibilityLabel("widget_hide_this".l)
+    }
+
+    final class Coordinator: NSObject {
+        var action: (() -> Void)?
+        @objc func hide() { action?() }
     }
 }
 
@@ -155,7 +193,7 @@ private struct StackedWidget: View {
     var body: some View {
         let tokens = theme.current.tokens
         VStack(alignment: .leading, spacing: 8) {
-            ProviderWidgetSection(provider: .claude)
+            ProviderWidgetSection(provider: .claude, showsHideButton: true)
             Divider().background(tokens.divider)
             ProviderWidgetSection(provider: .openAI)
             if settings.usagePetEnabled {
@@ -184,7 +222,7 @@ private struct HorizontalWidget: View {
                 Divider().background(tokens.divider)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    ProviderWidgetSection(provider: .openAI, contentWidth: WidgetGaugeWidth.horizontalColumn)
+                    ProviderWidgetSection(provider: .openAI, contentWidth: WidgetGaugeWidth.horizontalColumn, showsHideButton: true)
                     if let breakdown = vm.claudeWeeklyBreakdown {
                         Divider().background(tokens.divider)
                         WidgetBreakdownView(breakdown: breakdown)
@@ -387,6 +425,7 @@ private struct PagedWidget: View {
                 }
                 Spacer()
                 pageButton(systemName: "chevron.right", helpKey: "widget_next_provider")
+                WidgetHideButton()
             }
 
             ProviderWidgetSection(provider: selectedProvider)
@@ -431,7 +470,7 @@ private struct SingleProviderWidget: View {
     var body: some View {
         let tokens = theme.current.tokens
         VStack(alignment: .leading, spacing: 8) {
-            ProviderWidgetSection(provider: provider)
+            ProviderWidgetSection(provider: provider, showsHideButton: true)
             if settings.usagePetEnabled {
                 Divider().background(tokens.divider)
                 WidgetMimoCompanion()
@@ -450,6 +489,7 @@ private struct ProviderWidgetSection: View {
     /// 줄이 차지하는 폭. 세로·전환·분리 위젯은 240 − 여백 18×2
     var contentWidth: CGFloat = WidgetGaugeWidth.narrow
     var showsBreakdown = true
+    var showsHideButton = false
 
     @EnvironmentObject var vm: UsageViewModel
     @EnvironmentObject var theme: ThemeStore
@@ -458,7 +498,10 @@ private struct ProviderWidgetSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            providerHeader
+            HStack(spacing: 6) {
+                providerHeader
+                if showsHideButton { WidgetHideButton() }
+            }
             if provider == .claude {
                 if vm.snapshot != nil {
                     metricRows(vm.claudeDisplayMetrics, breakdown: vm.claudeWeeklyBreakdown)

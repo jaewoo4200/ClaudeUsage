@@ -56,12 +56,20 @@ final class WidgetHoverTrackingView: NSView {
 
     override func mouseExited(with event: NSEvent) { report(false) }
 
+    func refreshPointerLocation() {
+        guard isTrackingEnabled, let window else { return }
+        let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        report(window.isVisible && visibleRect.contains(point))
+    }
+
     private func report(_ inside: Bool) {
+        guard (window as? FloatingPanel)?.isInteractingWithWidget != true else { return }
         guard inside != pointerInside else { return }
         pointerInside = inside
         // AppKit can update tracking while SwiftUI is laying out the view.
         DispatchQueue.main.async { [weak self] in
-            guard let self, self.pointerInside == inside else { return }
+            guard let self, self.pointerInside == inside,
+                  (self.window as? FloatingPanel)?.isInteractingWithWidget != true else { return }
             self.onChange?(inside)
         }
     }

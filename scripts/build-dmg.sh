@@ -41,6 +41,8 @@ cp -R "$PRODUCTS/$APP_NAME.app" "$DMG_STAGING/"
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$DMG_STAGING/$APP_NAME.app/Contents/Info.plist")"
 codesign --force --sign - --identifier "$BUNDLE_ID" "$DMG_STAGING/$APP_NAME.app"
 codesign --verify --deep --strict "$DMG_STAGING/$APP_NAME.app"
+# Incremental builds can preserve the bundle date and leave Icon Services using old artwork.
+touch "$DMG_STAGING/$APP_NAME.app"
 ln -sf /Applications "$DMG_STAGING/Applications"
 
 echo "💿 4/4 dmg 생성"

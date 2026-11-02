@@ -15,7 +15,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             // 헤더
             HStack(spacing: 12) {
-                AppIconDot(theme: theme.current, size: 40)
+                AppLogo(size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Claude + Codex Usage")
                         .font(.system(size: 16, weight: .bold))

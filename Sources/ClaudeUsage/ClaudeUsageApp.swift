@@ -30,7 +30,8 @@ struct ClaudeUsageApp: App {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
-    private var widgetWindows: [WidgetPanelKind: FloatingPanel] = [:]
+    private(set) var widgetWindows: [WidgetPanelKind: FloatingPanel] = [:]
+    private var hiddenWidgetKinds: Set<WidgetPanelKind> = []
     private weak var widgetViewModel: UsageViewModel?
     private var loginWindow: NSWindow?
     private var loginController: LoginWindowController?  // ⬅️ retain
@@ -100,27 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     private func resizeWidgetWindow(_ kind: WidgetPanelKind, to size: CGSize) {
-        guard let panel = widgetWindows[kind] else { return }
-        let width = max(ceil(size.width), 240)
-        let height = max(ceil(size.height), 180)
-        guard width.isFinite, height.isFinite else { return }
-
-        var frame = panel.frame
-        guard abs(frame.width - width) >= 0.5 || abs(frame.height - height) >= 0.5 else { return }
-
-        let previousMaxY = frame.maxY
-        frame.size = NSSize(width: width, height: height)
-        frame.origin.y = previousMaxY - height
-
-        if let screen = panel.screen ?? NSScreen.main {
-            let visible = screen.visibleFrame
-            if frame.minX < visible.minX { frame.origin.x = visible.minX + 20 }
-            if frame.maxX > visible.maxX { frame.origin.x = visible.maxX - frame.width - 20 }
-            if frame.minY < visible.minY { frame.origin.y = visible.minY + 20 }
-            if frame.maxY > visible.maxY { frame.origin.y = visible.maxY - frame.height - 20 }
-        }
-
-        panel.setFrame(frame, display: true)
+        widgetWindows[kind]?.resizeToContent(size)
     }
 
     @objc private func updateConfiguredWidgetWindows() {
@@ -214,6 +195,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         print("[Widget] showWidget called")
         #endif
         widgetViewModel = viewModel
+        hiddenWidgetKinds.removeAll()
         AppSettings.shared.floatingWidgetVisible = true
         reconcileWidgetWindows(viewModel: viewModel)
         widgetVisible = !widgetWindows.isEmpty
@@ -227,15 +209,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func hideWidget() {
         AppSettings.shared.floatingWidgetVisible = false
-        for (kind, win) in widgetWindows {
-            WidgetPositionStore.save(win.frame.origin, id: kind.rawValue)
-            win.orderOut(nil)
-        }
+        // Discard hosting trees so hidden countdowns, hover tasks and sprite timelines stop too.
+        for kind in Array(widgetWindows.keys) { removeWidgetWindow(kind) }
+        hiddenWidgetKinds.removeAll()
         widgetVisible = false
     }
 
+    func hideWidget(_ kind: WidgetPanelKind) {
+        hiddenWidgetKinds.insert(kind)
+        removeWidgetWindow(kind)
+        widgetVisible = !widgetWindows.isEmpty
+        AppSettings.shared.floatingWidgetVisible = widgetVisible
+    }
+
     private func reconcileWidgetWindows(viewModel: UsageViewModel) {
-        let desired = desiredWidgetKinds()
+        let desired = desiredWidgetKinds().filter { !hiddenWidgetKinds.contains($0) }
         let desiredSet = Set(desired)
         let obsolete = widgetWindows.keys.filter { !desiredSet.contains($0) }
         for kind in obsolete {
@@ -254,6 +242,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
             panel.orderFrontRegardless()
         }
+        widgetVisible = !widgetWindows.isEmpty
+        AppSettings.shared.floatingWidgetVisible = widgetVisible
         updateWidgetLevel()
     }
 
@@ -274,12 +264,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         slot: Int,
         viewModel: UsageViewModel
     ) -> FloatingPanel {
-        let host = NSHostingView(rootView: WidgetView(panelID: kind.rawValue, provider: kind.provider)
+        let host = NSHostingView(rootView: WidgetView(panelID: kind.rawValue, provider: kind.provider,
+                                                     onHide: { [weak self] in self?.hideWidget(kind) })
             .environmentObject(viewModel)
             .environmentObject(ThemeStore.shared)
             .environmentObject(LanguageStore.shared)
             .environmentObject(AppSettings.shared)
             .environmentObject(UsageHistoryStore.shared))
+        // The panel owns resizing; don't let hosting min/max constraints move it during a drag.
+        host.sizingOptions = [.intrinsicContentSize]
         host.translatesAutoresizingMaskIntoConstraints = true
         host.layoutSubtreeIfNeeded()
         let fitting = host.fittingSize
@@ -298,7 +291,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
-        panel.isMovableByWindowBackground = true
+        panel.positionID = kind.rawValue
+        panel.isMovableByWindowBackground = false
         panel.hidesOnDeactivate = false
 
         var origin = WidgetPositionStore.load(id: kind.rawValue)

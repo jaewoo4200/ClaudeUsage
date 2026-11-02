@@ -19,18 +19,18 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-4.4MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.8MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">Download v1.7.1</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">Website</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.2/ClaudeUsage-1.7.2.dmg">Download v1.7.2</a> · <a href="#-read-before-first-launch">First-launch guide</a></b>
 </p>
 
 ---
 
 ## ✨ What is Claude Usage?
 
-A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time through a menu bar item and a floating widget. It combines Claude's 5-hour, weekly, and model limits with OpenAI's 5-hour, weekly, and server-provided model-specific limits.
+A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time through a menu bar item and a floating widget. It displays the session, weekly, and model limits each server provides. Accounts without a session limit, such as verified Ultra accounts, show only their available quotas.
 
 - 🤖 **Claude + Codex**: Fetches both providers independently and presents them together
 - 🪟 **4 widget layouts**: Choose stacked, wide, arrow-switched pages, or independent Claude/Codex widgets
@@ -44,6 +44,13 @@ A native macOS app that shows **Claude and ChatGPT/Codex usage** in real time th
 - 🔄 **Auto-refresh every 60s** plus manual refresh
 - 🌑 **Dark mode** — follows system appearance
 - 💻 **Universal Binary** (Intel + Apple Silicon)
+
+### Ultra and Available Limits (1.7.2)
+
+- Legacy Max 20x and new Ultra identifiers display as **Ultra**.
+- Missing five-hour windows no longer become synthetic `0%` rows. All themes, widgets, and the dropdown follow the next server refresh when a window disappears or returns.
+- The menu bar uses session usage when available, otherwise weekly usage. If neither is available it shows `—`; a real `0%` reading is preserved.
+- Weekly/Fable quotas and server reset times remain unchanged. Ultra accounts with a temporary session limit still display it, consistent with [Anthropic's official guidance](https://support.claude.com/en/articles/17728952-what-is-the-ultra-plan).
 
 ### Weekly Breakdown (v1.6.0)
 
@@ -60,6 +67,17 @@ This is the account's current weekly composition, separate from this Mac's local
 The Codex responses used by this integration provide quota utilization and account-level daily token totals, but no Claude-style service composition (checked September 17, 2026). Separate quota percentages, such as Spark's, are not shares of total usage and are never combined into a composition chart. [Official OpenAI App Server documentation](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt)
 
 ## 📸 Screenshots
+
+### macOS 1.7.2: Ultra and Actual Account Limits
+
+<p align="center">
+  <img src="docs/assets/releases/1.7.2/widget-horizontal-daangn-en.png" width="720" alt="1.7.2 horizontal widget showing Ultra weekly usage at 88%, Fable at 64%, and Codex quotas">
+</p>
+<p align="center">
+  <img src="docs/assets/releases/1.7.2/widget-paged-donut-en.png" width="260" alt="Donut paged widget with weekly and Fable quotas and no synthetic session row">
+</p>
+
+> Actual app views rendered with **demo data**, not personal account data. 88% and 64% are examples, not hardcoded readings. All six themes and four layouts follow the available quotas. This release also includes native widget dragging, a top-right minus button to hide each widget, stopped rendering for hidden widgets, and Settings icon fixes. [Full release notes](docs/releases/v1.7.2.md)
 
 ### macOS 1.7.1: New app icon and a real reset notification
 
@@ -175,7 +193,7 @@ The three-row Halo gauge icon comes from [@jwoo5377](https://github.com/jwoo5377
 
 ## 🚀 Installation (Users)
 
-1. Download [ClaudeUsage-1.7.1.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. Download [ClaudeUsage-1.7.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.2/ClaudeUsage-1.7.2.dmg) ([all releases](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. Open the dmg → drag to `Applications`
 3. Before launching, please read ⬇️ [**Read before first launch**](#-read-before-first-launch)!
 
@@ -312,6 +330,8 @@ A drop of at least 15 percentage points followed by pressure below 60% produces 
 
 > **Performance note:** On 2026-07-10, a 12-second horizontal-widget render-path sample on this Mac measured the installed v1.3.2 at about 31% average and 46.4% peak CPU. The v1.4.0 Release UI harness measured 1.5% average and 3.6% peak in Auto/Calm. The latter disabled account synchronization to isolate UI cost, so real usage varies with refresh activity and hardware.
 
+See the [widget performance notes](docs/WIDGET_PERFORMANCE.md) for current measurements and in-development hide/drag improvements. These changes are not yet included in a public release.
+
 ### What should you do?
 
 When the dialog appears:
@@ -389,7 +409,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.7.1.dmg (supports Intel + Apple Silicon)
+# → build/ClaudeUsage-1.7.2.dmg (supports Intel + Apple Silicon)
 ```
 
 ### Regenerate icon

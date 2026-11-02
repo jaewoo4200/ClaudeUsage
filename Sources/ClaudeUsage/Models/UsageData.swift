@@ -512,6 +512,7 @@ private struct DynamicCodingKey: CodingKey {
 }
 
 enum Plan: String, Codable, Equatable {
+    // Keep the legacy raw value for compatibility; Max 20x was renamed Ultra.
     case free, pro, max5x, max20x, team, enterprise, unknown
 
     var displayName: String {
@@ -519,7 +520,7 @@ enum Plan: String, Codable, Equatable {
         case .free: return "Free"
         case .pro: return "Pro"
         case .max5x: return "Max 5×"
-        case .max20x: return "Max 20×"
+        case .max20x: return "Ultra"
         case .team: return "Team"
         case .enterprise: return "Enterprise"
         case .unknown: return "—"
@@ -531,7 +532,7 @@ enum Plan: String, Codable, Equatable {
         case .free: return "FREE"
         case .pro: return "PRO"
         case .max5x: return "MAX 5×"
-        case .max20x: return "MAX 20×"
+        case .max20x: return "ULTRA"
         case .team: return "TEAM"
         case .enterprise: return "ENT"
         case .unknown: return "—"
@@ -541,6 +542,7 @@ enum Plan: String, Codable, Equatable {
     static func parse(capabilities: [String], rateLimitTier: String?) -> Plan {
         // rate_limit_tier 우선 (가장 구체적)
         if let tier = rateLimitTier?.lowercased() {
+            if tier.contains("ultra") { return .max20x }
             if tier.contains("max_20x") { return .max20x }
             if tier.contains("max_5x") || tier.contains("max") { return .max5x }
             if tier.contains("pro") { return .pro }
@@ -548,6 +550,7 @@ enum Plan: String, Codable, Equatable {
             if tier.contains("enterprise") { return .enterprise }
         }
         let caps = capabilities.map { $0.lowercased() }
+        if caps.contains("claude_ultra") { return .max20x }
         if caps.contains("claude_max") { return .max5x }
         if caps.contains("claude_pro") { return .pro }
         if caps.contains("claude_team") { return .team }
