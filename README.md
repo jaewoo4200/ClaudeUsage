@@ -19,18 +19,18 @@
   <img alt="macOS" src="https://img.shields.io/badge/macOS-13.0%2B-blue">
   <img alt="SwiftUI" src="https://img.shields.io/badge/SwiftUI-Native-orange">
   <img alt="Universal" src="https://img.shields.io/badge/Universal-Intel%20%2B%20Apple%20Silicon-brightgreen">
-  <img alt="Size" src="https://img.shields.io/badge/dmg-4.4MB-blueviolet">
+  <img alt="Size" src="https://img.shields.io/badge/dmg-4.8MB-blueviolet">
 </p>
 
 <p align="center">
-  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">v1.7.1 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
+  <b>👉 <a href="https://jaewoo4200.github.io/ClaudeUsage/">공식 사이트</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.2/ClaudeUsage-1.7.2.dmg">v1.7.2 다운로드</a> · <a href="#-처음-실행할-때-읽어주세요">처음 실행 가이드</a></b>
 </p>
 
 ---
 
 ## ✨ Claude Usage란?
 
-Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다. Claude의 5시간·7일·모델별 한도뿐 아니라 OpenAI의 5시간·주간 한도와 서버가 제공하는 모델별 한도를 함께 표시합니다.
+Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**으로 실시간 확인하는 macOS 앱입니다. 두 서비스의 서버가 제공하는 5시간·주간·모델별 한도를 함께 표시하며, Ultra처럼 5시간 한도가 없는 계정은 실제로 존재하는 한도만 보여줍니다.
 
 - 🤖 **Claude + Codex**: 두 계정 상태를 독립적으로 조회하고 한 화면에 표시
 - 👁️ **표시할 서비스**: 하나만 쓴다면 다른 쪽을 끄세요. 끈 서비스는 메뉴바·드롭다운·위젯에서 빠지고 조회도 하지 않습니다
@@ -46,6 +46,13 @@ Claude.ai와 ChatGPT/Codex의 사용량을 **메뉴바와 떠다니는 위젯**�
 - 🌑 **다크 모드** 자동 대응 (시스템 설정 따라감)
 - 💻 **Universal Binary** (Intel + Apple Silicon)
 
+### Ultra 및 한도 자동 표시 (1.7.2)
+
+- 기존 Max 20x와 새 Ultra 식별자는 **Ultra**로 표시합니다.
+- 서버 응답에 없는 5시간 한도를 `0%`로 만들지 않습니다. 한도가 없어지거나 다시 생기면 다음 새로고침에 모든 테마·위젯·드롭다운에 반영됩니다.
+- 메뉴바는 5시간 한도가 있으면 해당 사용률, 없으면 주간 사용률을 표시합니다. 둘 다 없으면 `—`이며, 실제 `0%`는 그대로 표시합니다.
+- 주간·Fable 한도와 서버의 초기화 시각은 유지합니다. [Anthropic 공식 안내](https://support.claude.com/en/articles/17728952-what-is-the-ultra-plan)에 따라 아직 임시 5시간 한도가 있는 Ultra 계정에서는 해당 한도를 계속 표시합니다.
+
 ### 주간 사용 구성
 
 Claude 서버가 제공하는 `seven_day_breakdown`을 **주간 사용량의 서비스별 비율**로 표시합니다. 예를 들어 주간 한도 사용률이 35%, Code 비중이 90%라면, 해당 주간 사용량 중 90%가 Claude Code에서 발생했다는 뜻입니다. Code 한도를 90% 소진했다는 의미는 아닙니다.
@@ -59,6 +66,17 @@ Claude 서버가 제공하는 `seven_day_breakdown`을 **주간 사용량의 서
 Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 일별 토큰을 제공하지만, Claude와 같은 서비스별 구성 비율은 제공하지 않습니다(2026-09-17 확인). Spark 등의 별도 한도 사용률은 전체 사용량에서 차지하는 비중이 아니므로 합산하거나 구성 비율로 바꾸지 않습니다. [OpenAI 공식 App Server 문서](https://learn.chatgpt.com/docs/app-server#6-rate-limits-chatgpt)
 
 ## 📸 스크린샷
+
+### 1.7.2: Ultra와 실제 계정 한도에 맞춘 표시
+
+<p align="center">
+  <img src="docs/assets/releases/1.7.2/widget-horizontal-daangn-ko.png" width="720" alt="Ultra 계정의 주간 88%, Fable 64%와 Codex 사용량을 표시하는 1.7.2 가로 위젯">
+</p>
+<p align="center">
+  <img src="docs/assets/releases/1.7.2/widget-paged-donut-ko.png" width="260" alt="5시간 자리 없이 주간·Fable만 표시하는 도넛 테마 전환 위젯">
+</p>
+
+> 실제 앱을 **데모 데이터**로 렌더링한 예시입니다. 88%·64%는 고정값이 아니며 실제 사용 시 서버에서 조회합니다. 6개 테마·4가지 배치에 동일하게 적용됩니다. 위젯 드래그 안정화, 우측 상단 `−` 숨기기 버튼, 숨긴 위젯의 렌더링 중지, 설정 아이콘 수정도 포함합니다. [전체 변경 내역](docs/releases/v1.7.2.md)
 
 ### 1.7.1: 새 앱 아이콘과 실제 초기화 알림
 
@@ -178,7 +196,7 @@ Codex는 현재 연동하는 응답에서 한도별 사용률과 계정 단위 �
 
 ## 🚀 설치 (사용자)
 
-1. [ClaudeUsage-1.7.1.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
+1. [ClaudeUsage-1.7.2.dmg](https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.2/ClaudeUsage-1.7.2.dmg) 다운로드 ([모든 릴리스](https://github.com/jaewoo4200/ClaudeUsage/releases))
 2. dmg 열기 → `Applications` 폴더로 드래그
 3. 처음 실행 전 ⬇️ [**처음 실행 가이드**](#-처음-실행할-때-읽어주세요)를 꼭 한 번 봐주세요!
 
@@ -318,6 +336,8 @@ Spark 표시를 끄면 Spark 전용 한도는 계산에서도 제외되고, 표�
 
 > **성능 참고:** 2026-07-10 이 Mac의 가로 위젯·Mimo 자동/편안 상태에서 12초 렌더링 경로를 측정한 결과, v1.3.2 설치본은 평균 약 31%·최대 46.4% CPU였고 v1.4.0 Release UI 측정 빌드는 평균 1.5%·최대 3.6%였습니다. 후자는 계정 동기화를 끈 UI 전용 측정이라 실제 사용 수치는 새로고침 시점과 Mac 환경에 따라 달라질 수 있습니다.
 
+개발 중인 위젯 숨기기·드래그 개선과 최신 측정 조건은 [위젯 성능 점검 기록](docs/WIDGET_PERFORMANCE.md)에 정리했습니다. 이 변경은 아직 공개 릴리즈에 포함되지 않았습니다.
+
 ### 어떻게 해야 하나요?
 
 다이얼로그가 뜨면:
@@ -395,7 +415,7 @@ xcodebuild -project ClaudeUsage.xcodeproj -scheme ClaudeUsage build
 
 ```bash
 ./scripts/build-dmg.sh
-# → build/ClaudeUsage-1.7.1.dmg (Intel + Apple Silicon 둘 다 지원)
+# → build/ClaudeUsage-1.7.2.dmg (Intel + Apple Silicon 둘 다 지원)
 ```
 
 ### 아이콘 재생성

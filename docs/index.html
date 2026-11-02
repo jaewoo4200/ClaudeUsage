@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f7f5">
-    <meta name="description" content="ClaudeUsage 1.7.1: 새 세 줄 게이지 아이콘. Claude와 Codex 사용량, 실제 초기화 알림, 6가지 테마와 주간 구성 고정을 macOS 메뉴바와 위젯에서 지원합니다.">
+    <meta name="description" content="ClaudeUsage 1.7.2: Claude Ultra 지원. 계정의 실제 한도와 주간 사용률을 반영하고, 위젯 드래그·숨기기·리소스 사용을 개선했습니다. macOS 메뉴바와 6가지 테마의 위젯으로 Claude·Codex 사용량을 확인하세요.">
     <meta property="og:title" content="ClaudeUsage for macOS">
-    <meta property="og:description" content="새 앱 아이콘과 실제 초기화 알림 화면. ClaudeUsage 1.7.1 for macOS.">
+    <meta property="og:description" content="Claude Ultra, 실제 한도 자동 표시, 주간 사용률 메뉴바. ClaudeUsage 1.7.2 for macOS.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jaewoo4200.github.io/ClaudeUsage/">
-    <meta property="og:image" content="https://jaewoo4200.github.io/ClaudeUsage/assets/releases/1.7.0/widget-horizontal-daangn-ko.png">
+    <meta property="og:image" content="https://jaewoo4200.github.io/ClaudeUsage/assets/releases/1.7.2/widget-horizontal-daangn-ko.png">
     <meta name="twitter:card" content="summary_large_image">
     <title>ClaudeUsage - Claude와 Codex 사용량을 메뉴바에서</title>
     <link rel="canonical" href="https://jaewoo4200.github.io/ClaudeUsage/">
@@ -46,16 +46,16 @@
         <h1>ClaudeUsage</h1>
         <p class="hero-lead">Claude·Codex 사용량과 주간 내역,<br>오늘 토큰까지 한곳에서.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">
+          <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.2/ClaudeUsage-1.7.2.dmg">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            <span>macOS v1.7.1 다운로드</span>
+            <span>macOS v1.7.2 다운로드</span>
           </a>
-          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.7.1" target="_blank" rel="noreferrer">
+          <a class="button button-secondary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.7.2" target="_blank" rel="noreferrer">
             릴리스 노트
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>
           </a>
         </div>
-        <p class="download-meta">4.4MB DMG · Intel + Apple Silicon · 빌드 23 · 오픈소스</p>
+        <p class="download-meta">4.8MB DMG · Intel + Apple Silicon · 빌드 24 · 오픈소스</p>
       </div>
 
       <div class="hero-stage" aria-label="ClaudeUsage 가로 위젯 미리보기">
@@ -64,7 +64,7 @@
           <img src="assets/menu-label.png" alt="Claude 68%, Codex 20% 메뉴바 표시">
         </div>
         <picture>
-          <img class="hero-widget" src="assets/releases/1.7.0/widget-horizontal-daangn-ko.png" alt="당근 테마의 Claude와 Codex 사용량, Codex 아래 고정된 주간 구성, Mimo가 보이는 가로 위젯">
+          <img class="hero-widget" src="assets/releases/1.7.2/widget-horizontal-daangn-ko.png" alt="1.7.2 데모 화면: Ultra 주간 88%·Fable 64%와 Codex 사용량, 주간 구성, Mimo가 보이는 가로 위젯">
         </picture>
       </div>
     </header>
@@ -72,7 +72,7 @@
     <main id="main">
       <section class="signal-band" aria-label="주요 기능">
         <div class="section-inner signal-grid">
-          <div><strong>5시간</strong><span>단기 한도와 리셋</span></div>
+          <div><strong>계정별 한도</strong><span>제공되는 단기 한도만 표시</span></div>
           <div><strong>주간</strong><span>Claude·Codex 장기 한도</span></div>
           <div><strong>모델별</strong><span>Fable과 서버 제공 모델</span></div>
           <div><strong>14일 그래프</strong><span>서비스·모델별 로컬 추이</span></div>
@@ -81,6 +81,23 @@
 
       <section class="section release-section" id="whats-new">
         <div class="section-inner">
+          <div class="section-heading compact">
+            <p class="kicker">macOS 1.7.2 · Ultra 핫픽스</p>
+            <h2>바뀐 플랜에 맞춰,<br>실제 한도만.</h2>
+            <p>Max 20x는 Ultra로 표시합니다. 서버에 5시간 한도가 없으면 해당 행을 숨기고 메뉴바는 주간 사용률을 보여줍니다. 임시 5시간 한도가 있는 계정은 계속 표시하며, 주간·Fable 한도와 초기화 시각은 그대로 유지합니다.</p>
+          </div>
+          <div class="release-shots">
+            <figure>
+              <img src="assets/releases/1.7.2/widget-horizontal-aura-ko.png" alt="Ultra의 주간·Fable 한도를 보여주는 오라 테마 가로 위젯 데모" loading="lazy">
+              <figcaption><strong>6개 테마에 같은 한도 기준</strong><span>없는 한도를 0%로 만들지 않습니다. 실제 0%는 유지하고 다음 새로고침에 계정 변경을 반영합니다.</span></figcaption>
+            </figure>
+            <figure>
+              <img src="assets/releases/1.7.2/widget-paged-donut-ko.png" alt="주간·Fable만 표시하는 도넛 테마 전환 위젯 데모" loading="lazy">
+              <figcaption><strong>4가지 배치에서도 자동 반영</strong><span>세로·가로·전환·분리 배치를 지원하고 우측 상단 − 버튼으로 위젯을 바로 숨깁니다.</span></figcaption>
+            </figure>
+          </div>
+          <p class="release-note">개인 정보가 없는 데모 데이터로 렌더링한 실제 앱 화면입니다. 88%·64%는 예시이며 실제 사용 시 서버에서 조회합니다. 위젯 드래그 안정화, 숨긴 위젯의 렌더링 중지, 긴 카운트다운의 갱신 주기 최적화, 설정 아이콘 수정도 포함합니다.</p>
+          <p class="release-note">자동 테스트 135개 통과, 선택 실행 항목 3개 건너뜀. Intel·Apple Silicon Universal DMG입니다. <a href="https://support.claude.com/en/articles/17728952-what-is-the-ultra-plan" target="_blank" rel="noreferrer">Anthropic Ultra 공식 안내</a> · <a href="https://github.com/jaewoo4200/ClaudeUsage/releases/tag/v1.7.2" target="_blank" rel="noreferrer">1.7.2 전체 변경 내역</a></p>
           <div class="section-heading compact">
             <p class="kicker">macOS 1.7.1 · 아이콘 업데이트</p>
             <h2>세 줄 게이지로<br>새로워진 아이콘.</h2>
@@ -145,7 +162,7 @@
               <dl class="source-list">
                 <div>
                   <dt><span class="source-mark claude"></span>Claude</dt>
-                  <dd>5시간, 7일, Fable과 모델별 한도. 7일 줄에서 Code·채팅·Cowork 주간 사용 구성을 펼쳐 볼 수 있습니다.</dd>
+                  <dd>7일, Fable과 모델별 한도 및 계정에 남아 있는 5시간 한도를 표시합니다. 5시간 한도가 없으면 메뉴바도 주간 사용률로 전환합니다. 7일 줄에서 Code·채팅·Cowork 주간 사용 구성을 펼쳐 볼 수 있습니다.</dd>
                 </div>
                 <div>
                   <dt><span class="source-mark codex"></span>Codex</dt>
@@ -158,7 +175,7 @@
               </dl>
             </div>
             <figure class="product-shot dropdown-shot">
-              <img src="assets/releases/1.7.0/dropdown-daangn-ko.png" alt="Mimo와 Claude, Codex 사용량이 당근 테마로 표시된 메뉴바 드롭다운">
+              <img src="assets/releases/1.7.2/dropdown-daangn-ko.png" alt="Mimo와 Ultra·Codex 사용량이 당근 테마로 표시된 1.7.2 메뉴바 드롭다운 데모">
               <figcaption>메뉴바를 누르면 세부 한도와 남은 시간을 바로 확인할 수 있습니다. 서비스 이름에 마우스를 올리면 연결 상태가 보입니다.</figcaption>
             </figure>
           </div>
@@ -175,12 +192,12 @@
 
           <div class="layout-showcase">
             <figure class="layout-main">
-              <img src="assets/releases/1.7.0/widget-horizontal-daangn-ko.png" alt="Claude와 Codex를 좌우로 배치한 가로 위젯">
+              <img src="assets/releases/1.7.2/widget-horizontal-daangn-ko.png" alt="Ultra와 Codex를 좌우로 배치한 1.7.2 가로 위젯 데모">
               <figcaption><strong>가로</strong><span>두 서비스의 한도와 펫·요약 정보</span></figcaption>
             </figure>
             <div class="layout-side">
               <figure>
-                <img src="assets/releases/1.7.0/widget-paged-daangn-ko.png" alt="화살표로 Claude와 Codex를 전환하는 위젯">
+                <img src="assets/releases/1.7.2/widget-paged-donut-ko.png" alt="화살표로 Ultra와 Codex를 전환하는 도넛 테마 위젯 데모">
                 <figcaption><strong>전환</strong><span>원래 크기에서 좌우로 넘겨 보기</span></figcaption>
               </figure>
               <figure class="settings-figure">
@@ -286,15 +303,15 @@
           </div>
 
           <ol class="install-steps">
-            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.7.1입니다.</p></li>
+            <li><span>1</span><strong>DMG 다운로드</strong><p>현재 버전은 v1.7.2입니다.</p></li>
             <li><span>2</span><strong>Applications로 이동</strong><p>아이콘을 폴더로 드래그합니다.</p></li>
             <li><span>3</span><strong>출처와 무결성 확인</strong><p>ad-hoc 서명이며 Developer ID 공증은 없습니다. 릴리즈의 SHA-256과 실행 안내를 확인하세요.</p></li>
           </ol>
 
           <div class="final-download">
             <img src="assets/app-icon.png?v=1.7.1" alt="" width="72" height="72">
-            <div><strong>ClaudeUsage 1.7.1</strong><span>무료 · MIT License · Universal</span></div>
-            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.1/ClaudeUsage-1.7.1.dmg">
+            <div><strong>ClaudeUsage 1.7.2</strong><span>무료 · MIT License · Universal</span></div>
+            <a class="button button-primary" href="https://github.com/jaewoo4200/ClaudeUsage/releases/download/v1.7.2/ClaudeUsage-1.7.2.dmg">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               <span>DMG 받기</span>
             </a>

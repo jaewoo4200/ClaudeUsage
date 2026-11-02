@@ -164,6 +164,7 @@ enum L10n {
         // ==== 푸터 버튼 ====
         "show_widget": [.ko: "위젯 켜기", .en: "Show widget"],
         "hide_widget": [.ko: "위젯 숨기기", .en: "Hide widget"],
+        "widget_hide_this": [.ko: "이 위젯 숨기기", .en: "Hide this widget"],
         "logout": [.ko: "로그아웃", .en: "Sign out"],
         "claude_logout": [.ko: "Claude 로그아웃", .en: "Sign out of Claude"],
 

@@ -74,6 +74,20 @@ final class UsageViewModel: ObservableObject {
     var fiveHourResetsAt: Date? { snapshot?.usage.fiveHour?.resetsAt }
     var sevenDayResetsAt: Date? { snapshot?.usage.sevenDay?.resetsAt }
 
+    // Verified Ultra accounts have no session window. Zero is still a real limit reading.
+    var claudePrimaryUtilization: Double? {
+        snapshot?.usage.fiveHour?.utilization ?? snapshot?.usage.sevenDay?.utilization
+    }
+
+    var claudeMenuBarValue: String {
+        if let utilization = claudePrimaryUtilization { return "\(Int(round(utilization)))%" }
+        switch state {
+        case .loading: return "…"
+        case .error: return "!"
+        case .needsLogin, .loaded: return "—"
+        }
+    }
+
     // Claude Design (Anthropic 내부 코드네임 = omelette)
     var claudeDesignUtilization: Double { snapshot?.usage.sevenDayOmelette?.utilization ?? 0 }
     var claudeDesignResetsAt: Date? { snapshot?.usage.sevenDayOmelette?.resetsAt }
@@ -91,22 +105,25 @@ final class UsageViewModel: ObservableObject {
 
     var claudeDisplayMetrics: [UsageDisplayMetric] {
         guard let usage = snapshot?.usage else { return [] }
-        var metrics: [UsageDisplayMetric] = [
-            UsageDisplayMetric(
+        var metrics: [UsageDisplayMetric] = []
+        if let window = usage.fiveHour {
+            metrics.append(UsageDisplayMetric(
                 id: "five_hour",
                 title: "five_hour".l,
-                utilization: usage.fiveHour?.utilization ?? 0,
-                resetsAt: usage.fiveHour?.resetsAt,
+                utilization: window.utilization,
+                resetsAt: window.resetsAt,
                 isWeekly: false
-            ),
-            UsageDisplayMetric(
+            ))
+        }
+        if let window = usage.sevenDay {
+            metrics.append(UsageDisplayMetric(
                 id: "seven_day",
                 title: "seven_day".l,
-                utilization: usage.sevenDay?.utilization ?? 0,
-                resetsAt: usage.sevenDay?.resetsAt,
+                utilization: window.utilization,
+                resetsAt: window.resetsAt,
                 isWeekly: true
-            )
-        ]
+            ))
+        }
 
         if let claudeDesign = usage.sevenDayOmelette {
             metrics.append(
@@ -291,7 +308,7 @@ final class UsageViewModel: ObservableObject {
     }
 
     var highestPrimaryUtilization: Double {
-        [showsClaude && state.isLoaded ? fiveHourUtilization : nil,
+        [showsClaude ? claudePrimaryUtilization : nil,
          showsCodex && openAIState.isLoaded ? openAIPrimaryUtilization : nil]
             .compactMap { $0 }
             .max() ?? 0

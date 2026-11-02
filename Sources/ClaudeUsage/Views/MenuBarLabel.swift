@@ -11,7 +11,7 @@ struct MenuBarLabel: View {
     var body: some View {
         let image = MenuBarLabelRenderer.makeImage(
             claudeValue: claudeValue,
-            claudeUtilization: vm.state.isLoaded ? vm.fiveHourUtilization : nil,
+            claudeUtilization: vm.claudePrimaryUtilization,
             codexValue: codexValue,
             codexUtilization: vm.openAIState.isLoaded ? vm.openAIPrimaryUtilization : nil,
             showsClaude: settings.showClaude,
@@ -38,13 +38,7 @@ struct MenuBarLabel: View {
 
     private var claudeValue: String {
         let _ = language.current
-        if vm.state.isLoaded { return "\(Int(round(vm.fiveHourUtilization)))%" }
-        switch vm.state {
-        case .loading: return "…"
-        case .error: return "!"
-        case .needsLogin: return "—"
-        case .loaded: return "—"
-        }
+        return vm.claudeMenuBarValue
     }
 
     private var codexValue: String {
